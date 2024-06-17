@@ -37,6 +37,8 @@ class App(ttk.Window):
         # run
         self.mainloop()
     
+    
+
     def make_menu(self):
         
         # menu setup
