@@ -12,7 +12,7 @@ class ComboboxLabel(ttk.Frame):
         self.combobox.configure(postcommand=lambda: self.update_combobox(combobox_values))
         
         self.combobox['values'] = combobox_values
-        self.combobox.pack(side='left')
+        self.combobox.pack(side='right')
     
     def update_combobox(self, new_values):
         self.combobox['values'] = new_values

@@ -17,6 +17,7 @@ from datetime import datetime
 from Premade.ComboboxLabel import ComboboxLabel
 from Premade.DateEntryLabel import DateEntryLabel
 from Premade.EntryLabel import EntryLabel
+from Premade.MoneyEntryLabel import MoneyEntryLabel
 import csv
 
 
@@ -25,23 +26,27 @@ import csv
 class App(ttk.Window):
     def __init__(self):
         self.imgs = {}
-        with open(fr'casino_entry_values.csv', 'r') as csvfile:
-            self.casino_values = list(csv.reader(csvfile))
+        self.play_type = ['AP', 'Gamble', 'Misplay', 'Non-play', 'Science', 'Tip', 'Tax Consequence']
+        with open(fr'external_entry_values.csv', 'r') as csvfile:
+            csv_values = list(csv.reader(csvfile))
+            self.casino_values = csv_values[0]
+            self.machine_values = csv_values[1]
         
         # main setup
         super().__init__()
         self.title('Slots')
         self.minsize(600, 450)
+        self.geometry('600x450')
         self.iconphoto(False, ttk.PhotoImage(file=r'Programs\Icon\slot_machine_icon.png'))
         
         # wigits
-        EntryWigits(self)
+        self.entry_wigits = EntryWigits(self)
+        self.entry_wigits.pack()
         
         self.make_menu()
         
         # run
         self.mainloop()
-    
     
     def make_menu(self):
         
@@ -80,8 +85,37 @@ class EntryWigits(ttk.Frame):
     def __init__(self, parent):
         super().__init__(master=parent)
         
-        self.casino = ComboboxLabel(self, 'Casino', combobox_values=parent.casino_values)
-        self.casino.pack()
+        self.casino = ComboboxLabel(self, 'Casino', parent.casino_values, state='readonly')
+        self.casino.pack(fill='x')
+        
+        self.date = DateEntryLabel(self, 'Date', r'%Y%m%d')
+        self.date.pack(fill='x')
+        
+        self.machine = ComboboxLabel(self, 'Machine', parent.machine_values, state='readonly')
+        self.machine.pack(fill='x')
+        
+        self.cashin = MoneyEntryLabel(self, 'Cash In')
+        self.cashin.pack(fill='x')
+        
+        self.bet = EntryLabel(self, 'Bet')
+        self.bet.pack(fill='x')
+        
+        self.play_type = ComboboxLabel(self, 'Play Type', parent.play_type, state='readonly')
+        self.play_type.pack(fill='x')
+        
+        #initial state
+        #
+        
+        self.cashout = MoneyEntryLabel(self, 'Cash Out')
+        self.cashout.pack(fill='x')
+        
+        #pl
+        #
+        
+        #note
+        #
+        
+        
         
         
         
