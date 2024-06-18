@@ -1,4 +1,5 @@
 '''length of play      end end - start time'''
+''' add image remove from play'''
 
 
 import ttkbootstrap as ttk
@@ -12,7 +13,7 @@ from Premade.MoneyEntryLabel import MoneyEntryLabel
 from Premade.LabelLabel import LabelLabel
 from Premade.LargeEntryLabel import LargeEntryLabel
 
-from os import listdir, makedirs
+from os import listdir, makedirs, remove
 from os.path import isfile, join, dirname, basename
 
 from shutil import move
@@ -29,6 +30,7 @@ import csv
 class App(ttk.Window):
     def __init__(self):
         self.imgs = []
+        self.play_imgs = []
         self.play_type = ['AP', 'Gamble', 'Misplay', 'Non-play', 'Science', 'Tip', 'Tax Consequence']
         with open(fr'external_entry_values.csv', 'r') as csvfile:
             csv_values = list(csv.reader(csvfile))
@@ -84,25 +86,26 @@ class App(ttk.Window):
             return
         
         self.imgs = [{'path': join(directory, f)} for f in listdir(directory) if isfile(join(directory, f))]
-        #self.imgs = {join(directory, f): {} for f in listdir(directory) if isfile(join(directory, f))}
-        for index, img in enumerate(self.imgs):
-            img_path = img['path']
-            
-            image = Image.open(img_path)
-            time = App.get_time(image)
-            
-            
-            
-            resized_img = image.reduce(5)
-            imagetk = ImageTk.PhotoImage(resized_img)
-            
-            self.imgs[index]['image'] = image
-            self.imgs[index]['imagetk'] = imagetk
-            self.imgs[index]['image_time'] = time
         
-        self.imgs = list(sorted(self.imgs, key=lambda item: item['image_time']))
-        
-        self.display_image()
+        if len(self.imgs) != 0:
+            for index, img in enumerate(self.imgs):
+                img_path = img['path']
+                
+                image = Image.open(img_path)
+                time = App.get_time(image)
+                
+                
+                
+                resized_img = image.reduce(5)
+                imagetk = ImageTk.PhotoImage(resized_img)
+                
+                self.imgs[index]['image'] = image
+                self.imgs[index]['imagetk'] = imagetk
+                self.imgs[index]['image_time'] = time
+            
+            self.imgs = list(sorted(self.imgs, key=lambda item: item['image_time']))
+            
+            self.display_image()
         
     
     def add_casino(self):
@@ -171,6 +174,14 @@ class EntryWigits(ttk.Frame):
         self.end_entry = EntryLabel(self, 'End Image', parent.end_img, state='readonly')
         self.end_entry.pack(fill='x')
         
+        self.table = ttk.Treeview(self, columns='imgs', show='headings')
+        self.table.heading('imgs', text='Images')
+        self.table.pack()
+    
+    def update_table(self, parent):
+        self.table.delete(*self.table.get_children())
+        for item in parent.play_imgs:
+            self.table.insert(parent='', index=ttk.END, values=item)
         
 
 class ImageButtons(ttk.Frame):
@@ -192,11 +203,11 @@ class ImageButtons(ttk.Frame):
         end_button = ttk.Button(self, text='Set End', command=lambda: self.end_button_command(parent))
         end_button.grid(column=1, row=1, sticky='nsew', padx=(3, 0), pady=(3, 3))
         
-        add_button = ttk.Button(self, text='Add Image') # command=lambda: self.add_button_command(parent)
+        add_button = ttk.Button(self, text='Add Image', command=lambda: self.add_button_command(parent))
         add_button.grid(column=0, row=2, sticky='nsew', padx=(0, 3), pady=(3, 0))
         
-        add_button = ttk.Button(self, text='Delete Image') # command=lambda: self.add_button_command(parent)
-        add_button.grid(column=1, row=2, sticky='nsew', padx=(3, 0), pady=(3, 0))
+        delete_button = ttk.Button(self, text='Delete Image', command=lambda: self.delete_button_command(parent))
+        delete_button.grid(column=1, row=2, sticky='nsew', padx=(3, 0), pady=(3, 0))
     
     
     
@@ -221,11 +232,15 @@ class ImageButtons(ttk.Frame):
             return
         
         old_path = parent.imgs[parent.pointer]['path']
+        
+        if 'Sorted' in old_path:
+            return
+        
         file_name = basename(old_path)
         
         parent.entry_wigits.date.var.set(parent.imgs[parent.pointer]['image_time'][:8])
         
-        new_path = join(dirname(dirname(old_path)), fr'Sorted\{parent.entry_wigits.date.var.get()}')
+        new_path = join(dirname(dirname(old_path)), fr'Sorted\{parent.imgs[parent.pointer]['image_time'][:8]}')
         
         try: makedirs(new_path)
         except FileExistsError: pass
@@ -244,6 +259,10 @@ class ImageButtons(ttk.Frame):
             return
         
         old_path = parent.imgs[parent.pointer]['path']
+        
+        if 'Sorted' in old_path:
+            return
+        
         file_name = basename(old_path)
         
         new_path = join(dirname(dirname(old_path)), fr'Sorted\{parent.entry_wigits.date.var.get()}')
@@ -256,6 +275,49 @@ class ImageButtons(ttk.Frame):
         parent.imgs = list(sorted(parent.imgs, key=lambda item: item['image_time']))
         
         parent.entry_wigits.end_entry.var.set(parent.imgs[parent.pointer]['path'])
+    
+    def add_button_command(self, parent):
+        if parent.entry_wigits.start_entry.var.get() == '':
+            return
+        
+        if len(parent.imgs) == 0:
+            return
+        
+        old_path = parent.imgs[parent.pointer]['path']
+        
+        if 'Sorted' in old_path:
+            return
+        
+        file_name = basename(old_path)
+        
+        new_path = join(dirname(dirname(old_path)), fr'Sorted\{parent.entry_wigits.date.var.get()}')
+        
+        try: makedirs(new_path)
+        except FileExistsError: pass
+        
+        move(old_path, new_path)
+        
+        parent.imgs[parent.pointer]['path'] = join(new_path, file_name)
+        parent.imgs = list(sorted(parent.imgs, key=lambda item: item['image_time']))
+        
+        parent.play_imgs.append(parent.imgs[parent.pointer]['path'])
+        
+        parent.entry_wigits.update_table(parent)
+    
+    def delete_button_command(self, parent):
+        path = parent.imgs[parent.pointer]['path']
+        remove(path)
+        parent.imgs.pop(parent.pointer)
+        
+        if parent.entry_wigits.start_entry.var.get() == path:
+            parent.entry_wigits.start_entry.var.set('')
+        elif parent.entry_wigits.end_entry.var.get() == path:
+            parent.entry_wigits.end_entry.var.set('')
+        elif path in parent.play_imgs:
+            parent.play_imgs.remove(path)
+            parent.entry_wigits.update_table(parent)
+        
+        
 
 
 class ImageDisplay(ttk.Frame):
