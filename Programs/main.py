@@ -1,44 +1,69 @@
+'''length of play      end end - start time'''
+
+
 import ttkbootstrap as ttk
-from ttkbootstrap.widgets import DateEntry
 from ttkbootstrap.dialogs import Querybox
-from tkinter.filedialog import askopenfilenames
 
-from PIL import Image, ImageTk
+from tkinter.filedialog import askdirectory
 
-import csv
-from os import walk, makedirs
-from os.path import basename, exists, splitext
+from Premade.ComboboxLabel import ComboboxLabel
+from Premade.EntryLabel import EntryLabel
+from Premade.MoneyEntryLabel import MoneyEntryLabel
+from Premade.LabelLabel import LabelLabel
+from Premade.LargeEntryLabel import LargeEntryLabel
+
+from os import listdir, makedirs
+from os.path import isfile, join, dirname, basename
+
 from shutil import move
 
-global imgs, misc_entry_vars
-imgs = []
-misc_entry_vars = []
+from PIL import Image, ExifTags, ImageTk
 
-global start_var, end_var
+from datetime import datetime
 
-global image_scale
-image_scale = 20
+import csv
+
+
 
 
 class App(ttk.Window):
     def __init__(self):
+        self.imgs = []
+        self.play_type = ['AP', 'Gamble', 'Misplay', 'Non-play', 'Science', 'Tip', 'Tax Consequence']
+        with open(fr'external_entry_values.csv', 'r') as csvfile:
+            csv_values = list(csv.reader(csvfile))
+            self.casino_values = csv_values[0]
+            self.machine_values = csv_values[1]
+        self.pointer = 0
+        
         
         
         # main setup
         super().__init__()
         self.title('Slots')
-        self.minsize(600, 450)
+        self.minsize(1000, 800)
+        self.geometry('1000x800')
         self.iconphoto(False, ttk.PhotoImage(file=r'Programs\Icon\slot_machine_icon.png'))
         
-        self.left_wigits = LeftScreenWigits(self)
+        self.start_img = ttk.StringVar()
+        self.end_img = ttk.StringVar()
+        
+        # wigits
+        self.entry_wigits = EntryWigits(self)
+        self.entry_wigits.place(x=5, y=5)
+        
         self.image_display = ImageDisplay(self)
+        self.image_display.place(x=440, y=5)
+        
+        self.image_buttons = ImageButtons(self)
+        self.image_buttons.place(x=220, y=5)
+        
         self.make_menu()
+        
         
         # run
         self.mainloop()
     
-    
-
     def make_menu(self):
         
         # menu setup
@@ -47,217 +72,197 @@ class App(ttk.Window):
         
         # file menu
         file_menu = ttk.Menu(menu, tearoff=False)
-        file_menu.add_command(label='Save', command=App.save)
-        file_menu.add_command(label='Load', command=App.load)
+        file_menu.add_command(label='Open Folder', command=self.open_folder)
+        file_menu.add_separator()
+        file_menu.add_command(label='Add Casino', command=self.add_casino)
+        file_menu.add_command(label='Add Machine', command=self.add_machine)
         menu.add_cascade(label='File', menu=file_menu)
-
-        # image menu
-        image_menu = ttk.Menu(menu, tearoff=False)
-        image_menu.add_command(label='Add Image', command=App.add_image)
-        image_menu.add_separator()
-        image_menu.add_command(label='Scale', command=App.set_image_scale)
-        menu.add_cascade(label='Image', menu=image_menu)
     
-    @staticmethod
-    def save():
-        global start_var, end_var, date_var, misc_entry_vars, imgs
+    def open_folder(self):
+        directory = askdirectory(mustexist=True)
+        if directory == '':
+            return
         
-        date = date_var.get()
-        
-        info = [date, *tuple(entry.get() for entry in misc_entry_vars), start_var.get(), end_var.get()]
-        
-        with open(fr'Data\{date}.csv', 'w+') as csvfile:
-            data_writer = csv.writer(csvfile)
-            data_writer.writerow(info)
-        
-        new_image_path = fr'Pics\Sorted\{date}'
-        if not exists(new_image_path):
-            makedirs(new_image_path)
-        
-        for img in imgs:
-            move(fr'Pics\Unsorted\{img}', fr'Pics\Sorted\{date}')
-    
-    @staticmethod
-    def load():
-        global imgs, misc_entry_vars, start_var, end_var, date_var
-        
-        date = date_var.get()
-        
-        imgs = []
-        imgs = next(walk(fr'Pics\Sorted\{date}'), (None, None, []))[2]
-
-        with open(fr'Data\{date}.csv', 'r') as csvfile:
-            data = list(csv.reader(csvfile))
-            for index, item in enumerate(data[0][1:4]):
-                misc_entry_vars[index].set(item)
+        self.imgs = [{'path': join(directory, f)} for f in listdir(directory) if isfile(join(directory, f))]
+        #self.imgs = {join(directory, f): {} for f in listdir(directory) if isfile(join(directory, f))}
+        for index, img in enumerate(self.imgs):
+            img_path = img['path']
             
-            start_var.set(data[0][4])
-            end_var.set(data[0][5])
+            image = Image.open(img_path)
+            time = App.get_time(image)
+            
+            
+            
+            resized_img = image.reduce(5)
+            imagetk = ImageTk.PhotoImage(resized_img)
+            
+            self.imgs[index]['image'] = image
+            self.imgs[index]['imagetk'] = imagetk
+            self.imgs[index]['image_time'] = time
         
-        LeftScreenWigits.update_image_table()
+        self.imgs = list(sorted(self.imgs, key=lambda item: item['image_time']))
+        
+        self.display_image()
+        
+    
+    def add_casino(self):
+        new_casino = Querybox.get_string(prompt='Enter a casino', title='Casino Entry')
+        if new_casino is not None:
+            self.casino_values.append(new_casino)
+    
+    def add_machine(self):
+        new_machine = Querybox.get_string(prompt='Enter a machine', title='Machine Entry')
+        if new_machine is not None:
+            self.machine_values.append(new_machine)
     
     @staticmethod
-    def add_image():
-        global imgs
-        
-        paths = askopenfilenames()
-        for path in paths:
-            file_name = basename(path)
-            if file_name not in imgs:
-                imgs.append(file_name)
-        
-        LeftScreenWigits.update_image_table()
-    
-    @staticmethod
-    def set_image_scale():
-        global image_scale
-        image_scale = Querybox.get_integer(prompt='', title='Set Scale', initialvalue=image_scale, minvalue=1)
-        LeftScreenWigits.table_selection_event()
+    def get_time(image):
+        image_exif = image._getexif()
+        exif = { ExifTags.TAGS[k]: v for k, v in image_exif.items() if k in ExifTags.TAGS and type(v) is not bytes }
+        date_obj = datetime.strptime(exif['DateTimeOriginal'], r'%Y:%m:%d %H:%M:%S').strftime(r'%Y%m%d%H%M%S')
+        return date_obj
+
+    def display_image(self):
+        self.image_display.canvas.create_image(0, 0, image=self.imgs[self.pointer]['imagetk'])
 
 
-class LeftScreenWigits(ttk.Frame):
+
+class EntryWigits(ttk.Frame):
     def __init__(self, parent):
         super().__init__(master=parent)
         
-        self.date_entry = self.make_date_entry()
-        self.misc_entries = self.make_misc_entries()
-        ttk.Separator(self).pack(fill='x')
-        self.start_entry = self.make_start_entry()
-        self.end_entry = self.make_end_entry()
-        ttk.Separator(self).pack(fill='x')
-        self.image_table = self.make_image_table()
+        self.casino = ComboboxLabel(self, 'Casino', parent.casino_values, state='readonly')
+        self.casino.pack(fill='x')
         
-        self.place(x=0, y=0)
+        self.date = EntryLabel(self, 'Date', state='readonly')
+        self.date.pack(fill='x')
         
-    def make_date_entry(self):
-        date_frame = ttk.Frame(self)
+        self.machine = ComboboxLabel(self, 'Machine', parent.machine_values, state='readonly')
+        self.machine.pack(fill='x')
         
-        date_label = ttk.Label(date_frame, text='Date')
-        date_label.pack(side='left', padx=5)
+        self.cashin = MoneyEntryLabel(self, 'Cash In')
+        self.cashin.pack(fill='x')
+        self.cashin.bind('<FocusIn>', lambda _: self.cashin.entry.selection_range(0, ttk.END))
         
-        global date_var
-        date_var = ttk.StringVar()
-        date_entry = DateEntry(date_frame, dateformat=r'%m%d%Y')
-        date_entry.entry.configure(textvariable=date_var)
-        date_entry.pack(side='left')
+        self.bet = MoneyEntryLabel(self, 'Bet')
+        self.bet.pack(fill='x')
+        self.bet.bind('<FocusIn>', lambda _: self.bet.entry.selection_range(0, ttk.END))
         
-        date_frame.pack(pady=5)
-    
-    def make_misc_entries(self):
-        global misc_entry_vars
-        misc_entry_vars = []
-        for x in range(1, 4):
-            entry_field_frame = ttk.Frame(self)
-            
-            entry_field_label = ttk.Label(entry_field_frame, text=f'Entry {x}')
-            entry_field_label.pack(side='left', padx=5)
-            
-            entry_field_var = ttk.StringVar()
-            misc_entry_vars.append(entry_field_var)
-            entry_field = ttk.Entry(entry_field_frame, textvariable=misc_entry_vars[x-1])
-            entry_field.pack(side='left')
-            
-            entry_field_frame.pack(pady=5)
-    
-    def make_start_entry(self):
-        global imgs
+        self.play_type = ComboboxLabel(self, 'Play Type', parent.play_type, state='readonly')
+        self.play_type.pack(fill='x')
         
-        start_frame = ttk.Frame(self)
+        self.initial_state = LargeEntryLabel(self, 'Initial State')
+        self.initial_state.pack(fill='x')
         
-        start_label = ttk.Label(start_frame, text='Start Image')
-        start_label.pack(side='left', padx=5)
+        self.cashout = MoneyEntryLabel(self, 'Cash Out')
+        self.cashout.pack(fill='x')
+        self.cashout.bind('<FocusIn>', lambda _: self.cashout.entry.selection_range(0, ttk.END))
         
-        global start_var, start_combobox
-        start_var = ttk.StringVar()
-        start_combobox = ttk.Combobox(start_frame, textvariable=start_var, postcommand=LeftScreenWigits.update_start_combobox)
-        start_combobox['values'] = [splitext(img)[0] for img in imgs]
-        start_combobox.pack(side='left')
+        self.profit_loss = LabelLabel(self, 'Prophet/Loss', self.cashout.var.get() - self.cashin.var.get())
+        parent.bind('<Key>', lambda _: self.profit_loss.var.set(self.cashout.var.get() - self.cashin.var.get()))
+        self.profit_loss.pack(fill='x')
         
-        start_frame.pack(pady=5)
-    
-    @staticmethod
-    def update_start_combobox():
-        global imgs, start_combobox
-        start_combobox['values'] = [splitext(img)[0] for img in imgs]
-    
-    def make_end_entry(self):
-        global imgs
-        end_frame = ttk.Frame(self)
+        self.note = LargeEntryLabel(self, 'Note', height=8)
+        self.note.pack(fill='x')
         
-        end_label = ttk.Label(end_frame, text='Start Image')
-        end_label.pack(side='left', padx=5)
-        
-        global end_var, end_combobox
-        end_var = ttk.StringVar()
-        end_combobox = ttk.Combobox(end_frame, textvariable=end_var, postcommand=LeftScreenWigits.update_end_combobox, )
-        end_combobox['values'] = [splitext(img)[0] for img in imgs]
-        end_combobox.pack(side='left')
-        
-        end_frame.pack(pady=5)
-    
-    @staticmethod
-    def update_end_combobox():
-        global imgs, end_combobox
-        end_combobox['values'] = [splitext(img)[0] for img in imgs]
+        self.start_entry = EntryLabel(self, 'Start Image', parent.start_img, state='readonly')
+        self.start_entry.pack(fill='x')
 
-    def make_image_table(self):
-        global image_table
-        image_table = ttk.Treeview(self, columns='imgs', show='headings')
-        image_table.heading('imgs', text='Images')
+        self.end_entry = EntryLabel(self, 'End Image', parent.end_img, state='readonly')
+        self.end_entry.pack(fill='x')
         
-        image_table.bind('<<TreeviewSelect>>', func=lambda event: LeftScreenWigits.table_selection_event())
-        image_table.bind('<Delete>', func=LeftScreenWigits.table_delete_event)
         
-        image_table.pack(pady=5)
+
+class ImageButtons(ttk.Frame):
+    def __init__(self, parent):
+        super().__init__(master=parent)
+        self.columnconfigure((0, 1), weight=1, uniform='a')
+        self.rowconfigure((0, 1, 2), weight=1, uniform='a')
+        
+        
+        prev_button = ttk.Button(self, text='Prev', command=lambda: self.prev_button_command(parent))
+        prev_button.grid(column=0, row=0, sticky='nsew', padx=(0, 3), pady=(0, 3))
+        
+        next_button = ttk.Button(self, text='Next', command=lambda: self.next_button_command(parent))
+        next_button.grid(column=1, row=0, sticky='nsew', padx=(3, 0), pady=(0, 3))
+        
+        start_button = ttk.Button(self, text='Set Start', command=lambda: self.start_button_command(parent))
+        start_button.grid(column=0, row=1, sticky='nsew', padx=(0, 3), pady=(3, 3))
+        
+        end_button = ttk.Button(self, text='Set End', command=lambda: self.end_button_command(parent))
+        end_button.grid(column=1, row=1, sticky='nsew', padx=(3, 0), pady=(3, 3))
+        
+        add_button = ttk.Button(self, text='Add Image') # command=lambda: self.add_button_command(parent)
+        add_button.grid(column=0, row=2, sticky='nsew', padx=(0, 3), pady=(3, 0))
+        
+        add_button = ttk.Button(self, text='Delete Image') # command=lambda: self.add_button_command(parent)
+        add_button.grid(column=1, row=2, sticky='nsew', padx=(3, 0), pady=(3, 0))
     
-    @staticmethod
-    def update_image_table():
-        global imgs
-        for item in image_table.get_children():
-            image_table.delete(item)
-        
-        for img in imgs:
-            image_table.insert(parent='', index=ttk.END, values=[splitext(img)[0]])
     
-    @staticmethod
-    def table_delete_event():
-        global imgs
-        for img in image_table.selection():
-            imgs.remove(fr'{image_table.item(img)['values'][0]}.jpeg')
-        
-        LeftScreenWigits.update_image_table()
     
-    @staticmethod
-    def table_selection_event():
-        img_path = fr'{image_table.item(image_table.selection()[0])['values'][0]}.jpeg'
-        try:
-            img = Image.open(fr'Pics\Unsorted\{img_path}')
-        except FileNotFoundError:
-            try:
-                img = Image.open(fr'Pics\Sorted\{date_var.get()}\{img_path}')
-            except FileNotFoundError:
-                return
+    def next_button_command(self, parent):
+        parent.pointer += 1
         
-        resized_img = img.reduce(image_scale)
-        global tk_image
-        tk_image = ImageTk.PhotoImage(resized_img)
-        ImageDisplay.image_display_create_image(tk_image)
+        if parent.pointer > len(parent.imgs)-1:
+            parent.pointer = len(parent.imgs)-1
+            return
+        parent.display_image()
+    
+    def prev_button_command(self, parent):
+        parent.pointer -= 1
+        
+        if parent.pointer < 0:
+            parent.pointer = 0
+            return
+        parent.display_image()
+    
+    def start_button_command(self, parent):
+        if len(parent.imgs) == 0:
+            return
+        
+        old_path = parent.imgs[parent.pointer]['path']
+        file_name = basename(old_path)
+        
+        parent.entry_wigits.date.var.set(parent.imgs[parent.pointer]['image_time'][:8])
+        
+        new_path = join(dirname(dirname(old_path)), fr'Sorted\{parent.entry_wigits.date.var.get()}')
+        
+        try: makedirs(new_path)
+        except FileExistsError: pass
+        
+        move(old_path, new_path)
+        parent.imgs[parent.pointer]['path'] = join(new_path, file_name)
+        parent.imgs = list(sorted(parent.imgs, key=lambda item: item['image_time']))
+        
+        parent.entry_wigits.start_entry.var.set(parent.imgs[parent.pointer]['path'])
+    
+    def end_button_command(self, parent):
+        if parent.entry_wigits.start_entry.var.get() == '':
+            return
+        
+        if len(parent.imgs) == 0:
+            return
+        
+        old_path = parent.imgs[parent.pointer]['path']
+        file_name = basename(old_path)
+        
+        new_path = join(dirname(dirname(old_path)), fr'Sorted\{parent.entry_wigits.date.var.get()}')
+        
+        try: makedirs(new_path)
+        except FileExistsError: pass
+        
+        move(old_path, new_path)
+        parent.imgs[parent.pointer]['path'] = join(new_path, file_name)
+        parent.imgs = list(sorted(parent.imgs, key=lambda item: item['image_time']))
+        
+        parent.entry_wigits.end_entry.var.set(parent.imgs[parent.pointer]['path'])
 
 
 class ImageDisplay(ttk.Frame):
     def __init__(self, parent):
         super().__init__(master=parent)
-        global canvas
-        canvas = ttk.Canvas(master=self, width=3000, height=3000)
-        canvas.pack()
-        self.place(y=0, x=250)
-    
-    @staticmethod
-    def image_display_create_image(new_image):
-        canvas.create_image(0, 0, image=new_image, anchor='nw')
-        
-    
-        
+        self.canvas = ttk.Canvas(master=self, width=500, height=500)
+        self.canvas.pack(fill='both')
 
 
 
