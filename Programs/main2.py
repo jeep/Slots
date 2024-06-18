@@ -10,10 +10,10 @@ from ttkbootstrap.dialogs import Querybox
 
 
 #from os import walk
-#from os.path import basename, exists, splitext
+#from os.path import exists, splitext
 from shutil import move
 from os import listdir, makedirs
-from os.path import isfile, join, dirname
+from os.path import isfile, join, dirname, basename
 from tkinter.filedialog import askdirectory
 from PIL import Image, ExifTags, ImageTk
 from datetime import datetime
@@ -130,7 +130,7 @@ class EntryWigits(ttk.Frame):
         self.casino = ComboboxLabel(self, 'Casino', parent.casino_values, state='readonly')
         self.casino.pack(fill='x')
         
-        self.date = DateEntryLabel(self, 'Date', r'%Y%m%d')
+        self.date = EntryLabel(self, 'Date', state='readonly')
         self.date.pack(fill='x')
         
         self.machine = ComboboxLabel(self, 'Machine', parent.machine_values, state='readonly')
@@ -158,10 +158,10 @@ class EntryWigits(ttk.Frame):
         self.note = LargeEntryLabel(self, 'Note', height=8)
         self.note.pack(fill='x')
         
-        self.start_entry = EntryLabel(self, 'Start Image', parent.start_img)
+        self.start_entry = EntryLabel(self, 'Start Image', parent.start_img, state='readonly')
         self.start_entry.pack(fill='x')
 
-        self.end_entry = EntryLabel(self, 'End Image', parent.end_img)
+        self.end_entry = EntryLabel(self, 'End Image', parent.end_img, state='readonly')
         self.end_entry.pack(fill='x')
         
         
@@ -205,7 +205,11 @@ class ImageButtons(ttk.Frame):
         parent.display_image()
     
     def start_button_command(self, parent):
+        if len(parent.imgs) == 0:
+            return
+        
         old_path = list(parent.imgs.keys())[parent.pointer]
+        file_name = basename(old_path)
         
         parent.entry_wigits.date.var.set(parent.imgs[old_path]['image_time'][:8])
         new_path = join(dirname(dirname(old_path)), fr'Sorted\{parent.entry_wigits.date.var.get()}')
@@ -214,12 +218,17 @@ class ImageButtons(ttk.Frame):
         except FileExistsError: pass
         
         move(old_path, new_path)
-        parent.imgs[new_path] = parent.imgs.pop(old_path)
+        parent.imgs[join(new_path, file_name)] = parent.imgs.pop(old_path)
+        parent.imgs = dict(sorted(parent.imgs.items(), key=lambda item: item[1]['image_time']))
         
         parent.entry_wigits.start_entry.var.set(list(parent.imgs.keys())[parent.pointer])
     
     def end_button_command(self, parent):
+        if len(parent.imgs) == 0:
+            return
+        
         old_path = list(parent.imgs.keys())[parent.pointer]
+        file_name = basename(old_path)
         
         new_path = join(dirname(dirname(old_path)), fr'Sorted\{parent.entry_wigits.date.var.get()}')
         
@@ -227,7 +236,8 @@ class ImageButtons(ttk.Frame):
         except FileExistsError: pass
         
         move(old_path, new_path)
-        parent.imgs[new_path] = parent.imgs.pop(old_path)
+        parent.imgs[join(new_path, file_name)] = parent.imgs.pop(old_path)
+        #parent.imgs = dict(sorted(parent.imgs.items(), key=lambda item: item[1]['image_time']))
         
         parent.entry_wigits.end_entry.var.set(list(parent.imgs.keys())[parent.pointer])
 
