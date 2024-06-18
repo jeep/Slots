@@ -1,0 +1,15 @@
+import ttkbootstrap as ttk
+from ttkbootstrap.scrolled import ScrolledText
+
+class LargeEntryLabel(ttk.Frame):
+    def __init__(self, parent, label_text='', width=20, height=5):
+        
+        super().__init__(master=parent)
+        self.label = ttk.Label(self, text=label_text)
+        self.label.pack(side='left', )
+        
+        self.text = ScrolledText(self, autohide=True, width=width, height=height)
+        self.text.pack(side='right')
+    
+    def get_text(self):
+        return self.text.get('1.0', 'end')
