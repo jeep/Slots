@@ -142,12 +142,12 @@ class App(ttk.Window):
             exif = { ExifTags.TAGS[k]: v for k, v in image_exif.items() if k in ExifTags.TAGS and type(v) is not bytes }
             date_obj = datetime.strptime(exif['DateTimeOriginal'], r'%Y:%m:%d %H:%M:%S').strftime(r'%Y%m%d%H%M%S')
             return date_obj
-        except AttributeError:
+        except KeyError:
             try:
                 image_exif = image.getexif()
                 date_obj = datetime.strptime(image_exif[306], r'%Y:%m:%d %H:%M:%S').strftime(r'%Y%m%d%H%M%S')
                 return date_obj
-            except AttributeError:
+            except KeyError:
                 image_exif = image.getexif()
                 date_obj = datetime.strptime(image_exif[36847], r'%Y:%m:%d %H:%M:%S').strftime(r'%Y%m%d%H%M%S')
                 return date_obj
