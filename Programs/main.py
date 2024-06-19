@@ -21,8 +21,6 @@ from datetime import datetime
 import csv
 
 from pillow_heif import register_heif_opener
-
-
 register_heif_opener()
 
 
@@ -216,11 +214,6 @@ class App(ttk.Window):
             writer = csv.writer(csvfile)
             for item in self.machine_values:
                 writer.writerow(item)
-            
-        
-        
-
-
 
 class EntryWigits(ttk.Frame):
     def __init__(self, parent):
@@ -274,7 +267,6 @@ class EntryWigits(ttk.Frame):
         self.table.delete(*self.table.get_children())
         for item in parent.play_imgs:
             self.table.insert(parent='', index=ttk.END, values=item)
-        
 
 class ImageButtons(ttk.Frame):
     def __init__(self, parent):
@@ -306,9 +298,7 @@ class ImageButtons(ttk.Frame):
         
         self.delete_button = ttk.Button(self, text='Delete Image', command=lambda: self.delete_button_command(parent), bootstyle='danger')
         self.delete_button.grid(column=1, row=3, sticky='nsew', padx=(3, 0), pady=(3, 0))
-    
-    
-    
+
     def next_button_command(self, parent):
         parent.pointer += 1
         
@@ -437,11 +427,6 @@ class ImageButtons(ttk.Frame):
         elif path in parent.play_imgs:
             parent.play_imgs.remove(path)
             parent.entry_wigits.update_table(parent)
-        
-        
-        
-        
-
 
 class ImageDisplay(ttk.Frame):
     def __init__(self, parent):
