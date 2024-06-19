@@ -8,20 +8,21 @@ from Scripts.EntryLabel import EntryLabel
 from Scripts.MoneyEntryLabel import MoneyEntryLabel
 from Scripts.LabelLabel import LabelLabel
 from Scripts.LargeEntryLabel import LargeEntryLabel
+from Scripts.get_imgs_data import multi_get_img_stuff
 
-from os import listdir, makedirs, remove
-from os.path import isfile, join, dirname, basename, getctime
+from os import makedirs, remove
+from os.path import join, dirname, basename, join
 
 from shutil import move
 
-from PIL import Image, ExifTags, ImageTk
-
-from datetime import datetime
+from PIL import Image, ImageTk
 
 import csv
 
 from pillow_heif import register_heif_opener
+
 register_heif_opener()
+
 
 
 
@@ -66,9 +67,6 @@ class App(ttk.Window):
         self.bind('<FocusOut>', lambda _: self.check_save_valid())
         self.bind('Control-s', lambda _: self.save())
         
-        self.mainloop()
-        
-        self.save_externals()
     
     
     def make_menu(self):
@@ -87,27 +85,12 @@ class App(ttk.Window):
         if directory == '':
             return
         
-        self.imgs = [[join(directory, f), join(directory, f)[join(directory, f).find('.'):].upper(), 0]
-                     for f in listdir(directory)
-                     if isfile(join(directory, f)) and
-                     (join(directory, f)[join(directory, f).find('.'):].upper() =='.HEIC' or
-                      join(directory, f)[join(directory, f).find('.'):].upper() =='.JPEG' or
-                      join(directory, f)[join(directory, f).find('.'):].upper() =='.PNG' or
-                      join(directory, f)[join(directory, f).find('.'):].upper() =='.JPG')]
+        self.imgs = multi_get_img_stuff(directory)
         
         if len(self.imgs) != 0:
-            for index, img in enumerate(self.imgs):
-                img_path = self.imgs[index][0]
-                
-                image = Image.open(img_path)
-                time = App.get_time(image, img_path)
-                image.close()
-                
-                self.imgs[index][2] = time
-            
             self.imgs = sorted(self.imgs, key=lambda item: item[2])
-            
             self.display_image()
+        print('Loaded')
         
     
     def add_casino(self):
@@ -119,23 +102,6 @@ class App(ttk.Window):
         new_machine = Querybox.get_string(prompt='Enter a machine', title='Machine Entry')
         if new_machine is not None:
             self.machine_values.append(new_machine)
-    
-    @staticmethod
-    def get_time(image, path):
-        try:
-            image_exif = image._getexif()
-            exif = { ExifTags.TAGS[k]: v for k, v in image_exif.items() if k in ExifTags.TAGS and type(v) is not bytes }
-            date_obj = datetime.strptime(exif['DateTimeOriginal'], r'%Y:%m:%d %H:%M:%S').strftime(r'%Y%m%d%H%M%S')
-            return date_obj
-        except (KeyError, AttributeError):
-            try:
-                image_exif = image.getexif()
-                date_obj = datetime.strptime(image_exif[306], r'%Y:%m:%d %H:%M:%S').strftime(r'%Y%m%d%H%M%S')
-                return date_obj
-            except KeyError:
-                date_obj = datetime.fromtimestamp(getctime(path)).strftime(r'%Y%m%d%H%M%S')
-                return date_obj
-        
 
     def display_image(self):
         with Image.open(self.imgs[self.pointer][0]) as image:
@@ -436,4 +402,7 @@ class ImageDisplay(ttk.Frame):
 
 
 
-App()
+if __name__ == '__main__':
+    root = App()
+    root.mainloop()
+    root.save_externals()
