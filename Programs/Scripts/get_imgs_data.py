@@ -5,8 +5,6 @@ from datetime import datetime
 
 from threading import Thread
 
-#exif = { ExifTags.TAGS[k]: v for k, v in image_exif.items() if k in ExifTags.TAGS and type(v) is not bytes }
-
 def get_time(path):
     with Image.open(path) as image:
         try:
@@ -40,7 +38,7 @@ def get_time(path):
         except Exception:
             return None
 
-def get_img_stuff(file, directory):
+def get_img_data(file, directory):
     file_path = join(directory, file)
     file_type = file_path[file_path.find('.'):].upper()
     if (file_type == '.HEIC' or file_type == '.JPEG' or file_type == '.JPG' or file_type == '.PNG') and isfile(file_path):
@@ -51,17 +49,17 @@ def get_img_stuff(file, directory):
 
 
 
-def multi_get_img_stuff(directory):
+def multi_get_img_data(directory):
     files = listdir(directory)
     
     threads = []
     results = []
     
-    def get_stuff_thread(file):
-        results.append(get_img_stuff(file, directory))
+    def get_data_thread(file):
+        results.append(get_img_data(file, directory))
     
     for file in files:
-        thread = Thread(target=get_stuff_thread, args=(file,), daemon=True)
+        thread = Thread(target=get_data_thread, args=(file,), daemon=True)
         threads.append(thread)
         thread.start()
     

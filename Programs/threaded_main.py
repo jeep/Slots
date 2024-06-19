@@ -8,7 +8,7 @@ from Scripts.EntryLabel import EntryLabel
 from Scripts.MoneyEntryLabel import MoneyEntryLabel
 from Scripts.LabelLabel import LabelLabel
 from Scripts.LargeEntryLabel import LargeEntryLabel
-from Scripts.get_imgs_data import multi_get_img_stuff
+from Scripts.get_imgs_data import multi_get_img_data
 
 from os import makedirs, remove
 from os.path import join, dirname, basename, join
@@ -83,15 +83,14 @@ class App(ttk.Window):
         if directory == '':
             return
         
-        self.imgs = multi_get_img_stuff(directory)
+        self.imgs = multi_get_img_data(directory)
+        print('Loaded')
         
         if len(self.imgs) == 0:
             return
         
         self.imgs = sorted(self.imgs, key=lambda item: item[2])
-        self.display_image()
-        print('Loaded')
-        
+        self.display_image()   
     
     def add_casino(self):
         new_casino = Querybox.get_string(prompt='Enter a casino', title='Casino Entry')
