@@ -92,7 +92,7 @@ class App(ttk.Window):
         if len(self.imgs) != 0:
             for index, img in enumerate(self.imgs):
                 img_path = img['path']
-                image_type = img_path[img_path.find('.')+1:]
+                image_type = img_path[img_path.find('.'):]
                 
                 image = Image.open(img_path)
                 time = App.get_time(image)
@@ -136,7 +136,7 @@ class App(ttk.Window):
         
 
     def display_image(self):
-        if self.imgs[self.pointer]['image_type'] == 'HIEC':
+        if self.imgs[self.pointer]['image_type'] == '.HIEC':
             place = 250
         else: place = 0
         
