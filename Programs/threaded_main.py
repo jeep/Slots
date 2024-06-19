@@ -66,8 +66,6 @@ class App(ttk.Window):
         self.bind('<FocusIn>', lambda _: self.check_save_valid())
         self.bind('<FocusOut>', lambda _: self.check_save_valid())
         self.bind('Control-s', lambda _: self.save())
-        
-    
     
     def make_menu(self):
         menu = ttk.Menu(master=self)
@@ -87,9 +85,11 @@ class App(ttk.Window):
         
         self.imgs = multi_get_img_stuff(directory)
         
-        if len(self.imgs) != 0:
-            self.imgs = sorted(self.imgs, key=lambda item: item[2])
-            self.display_image()
+        if len(self.imgs) == 0:
+            return
+        
+        self.imgs = sorted(self.imgs, key=lambda item: item[2])
+        self.display_image()
         print('Loaded')
         
     
@@ -105,8 +105,8 @@ class App(ttk.Window):
 
     def display_image(self):
         with Image.open(self.imgs[self.pointer][0]) as image:
-            if image.size[0] >= 400 or image.size[1] >= 400:
-                if self.imgs[self.pointer][1] =='.HEIC':
+            if image.size[0] >= 450 or image.size[1] >= 450:
+                if self.imgs[self.pointer][1] =='.HEIC' or self.imgs[self.pointer][1] == '.PNG':
                     image = image.reduce(10)
                 else:
                     image = image.reduce(5)
@@ -233,7 +233,7 @@ class EntryWigits(ttk.Frame):
         self.table.delete(*self.table.get_children())
         for item in parent.play_imgs:
             self.table.insert(parent='', index=ttk.END, values=item)
-
+    
 class ImageButtons(ttk.Frame):
     def __init__(self, parent):
         super().__init__(master=parent)
@@ -266,19 +266,11 @@ class ImageButtons(ttk.Frame):
         self.delete_button.grid(column=1, row=3, sticky='nsew', padx=(3, 0), pady=(3, 0))
 
     def next_button_command(self, parent):
-        parent.pointer += 1
-        
-        if parent.pointer > len(parent.imgs)-1:
-            parent.pointer = len(parent.imgs)-1
-            return
+        parent.pointer = min((parent.pointer+1), (len(parent.imgs)-1))
         parent.display_image()
     
     def prev_button_command(self, parent):
-        parent.pointer -= 1
-        
-        if parent.pointer < 0:
-            parent.pointer = 0
-            return
+        parent.pointer = max((parent.pointer-1), 0)
         parent.display_image()
     
     def start_button_command(self, parent):
@@ -364,7 +356,7 @@ class ImageButtons(ttk.Frame):
         
         path = parent.imgs[parent.pointer]['path']
         confirmation = Messagebox.show_question(f'Are you sure you want to delete this image:\n{path}',
-                                                'Delete Confirmation',
+                                                'Image Deletion Confirmation',
                                                 buttons=['No:secondary', 'Yes:warning'])
         
         if confirmation != 'Yes':

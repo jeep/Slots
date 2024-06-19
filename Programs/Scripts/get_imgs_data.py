@@ -5,22 +5,40 @@ from datetime import datetime
 
 from threading import Thread
 
+#exif = { ExifTags.TAGS[k]: v for k, v in image_exif.items() if k in ExifTags.TAGS and type(v) is not bytes }
+
 def get_time(path):
     with Image.open(path) as image:
         try:
-            image_exif = image.getexif()
-            exif = { ExifTags.TAGS[k]: v for k, v in image_exif.items() if k in ExifTags.TAGS and type(v) is not bytes }
-            date_obj = datetime.strptime(exif['DateTimeOriginal'], r'%Y:%m:%d %H:%M:%S').strftime(r'%Y%m%d%H%M%S')
-            return date_obj
-        except (KeyError, AttributeError):
+            return datetime.strptime(tuple(v
+                                           for k, v in image.getexif().items()
+                                           if ((ExifTags.TAGS[k] == 'DateTime') and
+                                               (k in ExifTags.TAGS) and
+                                               (type(v) is not bytes)))[0],
+                                     r'%Y:%m:%d %H:%M:%S').strftime(r'%Y%m%d%H%M%S')
+        
+        except (KeyError, AttributeError, IndexError):
             pass
+        
         try:
-            image_exif = image.getexif()
-            date_obj = datetime.strptime(image_exif[306], r'%Y:%m:%d %H:%M:%S').strftime(r'%Y%m%d%H%M%S')
-            return date_obj
-        except (KeyError, AttributeError):
-            date_obj = datetime.fromtimestamp(getctime(path)).strftime(r'%Y%m%d%H%M%S')
-            return date_obj
+            return datetime.strptime(tuple(v
+                                           for k, v in image.getexif().items()
+                                           if ((ExifTags.TAGS[k] == 'DateTimeOriginal') and
+                                               (k in ExifTags.TAGS) and
+                                               (type(v) is not bytes)) )[0],
+                                     r'%Y:%m:%d %H:%M:%S').strftime(r'%Y%m%d%H%M%S')
+        except (KeyError, AttributeError, IndexError):
+            pass
+        
+        try:
+            return datetime.strptime(image.getexif()[306],r'%Y:%m:%d %H:%M:%S').strftime(r'%Y%m%d%H%M%S')
+        except (KeyError, AttributeError, KeyError):
+            pass
+        
+        try:
+            return datetime.fromtimestamp(getctime(path)).strftime(r'%Y%m%d%H%M%S')
+        except Exception:
+            return None
 
 def get_img_stuff(file, directory):
     file_path = join(directory, file)
@@ -40,8 +58,7 @@ def multi_get_img_stuff(directory):
     results = []
     
     def get_stuff_thread(file):
-        result = get_img_stuff(file, directory)
-        results.append(result)
+        results.append(get_img_stuff(file, directory))
     
     for file in files:
         thread = Thread(target=get_stuff_thread, args=(file,))
