@@ -13,3 +13,6 @@ class LargeEntryLabel(ttk.Frame):
     
     def get_text(self):
         return self.text.get('1.0', 'end')
+
+    def clear(self):
+        self.text.delete(1.0, ttk.END)

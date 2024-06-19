@@ -3,7 +3,7 @@
 
 
 import ttkbootstrap as ttk
-from ttkbootstrap.dialogs import Querybox
+from ttkbootstrap.dialogs import Querybox, Messagebox
 
 from tkinter.filedialog import askdirectory
 
@@ -38,9 +38,6 @@ class App(ttk.Window):
             self.machine_values = csv_values[1]
         self.pointer = 0
         
-        
-        
-        # main setup
         super().__init__()
         self.title('Slots')
         self.minsize(1000, 800)
@@ -50,7 +47,6 @@ class App(ttk.Window):
         self.start_img = ttk.StringVar()
         self.end_img = ttk.StringVar()
         
-        # wigits
         self.entry_wigits = EntryWigits(self)
         self.entry_wigits.place(x=5, y=5)
         
@@ -62,17 +58,18 @@ class App(ttk.Window):
         
         self.make_menu()
         
+        self.bind('<FocusIn>', lambda _: self.check_save_valid())
+        self.bind('<FocusOut>', lambda _: self.check_save_valid())
         
-        # run
         self.mainloop()
+        
+        self.save_externals()
+    
     
     def make_menu(self):
-        
-        # menu setup
         menu = ttk.Menu(master=self)
         self.configure(menu=menu)
         
-        # file menu
         file_menu = ttk.Menu(menu, tearoff=False)
         file_menu.add_command(label='Open Folder', command=self.open_folder)
         file_menu.add_separator()
@@ -127,6 +124,63 @@ class App(ttk.Window):
 
     def display_image(self):
         self.image_display.canvas.create_image(0, 0, image=self.imgs[self.pointer]['imagetk'])
+    
+    def save(self):
+        if self.image_buttons.save_button.state() == 'disabled':
+            return
+        
+        casino = self.entry_wigits.casino.var.get()
+        date = self.entry_wigits.date.var.get()
+        machine = self.entry_wigits.machine.var.get()
+        cash_in = self.entry_wigits.cashin.var.get()
+        bet = self.entry_wigits.bet.var.get()
+        play_type = self.entry_wigits.play_type.var.get()
+        initial_state = self.entry_wigits.initial_state.get_text()
+        cash_out = self.entry_wigits.cashout.var.get()
+        note = self.entry_wigits.note.get_text()
+        start_img = self.entry_wigits.start_entry.var.get()
+        end_img = self.entry_wigits.end_entry.var.get() 
+        other = self.play_imgs
+        values = [casino, date, machine, cash_in, bet, play_type, initial_state, cash_out, note, start_img, end_img, other]
+        
+        file_path = join(dirname(dirname(__file__)), 'Data\\slots_data.csv')
+        with open(file_path, 'a', newline='') as csvfile:
+            writer = csv.writer(csvfile)
+            writer.writerow(values)
+        
+        self.entry_wigits.casino.var.set('')
+        self.entry_wigits.date.var.set('')
+        self.entry_wigits.machine.var.set('')
+        self.entry_wigits.cashin.var.set('0')
+        self.entry_wigits.bet.var.set('0')
+        self.entry_wigits.play_type.var.set('')
+        self.entry_wigits.initial_state.clear()
+        self.entry_wigits.cashout.var.set('0')
+        self.entry_wigits.note.clear()
+        self.entry_wigits.start_entry.var.set('')
+        self.entry_wigits.end_entry.var.set('') 
+        self.play_imgs.clear()
+    
+    def check_save_valid(self):
+        casino = self.entry_wigits.casino.var.get()
+        date = self.entry_wigits.date.var.get()
+        machine = self.entry_wigits.machine.var.get()
+        play_type = self.entry_wigits.play_type.var.get()
+        
+        if casino=='' or date=='' or machine=='' or play_type=='':
+            self.image_buttons.save_button.configure(state='disabled')
+        else:
+            self.image_buttons.save_button.configure(state='normal')
+        
+    
+    def save_externals(self):
+        file_path = join(dirname(dirname(__file__)), 'external_entry_values.csv')
+        with open(file_path, 'w', newline='') as csvfile:
+            writer = csv.writer(csvfile)
+            writer.writerows([self.casino_values, self.machine_values])
+            
+        
+        
 
 
 
@@ -188,26 +242,32 @@ class ImageButtons(ttk.Frame):
     def __init__(self, parent):
         super().__init__(master=parent)
         self.columnconfigure((0, 1), weight=1, uniform='a')
-        self.rowconfigure((0, 1, 2), weight=1, uniform='a')
+        self.rowconfigure((0, 1, 2, 3), weight=1, uniform='a')
         
         
-        prev_button = ttk.Button(self, text='Prev', command=lambda: self.prev_button_command(parent))
-        prev_button.grid(column=0, row=0, sticky='nsew', padx=(0, 3), pady=(0, 3))
+        self.prev_button = ttk.Button(self, text='Prev', command=lambda: self.prev_button_command(parent))
+        self.prev_button.grid(column=0, row=0, sticky='nsew', padx=(0, 3), pady=(0, 3))
         
-        next_button = ttk.Button(self, text='Next', command=lambda: self.next_button_command(parent))
-        next_button.grid(column=1, row=0, sticky='nsew', padx=(3, 0), pady=(0, 3))
+        self.next_button = ttk.Button(self, text='Next', command=lambda: self.next_button_command(parent))
+        self.next_button.grid(column=1, row=0, sticky='nsew', padx=(3, 0), pady=(0, 3))
         
-        start_button = ttk.Button(self, text='Set Start', command=lambda: self.start_button_command(parent))
-        start_button.grid(column=0, row=1, sticky='nsew', padx=(0, 3), pady=(3, 3))
+        self.start_button = ttk.Button(self, text='Set Start', command=lambda: self.start_button_command(parent))
+        self.start_button.grid(column=0, row=1, sticky='nsew', padx=(0, 3), pady=(3, 3))
         
-        end_button = ttk.Button(self, text='Set End', command=lambda: self.end_button_command(parent))
-        end_button.grid(column=1, row=1, sticky='nsew', padx=(3, 0), pady=(3, 3))
+        self.end_button = ttk.Button(self, text='Set End', command=lambda: self.end_button_command(parent))
+        self.end_button.grid(column=1, row=1, sticky='nsew', padx=(3, 0), pady=(3, 3))
         
-        add_button = ttk.Button(self, text='Add Image', command=lambda: self.add_button_command(parent))
-        add_button.grid(column=0, row=2, sticky='nsew', padx=(0, 3), pady=(3, 0))
+        self.add_button = ttk.Button(self, text='Add Image', command=lambda: self.add_button_command(parent))
+        self.add_button.grid(column=0, row=2, sticky='nsew', padx=(0, 3), pady=(3, 3))
         
-        delete_button = ttk.Button(self, text='Delete Image', command=lambda: self.delete_button_command(parent))
-        delete_button.grid(column=1, row=2, sticky='nsew', padx=(3, 0), pady=(3, 0))
+        self.remove_button = ttk.Button(self, text='Remove Image', command=lambda: self.remove_button_command(parent))
+        self.remove_button.grid(column=1, row=2, sticky='nsew', padx=(3, 0), pady=(3, 3))
+        
+        self.save_button = ttk.Button(self, text='Save Play', command=lambda: parent.save(), bootstyle='success')
+        self.save_button.grid(column=0, row=3, sticky='nsew', padx=(0, 3), pady=(3, 0))
+        
+        self.delete_button = ttk.Button(self, text='Delete Image', command=lambda: self.delete_button_command(parent), bootstyle='danger')
+        self.delete_button.grid(column=1, row=3, sticky='nsew', padx=(3, 0), pady=(3, 0))
     
     
     
@@ -305,7 +365,17 @@ class ImageButtons(ttk.Frame):
         parent.entry_wigits.update_table(parent)
     
     def delete_button_command(self, parent):
+        if len(parent.imgs) == 0:
+            return
+        
         path = parent.imgs[parent.pointer]['path']
+        confirmation = Messagebox.show_question(f'Are you sure you want to delete this image:\n{path}',
+                                                'Delete Confirmation',
+                                                buttons=['No:secondary', 'Yes:warning'])
+        
+        if confirmation != 'Yes':
+            return
+        
         remove(path)
         parent.imgs.pop(parent.pointer)
         
@@ -316,6 +386,21 @@ class ImageButtons(ttk.Frame):
         elif path in parent.play_imgs:
             parent.play_imgs.remove(path)
             parent.entry_wigits.update_table(parent)
+    
+    def remove_button_command(self, parent):
+        if len(parent.imgs) == 0:
+            return
+        
+        path = parent.imgs[parent.pointer]['path']
+        if parent.entry_wigits.start_entry.var.get() == path:
+            parent.entry_wigits.start_entry.var.set('')
+        elif parent.entry_wigits.end_entry.var.get() == path:
+            parent.entry_wigits.end_entry.var.set('')
+        elif path in parent.play_imgs:
+            parent.play_imgs.remove(path)
+            parent.entry_wigits.update_table(parent)
+        
+        
         
         
 
