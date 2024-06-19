@@ -36,10 +36,16 @@ class App(ttk.Window):
         self.imgs = []
         self.play_imgs = []
         self.play_type = ['AP', 'Gamble', 'Misplay', 'Non-play', 'Science', 'Tip', 'Tax Consequence']
-        with open(fr'external_entry_values.csv', 'r') as csvfile:
-            csv_values = list(csv.reader(csvfile))
-            self.casino_values = csv_values[0]
-            self.machine_values = csv_values[1]
+        with open(f'casino_entry_values.csv', 'r') as csvfile:
+            casino_values = list(csv.reader(csvfile))
+            casino_values = [val for sublist in casino_values for val in sublist]
+
+            self.casino_values = casino_values
+        with open(f'machine_entry_values.csv', 'r') as csvfile:
+            machine_values = list(csv.reader(csvfile))
+            machine_values = [val for sublist in machine_values for val in sublist]
+            
+            self.machine_values = machine_values
         self.pointer = 0
         
         super().__init__()
@@ -87,20 +93,26 @@ class App(ttk.Window):
         if directory == '':
             return
         
-        self.imgs = [{'path': join(directory, f)} for f in listdir(directory) if isfile(join(directory, f))]
+        self.imgs = [{'path': join(directory, f)}
+                     for f in listdir(directory)
+                     if isfile(join(directory, f)) and
+                     (join(directory, f)[join(directory, f).find('.'):].upper() =='.HEIC' or
+                      join(directory, f)[join(directory, f).find('.'):].upper() =='.JPEG' or
+                      join(directory, f)[join(directory, f).find('.'):].upper() =='.PNG')]
         
         if len(self.imgs) != 0:
             for index, img in enumerate(self.imgs):
                 img_path = img['path']
-                image_type = img_path[img_path.find('.'):]
-                print(image_type)
+                image_type = img_path[img_path.find('.'):].upper()
                 
                 image = Image.open(img_path)
                 time = App.get_time(image)
                 
+                if image_type == '.HEIC':
+                    resized_img = image.reduce(10)
+                else:
+                    resized_img = image.reduce(5)
                 
-                
-                resized_img = image.reduce(10)
                 imagetk = ImageTk.PhotoImage(resized_img)
                 
                 self.imgs[index]['image'] = image
@@ -137,10 +149,11 @@ class App(ttk.Window):
         
 
     def display_image(self):
-        if self.imgs[self.pointer]['image_type'] == '.HEIC':
+        if self.imgs[self.pointer]['image_type'] == '.HEIC' or self.imgs[self.pointer]['image_type'] == '.PNG':
             place = 250
         else: place = 0
         
+        self.image_display.canvas.delete('all')
         self.image_display.canvas.create_image(place, place, image=self.imgs[self.pointer]['imagetk'])
     
     def save(self):
@@ -191,10 +204,16 @@ class App(ttk.Window):
             self.image_buttons.save_button.configure(state='normal')
         
     def save_externals(self):
-        file_path = join(dirname(dirname(__file__)), 'external_entry_values.csv')
+        file_path = join(dirname(dirname(__file__)), 'casino_entry_values.csv')
         with open(file_path, 'w', newline='') as csvfile:
             writer = csv.writer(csvfile)
-            writer.writerows([self.casino_values, self.machine_values])
+            for item in self.casino_values:
+                writer.writerow([item])
+        file_path = join(dirname(dirname(__file__)), 'machine_entry_values.csv')
+        with open(file_path, 'w', newline='') as csvfile:
+            writer = csv.writer(csvfile)
+            for item in self.machine_values:
+                writer.writerow(item)
             
         
         
