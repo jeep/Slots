@@ -139,7 +139,7 @@ class App(ttk.Window):
         values = [casino, date, machine, cash_in, bet, play_type, initial_state, cash_out, note, start_img, end_img, other]
         
         file_path = join(dirname(dirname(__file__)), 'Data\\slots_data.csv')
-        with open(file_path, 'a', newline='') as csvfile:
+        with open(file_path, 'a+', newline='') as csvfile:
             writer = csv.writer(csvfile)
             writer.writerow(values)
         
