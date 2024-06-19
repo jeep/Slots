@@ -143,9 +143,14 @@ class App(ttk.Window):
             date_obj = datetime.strptime(exif['DateTimeOriginal'], r'%Y:%m:%d %H:%M:%S').strftime(r'%Y%m%d%H%M%S')
             return date_obj
         except AttributeError:
-            image_exif = image.getexif()
-            date_obj = datetime.strptime(image_exif[306], r'%Y:%m:%d %H:%M:%S').strftime(r'%Y%m%d%H%M%S')
-            return date_obj
+            try:
+                image_exif = image.getexif()
+                date_obj = datetime.strptime(image_exif[306], r'%Y:%m:%d %H:%M:%S').strftime(r'%Y%m%d%H%M%S')
+                return date_obj
+            except AttributeError:
+                image_exif = image.getexif()
+                date_obj = datetime.strptime(image_exif[36847], r'%Y:%m:%d %H:%M:%S').strftime(r'%Y%m%d%H%M%S')
+                return date_obj
         
 
     def display_image(self):
