@@ -24,6 +24,10 @@ from datetime import datetime
 
 import csv
 
+from pillow_heif import register_heif_opener
+
+
+register_heif_opener()
 
 
 
@@ -94,7 +98,7 @@ class App(ttk.Window):
                 
                 
                 
-                resized_img = image.reduce(5)
+                resized_img = image.reduce(10)
                 imagetk = ImageTk.PhotoImage(resized_img)
                 
                 self.imgs[index]['image'] = image
@@ -118,13 +122,19 @@ class App(ttk.Window):
     
     @staticmethod
     def get_time(image):
-        image_exif = image._getexif()
-        exif = { ExifTags.TAGS[k]: v for k, v in image_exif.items() if k in ExifTags.TAGS and type(v) is not bytes }
-        date_obj = datetime.strptime(exif['DateTimeOriginal'], r'%Y:%m:%d %H:%M:%S').strftime(r'%Y%m%d%H%M%S')
-        return date_obj
+        try:
+            image_exif = image._getexif()
+            exif = { ExifTags.TAGS[k]: v for k, v in image_exif.items() if k in ExifTags.TAGS and type(v) is not bytes }
+            date_obj = datetime.strptime(exif['DateTimeOriginal'], r'%Y:%m:%d %H:%M:%S').strftime(r'%Y%m%d%H%M%S')
+            return date_obj
+        except AttributeError:
+            image_exif = image.getexif()
+            date_obj = datetime.strptime(image_exif[306], r'%Y:%m:%d %H:%M:%S').strftime(r'%Y%m%d%H%M%S')
+            return date_obj
+        
 
     def display_image(self):
-        self.image_display.canvas.create_image(0, 0, image=self.imgs[self.pointer]['imagetk'])
+        self.image_display.canvas.create_image(300, 300, image=self.imgs[self.pointer]['imagetk'])
     
     def save(self):
         if self.image_buttons.save_button.state() == 'disabled':
@@ -173,7 +183,6 @@ class App(ttk.Window):
         else:
             self.image_buttons.save_button.configure(state='normal')
         
-    
     def save_externals(self):
         file_path = join(dirname(dirname(__file__)), 'external_entry_values.csv')
         with open(file_path, 'w', newline='') as csvfile:
