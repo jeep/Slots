@@ -92,6 +92,7 @@ class App(ttk.Window):
         if len(self.imgs) != 0:
             for index, img in enumerate(self.imgs):
                 img_path = img['path']
+                image_type = img_path[img_path.find('.')+1:]
                 
                 image = Image.open(img_path)
                 time = App.get_time(image)
@@ -104,6 +105,7 @@ class App(ttk.Window):
                 self.imgs[index]['image'] = image
                 self.imgs[index]['imagetk'] = imagetk
                 self.imgs[index]['image_time'] = time
+                self.imgs[index]['image_type'] = image_type
             
             self.imgs = list(sorted(self.imgs, key=lambda item: item['image_time']))
             
@@ -134,7 +136,11 @@ class App(ttk.Window):
         
 
     def display_image(self):
-        self.image_display.canvas.create_image(300, 300, image=self.imgs[self.pointer]['imagetk'])
+        if self.imgs[self.pointer]['image_type'] == 'HIEC':
+            place = 250
+        else: place = 0
+        
+        self.image_display.canvas.create_image(place, place, image=self.imgs[self.pointer]['imagetk'])
     
     def save(self):
         if self.image_buttons.save_button.state() == 'disabled':
