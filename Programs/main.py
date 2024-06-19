@@ -1,7 +1,3 @@
-'''length of play      end end - start time'''
-''' add image remove from play'''
-
-
 import ttkbootstrap as ttk
 from ttkbootstrap.dialogs import Querybox, Messagebox
 
@@ -93,34 +89,25 @@ class App(ttk.Window):
         if directory == '':
             return
         
-        self.imgs = [{'path': join(directory, f)}
+        self.imgs = [[join(directory, f), join(directory, f)[join(directory, f).find('.'):].upper(), 0]
                      for f in listdir(directory)
                      if isfile(join(directory, f)) and
                      (join(directory, f)[join(directory, f).find('.'):].upper() =='.HEIC' or
                       join(directory, f)[join(directory, f).find('.'):].upper() =='.JPEG' or
-                      join(directory, f)[join(directory, f).find('.'):].upper() =='.PNG')]
+                      join(directory, f)[join(directory, f).find('.'):].upper() =='.PNG' or
+                      join(directory, f)[join(directory, f).find('.'):].upper() =='.JPG')]
         
         if len(self.imgs) != 0:
             for index, img in enumerate(self.imgs):
-                img_path = img['path']
-                image_type = img_path[img_path.find('.'):].upper()
+                img_path = self.imgs[index][0]
                 
                 image = Image.open(img_path)
                 time = App.get_time(image, img_path)
+                image.close()
                 
-                if image_type == '.HEIC':
-                    resized_img = image.reduce(10)
-                else:
-                    resized_img = image.reduce(5)
-                
-                imagetk = ImageTk.PhotoImage(resized_img)
-                
-                self.imgs[index]['image'] = image
-                self.imgs[index]['imagetk'] = imagetk
-                self.imgs[index]['image_time'] = time
-                self.imgs[index]['image_type'] = image_type
+                self.imgs[index][2] = time
             
-            self.imgs = list(sorted(self.imgs, key=lambda item: item['image_time']))
+            self.imgs = sorted(self.imgs, key=lambda item: item[2])
             
             self.display_image()
         
@@ -142,7 +129,7 @@ class App(ttk.Window):
             exif = { ExifTags.TAGS[k]: v for k, v in image_exif.items() if k in ExifTags.TAGS and type(v) is not bytes }
             date_obj = datetime.strptime(exif['DateTimeOriginal'], r'%Y:%m:%d %H:%M:%S').strftime(r'%Y%m%d%H%M%S')
             return date_obj
-        except KeyError:
+        except (KeyError, AttributeError):
             try:
                 image_exif = image.getexif()
                 date_obj = datetime.strptime(image_exif[306], r'%Y:%m:%d %H:%M:%S').strftime(r'%Y%m%d%H%M%S')
@@ -153,12 +140,21 @@ class App(ttk.Window):
         
 
     def display_image(self):
-        if self.imgs[self.pointer]['image_type'] == '.HEIC' or self.imgs[self.pointer]['image_type'] == '.PNG':
-            place = 250
-        else: place = 0
-        
-        self.image_display.canvas.delete('all')
-        self.image_display.canvas.create_image(place, place, image=self.imgs[self.pointer]['imagetk'])
+        with Image.open(self.imgs[self.pointer][0]) as image:
+            if image.size[0] >= 400 or image.size[1] >= 400:
+                if self.imgs[self.pointer][1] =='.HEIC':
+                    image = image.reduce(10)
+                else:
+                    image = image.reduce(5)
+            
+            global imagetk
+            imagetk = ImageTk.PhotoImage(image)
+            
+            x, y = image.size
+            x, y = x/2, y/2
+            
+            self.image_display.canvas.delete('all')
+            self.image_display.canvas.create_image(x, y, image=imagetk)
     
     def save(self):
         if self.image_buttons.save_button.state() == 'disabled':
@@ -195,6 +191,8 @@ class App(ttk.Window):
         self.entry_wigits.start_entry.var.set('')
         self.entry_wigits.end_entry.var.set('') 
         self.play_imgs.clear()
+        
+        self.image_buttons.save_button.configure(state='disabled')
     
     def check_save_valid(self):
         casino = self.entry_wigits.casino.var.get()
@@ -331,25 +329,25 @@ class ImageButtons(ttk.Frame):
         if len(parent.imgs) == 0:
             return
         
-        old_path = parent.imgs[parent.pointer]['path']
+        old_path = parent.imgs[parent.pointer][0]
         
         if 'Sorted' in old_path:
             return
         
         file_name = basename(old_path)
         
-        parent.entry_wigits.date.var.set(parent.imgs[parent.pointer]['image_time'][:8])
+        parent.entry_wigits.date.var.set(parent.imgs[parent.pointer][2][:8])
         
-        new_path = join(dirname(dirname(old_path)), fr'Sorted\{parent.imgs[parent.pointer]['image_time'][:8]}')
+        new_path = join(dirname(dirname(old_path)), fr'Sorted\{parent.imgs[parent.pointer][2][:8]}')
         
         try: makedirs(new_path)
         except FileExistsError: pass
         
         move(old_path, new_path)
-        parent.imgs[parent.pointer]['path'] = join(new_path, file_name)
-        parent.imgs = list(sorted(parent.imgs, key=lambda item: item['image_time']))
+        parent.imgs[parent.pointer][0] = join(new_path, file_name)
+        parent.imgs = list(sorted(parent.imgs, key=lambda item: item[2]))
         
-        parent.entry_wigits.start_entry.var.set(parent.imgs[parent.pointer]['path'])
+        parent.entry_wigits.start_entry.var.set(parent.imgs[parent.pointer][0])
     
     def end_button_command(self, parent):
         if parent.entry_wigits.start_entry.var.get() == '':
@@ -358,7 +356,7 @@ class ImageButtons(ttk.Frame):
         if len(parent.imgs) == 0:
             return
         
-        old_path = parent.imgs[parent.pointer]['path']
+        old_path = parent.imgs[parent.pointer][0]
         
         if 'Sorted' in old_path:
             return
@@ -371,10 +369,10 @@ class ImageButtons(ttk.Frame):
         except FileExistsError: pass
         
         move(old_path, new_path)
-        parent.imgs[parent.pointer]['path'] = join(new_path, file_name)
-        parent.imgs = list(sorted(parent.imgs, key=lambda item: item['image_time']))
+        parent.imgs[parent.pointer][0] = join(new_path, file_name)
+        parent.imgs = list(sorted(parent.imgs, key=lambda item: item[2]))
         
-        parent.entry_wigits.end_entry.var.set(parent.imgs[parent.pointer]['path'])
+        parent.entry_wigits.end_entry.var.set(parent.imgs[parent.pointer][0])
     
     def add_button_command(self, parent):
         if parent.entry_wigits.start_entry.var.get() == '':
@@ -383,7 +381,7 @@ class ImageButtons(ttk.Frame):
         if len(parent.imgs) == 0:
             return
         
-        old_path = parent.imgs[parent.pointer]['path']
+        old_path = parent.imgs[parent.pointer][0]
         
         if 'Sorted' in old_path:
             return
@@ -397,10 +395,10 @@ class ImageButtons(ttk.Frame):
         
         move(old_path, new_path)
         
-        parent.imgs[parent.pointer]['path'] = join(new_path, file_name)
-        parent.imgs = list(sorted(parent.imgs, key=lambda item: item['image_time']))
+        parent.imgs[parent.pointer][0] = join(new_path, file_name)
+        parent.imgs = list(sorted(parent.imgs, key=lambda item: item[2]))
         
-        parent.play_imgs.append(parent.imgs[parent.pointer]['path'])
+        parent.play_imgs.append(parent.imgs[parent.pointer][0])
         
         parent.entry_wigits.update_table(parent)
     
@@ -431,7 +429,7 @@ class ImageButtons(ttk.Frame):
         if len(parent.imgs) == 0:
             return
         
-        path = parent.imgs[parent.pointer]['path']
+        path = parent.imgs[parent.pointer][0]
         if parent.entry_wigits.start_entry.var.get() == path:
             parent.entry_wigits.start_entry.var.set('')
         elif parent.entry_wigits.end_entry.var.get() == path:
@@ -448,7 +446,7 @@ class ImageButtons(ttk.Frame):
 class ImageDisplay(ttk.Frame):
     def __init__(self, parent):
         super().__init__(master=parent)
-        self.canvas = ttk.Canvas(master=self, width=500, height=500)
+        self.canvas = ttk.Canvas(master=self, width=750, height=750)
         self.canvas.pack(fill='both')
 
 
