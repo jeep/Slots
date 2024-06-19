@@ -14,7 +14,7 @@ from Premade.LabelLabel import LabelLabel
 from Premade.LargeEntryLabel import LargeEntryLabel
 
 from os import listdir, makedirs, remove
-from os.path import isfile, join, dirname, basename
+from os.path import isfile, join, dirname, basename, getctime
 
 from shutil import move
 
@@ -106,7 +106,7 @@ class App(ttk.Window):
                 image_type = img_path[img_path.find('.'):].upper()
                 
                 image = Image.open(img_path)
-                time = App.get_time(image)
+                time = App.get_time(image, img_path)
                 
                 if image_type == '.HEIC':
                     resized_img = image.reduce(10)
@@ -136,7 +136,7 @@ class App(ttk.Window):
             self.machine_values.append(new_machine)
     
     @staticmethod
-    def get_time(image):
+    def get_time(image, path):
         try:
             image_exif = image._getexif()
             exif = { ExifTags.TAGS[k]: v for k, v in image_exif.items() if k in ExifTags.TAGS and type(v) is not bytes }
@@ -148,8 +148,7 @@ class App(ttk.Window):
                 date_obj = datetime.strptime(image_exif[306], r'%Y:%m:%d %H:%M:%S').strftime(r'%Y%m%d%H%M%S')
                 return date_obj
             except KeyError:
-                image_exif = image.getexif()
-                date_obj = datetime.strptime(image_exif[36847], r'%Y:%m:%d %H:%M:%S').strftime(r'%Y%m%d%H%M%S')
+                date_obj = datetime.fromtimestamp(getctime(path)).strftime(r'%Y%m%d%H%M%S')
                 return date_obj
         
 
