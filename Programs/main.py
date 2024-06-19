@@ -60,6 +60,7 @@ class App(ttk.Window):
         
         self.bind('<FocusIn>', lambda _: self.check_save_valid())
         self.bind('<FocusOut>', lambda _: self.check_save_valid())
+        self.bind('Control-s', lambda _: self.save())
         
         self.mainloop()
         

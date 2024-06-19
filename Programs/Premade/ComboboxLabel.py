@@ -1,4 +1,5 @@
 import ttkbootstrap as ttk
+from ttkwidgets.autocomplete import AutocompleteCombobox
 
 class ComboboxLabel(ttk.Frame):
     def __init__(self, parent, label_text='', combobox_values=(),  state='normal'):
@@ -8,11 +9,13 @@ class ComboboxLabel(ttk.Frame):
         self.label.pack(side='left')
         
         self.var = ttk.StringVar()
-        self.combobox = ttk.Combobox(self, textvariable=self.var, state=state)
+        self.combobox = AutocompleteCombobox(self, textvariable=self.var, state=state)
         self.combobox.configure(postcommand=lambda: self.update_combobox(combobox_values))
         
         self.combobox['values'] = combobox_values
         self.combobox.pack(side='right')
     
     def update_combobox(self, new_values):
-        self.combobox['values'] = new_values
+        self.combobox.configure(completevalues=new_values)
+        #self.combobox['values'] = new_values
+        #self.combobox['completevalues'] = new_values
