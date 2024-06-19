@@ -61,7 +61,7 @@ def multi_get_img_stuff(directory):
         results.append(get_img_stuff(file, directory))
     
     for file in files:
-        thread = Thread(target=get_stuff_thread, args=(file,))
+        thread = Thread(target=get_stuff_thread, args=(file,), daemon=True)
         threads.append(thread)
         thread.start()
     
