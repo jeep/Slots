@@ -392,6 +392,8 @@ class ImageButtons(ttk.Frame):
         self.delete_button.grid(column=1, row=3, sticky='nsew', padx=(6, 0), pady=(6, 0))
 
     def next_button_command(self, parent):
+        self.next_button.configure(state='disabled')
+        
         # increases the pointer by one to the max of the length of the image list
         parent.pointer = min((parent.pointer+1), (len(parent.imgs)-1))
         # updates the image display
@@ -417,6 +419,8 @@ class ImageButtons(ttk.Frame):
             self.remove_button.configure(state='disabled')
     
     def prev_button_command(self, parent):
+        self.prev_button.configure(state='disabled')
+        
         # decreases the pointer by one to the minimum of 0
         parent.pointer = max((parent.pointer-1), 0)
         # updates the image display
