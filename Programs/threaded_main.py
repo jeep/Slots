@@ -86,7 +86,7 @@ class App(ttk.Window):
         
         # creates the image display and places them on the right
         self.image_display = ImageDisplay(self)
-        self.image_display.place(x=440, y=5)
+        self.image_display.place(x=450, y=5)
         
         # creates the buttons that control the play and places them in the middle
         self.image_buttons = ImageButtons(self)
@@ -361,35 +361,35 @@ class ImageButtons(ttk.Frame):
         
         # adds the previous button that calls self.prev_button_command when pressed
         self.prev_button = ttk.Button(self, text='Prev', command=lambda: self.prev_button_command(parent))
-        self.prev_button.grid(column=0, row=0, sticky='nsew', padx=(0, 3), pady=(0, 3))
+        self.prev_button.grid(column=0, row=0, sticky='nsew', padx=(0, 6), pady=(0, 6))
         
         # adds the next button that calls self.next_button_command when pressed
         self.next_button = ttk.Button(self, text='Next', command=lambda: self.next_button_command(parent))
-        self.next_button.grid(column=1, row=0, sticky='nsew', padx=(3, 0), pady=(0, 3))
+        self.next_button.grid(column=1, row=0, sticky='nsew', padx=(6, 0), pady=(0, 6))
         
         # adds the set start button that calls self.start_button_command when pressed
         self.start_button = ttk.Button(self, text='Set Start', command=lambda: self.start_button_command(parent))
-        self.start_button.grid(column=0, row=1, sticky='nsew', padx=(0, 3), pady=(3, 3))
+        self.start_button.grid(column=0, row=1, sticky='nsew', padx=(0, 6), pady=(6, 6))
         
         # adds the set end button that calls self.end_button_command when pressed
         self.end_button = ttk.Button(self, text='Set End', command=lambda: self.end_button_command(parent))
-        self.end_button.grid(column=1, row=1, sticky='nsew', padx=(3, 0), pady=(3, 3))
+        self.end_button.grid(column=1, row=1, sticky='nsew', padx=(6, 0), pady=(6, 6))
         
         # adds the add image button that calls self.add_button_command when pressed
         self.add_button = ttk.Button(self, text='Add Image', command=lambda: self.add_button_command(parent))
-        self.add_button.grid(column=0, row=2, sticky='nsew', padx=(0, 3), pady=(3, 3))
+        self.add_button.grid(column=0, row=2, sticky='nsew', padx=(0, 6), pady=(6, 6))
         
         # adds the remove image button that calls self.remove_button_command when pressed
         self.remove_button = ttk.Button(self, text='Remove Image', command=lambda: self.remove_button_command(parent))
-        self.remove_button.grid(column=1, row=2, sticky='nsew', padx=(3, 0), pady=(3, 3))
+        self.remove_button.grid(column=1, row=2, sticky='nsew', padx=(6, 0), pady=(6, 6))
         
         # adds the save button that calls parent.save when pressed
         self.save_button = ttk.Button(self, text='Save Play', command=lambda: parent.save(), bootstyle='success')
-        self.save_button.grid(column=0, row=3, sticky='nsew', padx=(0, 3), pady=(3, 0))
+        self.save_button.grid(column=0, row=3, sticky='nsew', padx=(0, 6), pady=(6, 6))
         
         # adds the delete image button that calls self.delete_button_command when pressed
         self.delete_button = ttk.Button(self, text='Delete Image', command=lambda: self.delete_button_command(parent), bootstyle='danger')
-        self.delete_button.grid(column=1, row=3, sticky='nsew', padx=(3, 0), pady=(3, 0))
+        self.delete_button.grid(column=1, row=3, sticky='nsew', padx=(6, 0), pady=(6, 0))
 
     def next_button_command(self, parent):
         # increases the pointer by one to the max of the length of the image list
