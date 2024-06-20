@@ -9,7 +9,7 @@ class ComboboxLabel(ttk.Frame):
         self.label.pack(side='left')
         
         self.var = ttk.StringVar()
-        self.combobox = AutocompleteCombobox(self, textvariable=self.var, state=state)
+        self.combobox = AutocompleteCombobox(self, textvariable=self.var, state=state, validate='key', validatecommand=(self.register(self.validate), '%P'))
         self.combobox.configure(postcommand=lambda: self.update_combobox(combobox_values))
         
         self.combobox['values'] = combobox_values
@@ -17,3 +17,9 @@ class ComboboxLabel(ttk.Frame):
     
     def update_combobox(self, new_values):
         self.combobox.configure(completevalues=new_values)
+    
+    def validate(self, inp):
+        for value in self.combobox['values']:
+            if inp in value:
+                return True
+        return False
