@@ -121,7 +121,7 @@ class App(ttk.Window):
             return
         
         # multi threads geting the image data ( image path, image type, image date )
-        self.imgs = multi_get_img_data(directory)
+        self.imgs = [d for d in multi_get_img_data(directory) if d is not None]
         print('Loaded')
         
         # does nothing else if there are not images in the directory
@@ -203,7 +203,6 @@ class App(ttk.Window):
             writer.writerow(values)
         
         # clears all entry values
-        self.entry_wigits.casino.var.set('')
         self.entry_wigits.date.var.set('')
         self.entry_wigits.machine.var.set('')
         self.entry_wigits.cashin.var.set('0')
@@ -215,6 +214,8 @@ class App(ttk.Window):
         self.entry_wigits.start_entry.var.set('')
         self.entry_wigits.end_entry.var.set('') 
         self.play_imgs.clear()
+        
+        self.entry_wigits.update_table(self)
         
         # resets the save button to disabled
         self.image_buttons.save_button.configure(state='disabled')
@@ -249,7 +250,7 @@ class App(ttk.Window):
         with open(file_path, 'w', newline='') as csvfile:
             writer = csv.writer(csvfile)
             for item in self.machine_values:
-                writer.writerow(item)
+                writer.writerow([item])
 
 class EntryWigits(ttk.Frame):
     def __init__(self, parent):
@@ -281,7 +282,7 @@ class EntryWigits(ttk.Frame):
         self.bet.bind('<FocusIn>', lambda _: self.bet.entry.selection_range(0, ttk.END))
         
         # adds the play type entry, readonly so you cannot enter your own values
-        self.play_type = ComboboxLabel(self, 'Play Type', parent.play_type, state='readonly')
+        self.play_type = ComboboxLabel(self, 'Play Type', parent.play_type)
         self.play_type.pack(fill='x')
         
         # adds the initial state entry
@@ -297,7 +298,7 @@ class EntryWigits(ttk.Frame):
         # adds the profit loss amount
         self.profit_loss = LabelLabel(self, 'Profit/Loss', self.cashout.var.get() - self.cashin.var.get())
         # binds keypresses to updating the ammount
-        parent.bind('<Key>', lambda _: self.profit_loss.var.set(self.cashout.var.get() - self.cashin.var.get()))
+        parent.bind('<Key>', lambda _: self.profit_loss.var.set(f'{(self.cashout.var.get() - self.cashin.var.get()):.2f}'))
         self.profit_loss.pack(fill='x')
         
         # adds the note entry
@@ -369,11 +370,20 @@ class ImageButtons(ttk.Frame):
         parent.pointer = min((parent.pointer+1), (len(parent.imgs)-1))
         # updates the image display
         parent.display_image()
+        if parent.imgs[parent.pointer][0] in parent.play_imgs:
+            self.add_button.configure(state='disabled')
+        else:
+            self.add_button.configure(state='normal')
     
     def prev_button_command(self, parent):
         # decreases the pointer by one to the minimum of 0
         parent.pointer = max((parent.pointer-1), 0)
+        # updates the image display
         parent.display_image()
+        if parent.imgs[parent.pointer][0] in parent.play_imgs:
+            self.add_button.configure(state='disabled')
+        else:
+            self.add_button.configure(state='normal')
     
     def start_button_command(self, parent):
         # does nothing if there are no images
@@ -494,7 +504,7 @@ class ImageButtons(ttk.Frame):
             return
         
         # gets the path of the image to be deleted
-        path = parent.imgs[parent.pointer]['path']
+        path = parent.imgs[parent.pointer][0]
         # opens a confirmation that you want to delete the image
         confirmation = Messagebox.show_question(f'Are you sure you want to delete this image:\n{path}',
                                                 'Image Deletion Confirmation',
@@ -525,6 +535,9 @@ class ImageButtons(ttk.Frame):
         
         # gets path of the image to be removed from the play
         path = parent.imgs[parent.pointer][0]
+        
+        new_path = join(dirname(path), fr'Unsorted')
+        move(path, new_path)
         
         # removes the image from the start entry, end entry, and play images table
         if parent.entry_wigits.start_entry.var.get() == path:
