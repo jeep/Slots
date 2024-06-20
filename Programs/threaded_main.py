@@ -202,7 +202,7 @@ class App(ttk.Window):
         initial_state = self.entry_wigits.initial_state.get_text()
         cash_out = self.entry_wigits.cashout.var.get()
         note = self.entry_wigits.note.get_text()
-
+        
         new_path = join(dirname(self.entry_wigits.start_entry.var.get()), f'Sorted/{date}')
         
         try:
@@ -214,6 +214,8 @@ class App(ttk.Window):
         end_img = move(self.entry_wigits.end_entry.var.get(), new_path)
         other = [move(path, new_path) for path in self.play_imgs]
         
+        
+        date = f'{date[:4]}-{date[4:6]}-{date[6:]}'
         values = [casino, date, machine, cash_in, bet, play_type, initial_state, cash_out, note, start_img, end_img, other]
         
         self.imgs = [d for d in self.imgs if ((d[0] not in other) and (d[0] != start_img) and (d[0] != end_img))]
