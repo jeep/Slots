@@ -39,6 +39,8 @@ def no_tab(_, parent):
     parent.focus_get().tk_focusNext().focus()
     return 'break'
 
+def no_shift_tab(_, parent):
+    parent.focus_get().tk_focusPrev().focus()
 
 class App(ttk.Window):
     def __init__(self):
@@ -100,9 +102,6 @@ class App(ttk.Window):
         self.bind('<FocusOut>', lambda _: self.check_save_valid())
         # binds CTRL-s to save the current play
         self.bind('<Control-s>', lambda _: self.save())
-        
-        self.image_buttons.prev_button.configure(state='disabled')
-        self.image_buttons.next_button.configure(state='disabled')
     
     def make_menu(self):
         # creates the menu wigit
@@ -140,12 +139,10 @@ class App(ttk.Window):
         self.display_image()
         
         self.image_buttons.save_button.configure(state='disabled')
-        self.add_button.configure(state='normal')
-        self.start_button.configure(state='normal')
-        self.end_button.configure(state='normal')
-        self.remove_button.configure(state='disabled')
-        self.image_buttons.prev_button.configure(state='disabled')
-        self.image_buttons.next_button.configure(state='normal')
+        self.image_buttons.add_button.configure(state='normal')
+        self.image_buttons.start_button.configure(state='normal')
+        self.image_buttons.end_button.configure(state='normal')
+        self.image_buttons.remove_button.configure(state='disabled')
     
     def add_casino(self):
         # opens a window to ask for a casino
@@ -208,6 +205,11 @@ class App(ttk.Window):
 
         new_path = join(dirname(self.entry_wigits.start_entry.var.get()), f'Sorted/{date}')
         
+        try:
+            makedirs(new_path, exist_ok=False)
+        except Exception:
+            pass
+        
         start_img = move(self.entry_wigits.start_entry.var.get(), new_path)
         end_img = move(self.entry_wigits.end_entry.var.get(), new_path)
         other = [move(path, new_path) for path in self.play_imgs]
@@ -239,13 +241,12 @@ class App(ttk.Window):
         
         self.entry_wigits.update_table(self)
         self.pointer = 0
-        self.image_buttons.prev_button.configure(state='disabled')
         self.display_image()
         
-        self.add_button.configure(state='normal')
-        self.start_button.configure(state='normal')
-        self.end_button.configure(state='normal')
-        self.remove_button.configure(state='disabled')
+        self.image_buttons.add_button.configure(state='normal')
+        self.image_buttons.start_button.configure(state='normal')
+        self.image_buttons.end_button.configure(state='normal')
+        self.image_buttons.remove_button.configure(state='disabled')
         
         # resets the save button to disabled
         self.image_buttons.save_button.configure(state='disabled')
@@ -314,6 +315,7 @@ class EntryWigits(ttk.Frame):
         # adds the initial state entry
         self.initial_state = LargeEntryLabel(self, 'Initial State')
         self.initial_state.text.bind('<Tab>', lambda _: no_tab(_, parent))
+        self.initial_state.text.bind('<Shift-Tab>', lambda _: no_shift_tab(_, parent))
         self.initial_state.pack(fill='x')
         
         # adds the cash out entry, only allows float-likes
@@ -329,6 +331,7 @@ class EntryWigits(ttk.Frame):
         # adds the note entry
         self.note = LargeEntryLabel(self, 'Note', height=8)
         self.note.text.bind('<Tab>', lambda _: no_tab(_, parent))
+        self.note.text.bind('<Shift-Tab>', lambda _: no_shift_tab(_, parent))
         self.note.pack(fill='x')
         
         # adds the start image entry, readonly so you cannot enter your own values
@@ -392,17 +395,11 @@ class ImageButtons(ttk.Frame):
         self.delete_button.grid(column=1, row=3, sticky='nsew', padx=(6, 0), pady=(6, 0))
 
     def next_button_command(self, parent):
-        self.next_button.configure(state='disabled')
         
         # increases the pointer by one to the max of the length of the image list
         parent.pointer = min((parent.pointer+1), (len(parent.imgs)-1))
         # updates the image display
         parent.display_image()
-        
-        if parent.pointer == (len(parent.imgs)-1):
-            self.next_button.configure(state='disabled')
-        else:
-            self.next_button.configure(state='normal')
         
         if ((parent.imgs[parent.pointer][0] in parent.play_imgs) or
             (parent.entry_wigits.start_entry.var.get() == parent.imgs[parent.pointer][0]) or 
@@ -419,17 +416,11 @@ class ImageButtons(ttk.Frame):
             self.remove_button.configure(state='disabled')
     
     def prev_button_command(self, parent):
-        self.prev_button.configure(state='disabled')
         
         # decreases the pointer by one to the minimum of 0
         parent.pointer = max((parent.pointer-1), 0)
         # updates the image display
         parent.display_image()
-        
-        if parent.pointer == 0:
-            self.prev_button.configure(state='disabled')
-        else:
-            self.prev_button.configure(state='normal')
         
         if ((parent.imgs[parent.pointer][0] in parent.play_imgs) or
             (parent.entry_wigits.start_entry.var.get() == parent.imgs[parent.pointer][0]) or 
