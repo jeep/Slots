@@ -230,11 +230,9 @@ class EntryWigits(ttk.Frame):
         
         self.cashin = MoneyEntryLabel(self, 'Cash In')
         self.cashin.pack(fill='x')
-        self.cashin.bind('<FocusIn>', lambda _: self.cashin.entry.selection_range(0, ttk.END))
         
         self.bet = MoneyEntryLabel(self, 'Bet')
         self.bet.pack(fill='x')
-        self.bet.bind('<FocusIn>', lambda _: self.bet.entry.selection_range(0, ttk.END))
         
         self.play_type = ComboboxLabel(self, 'Play Type', parent.play_type, state='readonly')
         self.play_type.pack(fill='x')
@@ -244,7 +242,6 @@ class EntryWigits(ttk.Frame):
         
         self.cashout = MoneyEntryLabel(self, 'Cash Out')
         self.cashout.pack(fill='x')
-        self.cashout.bind('<FocusIn>', lambda _: self.cashout.entry.selection_range(0, ttk.END))
         
         self.profit_loss = LabelLabel(self, 'Prophet/Loss', self.cashout.var.get() - self.cashin.var.get())
         parent.bind('<Key>', lambda _: self.profit_loss.var.set(self.cashout.var.get() - self.cashin.var.get()))

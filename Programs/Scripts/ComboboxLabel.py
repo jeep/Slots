@@ -17,5 +17,3 @@ class ComboboxLabel(ttk.Frame):
     
     def update_combobox(self, new_values):
         self.combobox.configure(completevalues=new_values)
-        #self.combobox['values'] = new_values
-        #self.combobox['completevalues'] = new_values

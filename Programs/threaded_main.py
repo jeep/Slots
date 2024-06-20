@@ -51,7 +51,7 @@ class App(ttk.Window):
             # reads the casino entry values from the csv file
             casino_values = list(csv.reader(csvfile))
             # gets the values in a readable format, also flattens any lists
-            self.casino_values = [val for sublist in casino_values for val in sublist]
+            self.casino_values = [val.strip() for sublist in casino_values for val in sublist if (val.strip() != '')]
         
         # gets the values that goes in the machine entry field
         with open(f'machine_entry_values.csv', 'r') as csvfile:
@@ -96,7 +96,7 @@ class App(ttk.Window):
         self.bind('<FocusIn>', lambda _: self.check_save_valid())
         self.bind('<FocusOut>', lambda _: self.check_save_valid())
         # binds CTRL-s to save the current play
-        self.bind('Control-s', lambda _: self.save())
+        self.bind('<Control-s>', lambda _: self.save())
     
     def make_menu(self):
         # creates the menu wigit
@@ -189,15 +189,17 @@ class App(ttk.Window):
         initial_state = self.entry_wigits.initial_state.get_text()
         cash_out = self.entry_wigits.cashout.var.get()
         note = self.entry_wigits.note.get_text()
-        start_img = self.entry_wigits.start_entry.var.get()
-        end_img = self.entry_wigits.end_entry.var.get() 
-        other = self.play_imgs
-        # makes all the values into a list
+
+        new_path = join(dirname(self.entry_wigits.start_entry.var.get()), f'Sorted/{date}')
+        
+        start_img = move(self.entry_wigits.start_entry.var.get(), new_path)
+        end_img = move(self.entry_wigits.end_entry.var.get(), new_path)
+        other = [move(path, new_path) for path in self.play_imgs]
+        
         values = [casino, date, machine, cash_in, bet, play_type, initial_state, cash_out, note, start_img, end_img, other]
         
-        
         self.imgs = [d for d in self.imgs if ((d[0] not in other) and (d[0] != start_img) and (d[0] != end_img))]
-        
+        self.imgs = sorted(self.imgs, key=lambda item: item[2])
         
         # gets the path to the data save
         file_path = join(dirname(dirname(__file__)), 'Data\\slots_data.csv')
@@ -209,17 +211,25 @@ class App(ttk.Window):
         # clears all entry values
         self.entry_wigits.date.var.set('')
         self.entry_wigits.machine.var.set('')
-        self.entry_wigits.cashin.var.set('0')
-        self.entry_wigits.bet.var.set('0')
+        self.entry_wigits.cashin.var.set(cash_out)
+        self.entry_wigits.bet.var.set(0)
         self.entry_wigits.play_type.var.set('')
         self.entry_wigits.initial_state.clear()
-        self.entry_wigits.cashout.var.set('0')
+        self.entry_wigits.cashout.var.set(0)
         self.entry_wigits.note.clear()
         self.entry_wigits.start_entry.var.set('')
         self.entry_wigits.end_entry.var.set('') 
         self.play_imgs.clear()
         
         self.entry_wigits.update_table(self)
+        self.pointer = 0
+        self.image_buttons.prev_button.configure(state='disabled')
+        self.display_image()
+        
+        self.add_button.configure(state='normal')
+        self.start_button.configure(state='normal')
+        self.end_button.configure(state='normal')
+        self.remove_button.configure(state='disabled')
         
         # resets the save button to disabled
         self.image_buttons.save_button.configure(state='disabled')
@@ -269,23 +279,19 @@ class EntryWigits(ttk.Frame):
         self.date = EntryLabel(self, 'Date', state='readonly')
         self.date.pack(fill='x')
         
-        # adds the machine entry, readonly so you cannot enter your own values
-        self.machine = ComboboxLabel(self, 'Machine', parent.machine_values, state='readonly')
+        # adds the machine entry
+        self.machine = ComboboxLabel(self, 'Machine', parent.machine_values)
         self.machine.pack(fill='x')
         
         # adds the cash in entry label, only allows float-likes
         self.cashin = MoneyEntryLabel(self, 'Cash In')
         self.cashin.pack(fill='x')
-        # binds entering the entry to selecting all characters
-        self.cashin.bind('<FocusIn>', lambda _: self.cashin.entry.selection_range(0, ttk.END))
         
         # adds the bet entry label, only allows float-likes
         self.bet = MoneyEntryLabel(self, 'Bet')
         self.bet.pack(fill='x')
-        # binds entering the entry to selecting all characters
-        self.bet.bind('<FocusIn>', lambda _: self.bet.entry.selection_range(0, ttk.END))
         
-        # adds the play type entry, readonly so you cannot enter your own values
+        # adds the play type entry
         self.play_type = ComboboxLabel(self, 'Play Type', parent.play_type)
         self.play_type.pack(fill='x')
         
@@ -296,8 +302,6 @@ class EntryWigits(ttk.Frame):
         # adds the cash out entry, only allows float-likes
         self.cashout = MoneyEntryLabel(self, 'Cash Out')
         self.cashout.pack(fill='x')
-        # binds entering the entry to selecting all characters
-        self.cashout.bind('<FocusIn>', lambda _: self.cashout.entry.selection_range(0, ttk.END))
         
         # adds the profit loss amount
         self.profit_loss = LabelLabel(self, 'Profit/Loss', self.cashout.var.get() - self.cashin.var.get())
@@ -374,133 +378,103 @@ class ImageButtons(ttk.Frame):
         parent.pointer = min((parent.pointer+1), (len(parent.imgs)-1))
         # updates the image display
         parent.display_image()
-        if parent.imgs[parent.pointer][0] in parent.play_imgs:
+        
+        if parent.pointer == (len(parent.imgs)-1):
+            self.next_button.configure(state='disabled')
+        else:
+            self.next_button.configure(state='normal')
+        
+        if ((parent.imgs[parent.pointer][0] in parent.play_imgs) or
+            (parent.entry_wigits.start_entry.var.get() == parent.imgs[parent.pointer][0]) or 
+            (parent.entry_wigits.end_entry.var.get() == parent.imgs[parent.pointer][0])):
+            
             self.add_button.configure(state='disabled')
+            self.start_button.configure(state='disabled')
+            self.end_button.configure(state='disabled')
+            self.remove_button.configure(state='normal')
         else:
             self.add_button.configure(state='normal')
+            self.start_button.configure(state='normal')
+            self.end_button.configure(state='normal')
+            self.remove_button.configure(state='disabled')
     
     def prev_button_command(self, parent):
         # decreases the pointer by one to the minimum of 0
         parent.pointer = max((parent.pointer-1), 0)
         # updates the image display
         parent.display_image()
-        if parent.imgs[parent.pointer][0] in parent.play_imgs:
+        
+        if parent.pointer == 0:
+            self.prev_button.configure(state='disabled')
+        else:
+            self.prev_button.configure(state='normal')
+        
+        if ((parent.imgs[parent.pointer][0] in parent.play_imgs) or
+            (parent.entry_wigits.start_entry.var.get() == parent.imgs[parent.pointer][0]) or 
+            (parent.entry_wigits.end_entry.var.get() == parent.imgs[parent.pointer][0])):
+            
             self.add_button.configure(state='disabled')
+            self.start_button.configure(state='disabled')
+            self.end_button.configure(state='disabled')
+            self.remove_button.configure(state='normal')
         else:
             self.add_button.configure(state='normal')
+            self.start_button.configure(state='normal')
+            self.end_button.configure(state='normal')
+            self.remove_button.configure(state='disabled')
     
     def start_button_command(self, parent):
-        # does nothing if there are no images
         if len(parent.imgs) == 0:
             return
         
-        # gets the path of the current image
-        old_path = parent.imgs[parent.pointer][0]
+        path = parent.imgs[parent.pointer][0]
+        parent.entry_wigits.start_entry.var.set(path)
         
-        # does nothing if the image is already in
-        if 'Sorted' in old_path:
-            return
-        
-        # gets the file name from the path
-        file_name = basename(old_path)
-        
-        # sets the date to the date of the image
         parent.entry_wigits.date.var.set(parent.imgs[parent.pointer][2][:8])
         
-        # makes the new path
-        new_path = join(dirname(dirname(old_path)), fr'Sorted\{parent.imgs[parent.pointer][2][:8]}')
-        
-        # makes a directory at the new path if it does not exist
-        try: makedirs(new_path)
-        except FileExistsError: pass
-        
-        # moves the image to the new path
-        move(old_path, new_path)
-        
-        # sets the image path in the image list to the new path
-        parent.imgs[parent.pointer][0] = join(new_path, file_name)
-        # resorts the image list by date
-        parent.imgs = list(sorted(parent.imgs, key=lambda item: item[2]))
-        
-        # sets the start entry to the new path of the image
-        parent.entry_wigits.start_entry.var.set(parent.imgs[parent.pointer][0])
+        self.add_button.configure(state='disabled')
+        self.end_button.configure(state='disabled')
+        self.start_button.configure(state='disabled')
+        self.remove_button.configure(state='normal')
     
     def end_button_command(self, parent):
-        # does nothing if there is no start image
         if parent.entry_wigits.start_entry.var.get() == '':
             return
         
-        # does nothing if ther are no images
         if len(parent.imgs) == 0:
             return
         
-        # gets the path of the current image
-        old_path = parent.imgs[parent.pointer][0]
+        path = parent.imgs[parent.pointer][0]
+        parent.entry_wigits.start_entry.var.set(path)
         
-        # does nothing if the image is already in
-        if 'Sorted' in old_path:
-            return
+        parent.entry_wigits.date.var.set(parent.imgs[parent.pointer][2][:8])
         
-        # gets the file name from the path
-        file_name = basename(old_path)
-        
-        # makes the new path
-        new_path = join(dirname(dirname(old_path)), fr'Sorted\{parent.entry_wigits.date.var.get()}')
-        
-        # makes a directory at the new path if it does not exist
-        try: makedirs(new_path)
-        except FileExistsError: pass
-        
-        # moves the image to the new path
-        move(old_path, new_path)
-        
-        # sets the image path in the image list to the new path
-        parent.imgs[parent.pointer][0] = join(new_path, file_name)
-        # resorts the image list by date
-        parent.imgs = list(sorted(parent.imgs, key=lambda item: item[2]))
-        
-        # sets the end entry to the new path of the image
         parent.entry_wigits.end_entry.var.set(parent.imgs[parent.pointer][0])
+        
+        self.add_button.configure(state='disabled')
+        self.end_button.configure(state='disabled')
+        self.start_button.configure(state='disabled')
+        self.remove_button.configure(state='normal')
     
     def add_button_command(self, parent):
-        # does nothing if there is no start image
         if parent.entry_wigits.start_entry.var.get() == '':
             return
         
-        # does nothing if there are no images
         if len(parent.imgs) == 0:
             return
         
-        # gets the path of the current image
-        old_path = parent.imgs[parent.pointer][0]
+        path = parent.imgs[parent.pointer][0]
+        parent.entry_wigits.start_entry.var.set(path)
         
-        # does nothing if the image is already in
-        if 'Sorted' in old_path:
-            return
         
-        # gets the file name from the path
-        file_name = basename(old_path)
-        
-        # makes the new path
-        new_path = join(dirname(dirname(old_path)), fr'Sorted\{parent.entry_wigits.date.var.get()}')
-        
-        # makes a directory at the new path if it does not exist
-        try: makedirs(new_path)
-        except FileExistsError: pass
-        
-        # moves the image to the new path
-        move(old_path, new_path)
-        
-        # sets the image path in the image list to the new path
-        parent.imgs[parent.pointer][0] = join(new_path, file_name)
-        # resorts the image list by date
-        parent.imgs = list(sorted(parent.imgs, key=lambda item: item[2]))
-        
-        # adds the new image path to the play images list
         parent.play_imgs.append(parent.imgs[parent.pointer][0])
         
-        # updates the table
         parent.entry_wigits.update_table(parent)
+        
+        self.add_button.configure(state='disabled')
+        self.end_button.configure(state='disabled')
+        self.start_button.configure(state='disabled')
+        self.remove_button.configure(state='normal')
     
     def delete_button_command(self, parent):
         # does nothing if there are no images
@@ -539,9 +513,6 @@ class ImageButtons(ttk.Frame):
         
         # gets path of the image to be removed from the play
         path = parent.imgs[parent.pointer][0]
-        
-        new_path = join(dirname(path), fr'Unsorted')
-        move(path, new_path)
         
         # removes the image from the start entry, end entry, and play images table
         if parent.entry_wigits.start_entry.var.get() == path:
