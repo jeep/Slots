@@ -35,6 +35,9 @@ import csv
 # allows pillow to open HEIC images, using 8 threads
 register_heif_opener(decode_threads=8, thumbnails=False)
 
+def no_tab(_, parent):
+    parent.focus_get().tk_focusNext().focus()
+    return 'break'
 
 
 class App(ttk.Window):
@@ -97,6 +100,9 @@ class App(ttk.Window):
         self.bind('<FocusOut>', lambda _: self.check_save_valid())
         # binds CTRL-s to save the current play
         self.bind('<Control-s>', lambda _: self.save())
+        
+        self.image_buttons.prev_button.configure(state='disabled')
+        self.image_buttons.next_button.configure(state='disabled')
     
     def make_menu(self):
         # creates the menu wigit
@@ -131,7 +137,15 @@ class App(ttk.Window):
         # sorts images in the image list by date
         self.imgs = sorted(self.imgs, key=lambda item: item[2])
         # displays the oldest image
-        self.display_image()   
+        self.display_image()
+        
+        self.image_buttons.save_button.configure(state='disabled')
+        self.add_button.configure(state='normal')
+        self.start_button.configure(state='normal')
+        self.end_button.configure(state='normal')
+        self.remove_button.configure(state='disabled')
+        self.image_buttons.prev_button.configure(state='disabled')
+        self.image_buttons.next_button.configure(state='normal')
     
     def add_casino(self):
         # opens a window to ask for a casino
@@ -177,6 +191,8 @@ class App(ttk.Window):
     def save(self):
         # does nothing if the save button is disabled
         if self.image_buttons.save_button.state() == 'disabled':
+            return
+        if len(self.imgs) == 0:
             return
         
         # gets all entry values
@@ -297,6 +313,7 @@ class EntryWigits(ttk.Frame):
         
         # adds the initial state entry
         self.initial_state = LargeEntryLabel(self, 'Initial State')
+        self.initial_state.text.bind('<Tab>', lambda _: no_tab(_, parent))
         self.initial_state.pack(fill='x')
         
         # adds the cash out entry, only allows float-likes
@@ -311,6 +328,7 @@ class EntryWigits(ttk.Frame):
         
         # adds the note entry
         self.note = LargeEntryLabel(self, 'Note', height=8)
+        self.note.text.bind('<Tab>', lambda _: no_tab(_, parent))
         self.note.pack(fill='x')
         
         # adds the start image entry, readonly so you cannot enter your own values

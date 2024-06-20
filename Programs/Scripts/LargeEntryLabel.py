@@ -8,7 +8,7 @@ class LargeEntryLabel(ttk.Frame):
         self.label = ttk.Label(self, text=label_text)
         self.label.pack(side='left', )
         
-        self.text = ScrolledText(self, autohide=True, width=width, height=height)
+        self.text = ttk.Text(self, width=width, height=height)#, autohide=True
         self.text.pack(side='right')
     
     def get_text(self):
