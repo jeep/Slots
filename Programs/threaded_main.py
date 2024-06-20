@@ -195,6 +195,9 @@ class App(ttk.Window):
         # makes all the values into a list
         values = [casino, date, machine, cash_in, bet, play_type, initial_state, cash_out, note, start_img, end_img, other]
         
+        self.imgs = [d for d in self.imgs if ((d[0] not in other) and (d[0] != start_img) and (d[0] != end_img))]
+        
+        
         # gets the path to the data save
         file_path = join(dirname(dirname(__file__)), 'Data\\slots_data.csv')
         # writes the entry values to the path
