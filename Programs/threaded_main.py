@@ -41,6 +41,7 @@ def no_tab(_, parent):
 
 def no_shift_tab(_, parent):
     parent.focus_get().tk_focusPrev().focus()
+    return 'break'
 
 class App(ttk.Window):
     def __init__(self):
@@ -161,6 +162,9 @@ class App(ttk.Window):
             self.machine_values.append(new_machine)
 
     def display_image(self):
+        if len(self.imgs) == 0:
+            return
+        
         # opens the image at the current pointer
         with Image.open(self.imgs[self.pointer][0]) as image:
             # reduces the image size if it larger than 450 by 450 pixels
@@ -329,7 +333,7 @@ class EntryWigits(ttk.Frame):
         self.cashout.pack(fill='x')
         
         # adds the profit loss amount
-        self.profit_loss = LabelLabel(self, 'Profit/Loss', self.cashout.get_var() - self.cashin.get_var())
+        self.profit_loss = LabelLabel(self, 'Profit/Loss', 0.00)
         # binds keypresses to updating the ammount
         parent.bind('<Key>', lambda _: self.profit_loss.var.set(f'{(self.cashout.get_var() - self.cashin.get_var()):.2f}'))
         self.profit_loss.pack(fill='x')
@@ -401,11 +405,14 @@ class ImageButtons(ttk.Frame):
         self.delete_button.grid(column=1, row=3, sticky='nsew', padx=(6, 0), pady=(6, 0))
 
     def next_button_command(self, parent):
+        self.next_button.configure(state='disabled')
         
         # increases the pointer by one to the max of the length of the image list
         parent.pointer = min((parent.pointer+1), (len(parent.imgs)-1))
         # updates the image display
         parent.display_image()
+        
+        self.next_button.configure(state='normal')
         
         if ((parent.imgs[parent.pointer][0] in parent.play_imgs) or
             (parent.entry_wigits.start_entry.var.get() == parent.imgs[parent.pointer][0]) or 
@@ -422,11 +429,14 @@ class ImageButtons(ttk.Frame):
             self.remove_button.configure(state='disabled')
     
     def prev_button_command(self, parent):
+        self.prev_button.configure(state='disabled')
         
         # decreases the pointer by one to the minimum of 0
         parent.pointer = max((parent.pointer-1), 0)
         # updates the image display
         parent.display_image()
+        
+        self.prev_button.configure(state='normal')
         
         if ((parent.imgs[parent.pointer][0] in parent.play_imgs) or
             (parent.entry_wigits.start_entry.var.get() == parent.imgs[parent.pointer][0]) or 
