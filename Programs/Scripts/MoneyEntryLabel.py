@@ -1,5 +1,9 @@
 import ttkbootstrap as ttk
 
+def period(_, parent):
+    parent.entry.insert(ttk.INSERT, '0.')
+    return 'break'
+
 class MoneyEntryLabel(ttk.Frame):
     def __init__(self, parent, label_text=''):
         
@@ -10,6 +14,8 @@ class MoneyEntryLabel(ttk.Frame):
         self.var = ttk.DoubleVar(value=0)
         self.entry = ttk.Entry(self, textvariable=self.var, validate='key', validatecommand=(self.register(self.validate), '%P'))
         self.entry.pack(side='right')
+        
+        self.entry.bind('.', lambda _: period(_, self))
     
     def validate(self, inp):
         try:
