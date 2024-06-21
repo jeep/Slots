@@ -19,7 +19,7 @@ class MoneyEntryLabel(ttk.Frame):
     
     def validate(self, inp):
         try:
-            if inp == '':
+            if str(inp) == '':
                 return True
 
             float(inp)
@@ -32,3 +32,10 @@ class MoneyEntryLabel(ttk.Frame):
         except:
             return False
         return True
+    
+    def get_var(self):
+        try:
+            val = self.var.get()
+        except Exception:
+            val = 0
+        return val

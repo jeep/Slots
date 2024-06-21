@@ -203,7 +203,14 @@ class App(ttk.Window):
         cash_out = self.entry_wigits.cashout.var.get()
         note = self.entry_wigits.note.get_text()
         
-        new_path = join(dirname(self.entry_wigits.start_entry.var.get()), f'Sorted/{date}')
+        start_img = self.entry_wigits.start_entry.var.get()
+        end_img = self.entry_wigits.end_entry.var.get()
+        other = self.play_imgs
+        
+        self.imgs = [d for d in self.imgs if ((d[0] not in other) and (d[0] != start_img) and (d[0] != end_img))]
+        self.imgs = sorted(self.imgs, key=lambda item: item[2])
+        
+        new_path = join(dirname(dirname(self.entry_wigits.start_entry.var.get())), f'Sorted/{date}')
         
         try:
             makedirs(new_path, exist_ok=False)
@@ -217,9 +224,6 @@ class App(ttk.Window):
         
         date = f'{date[:4]}-{date[4:6]}-{date[6:]}'
         values = [casino, date, machine, cash_in, bet, play_type, initial_state, cash_out, note, start_img, end_img, other]
-        
-        self.imgs = [d for d in self.imgs if ((d[0] not in other) and (d[0] != start_img) and (d[0] != end_img))]
-        self.imgs = sorted(self.imgs, key=lambda item: item[2])
         
         # gets the path to the data save
         file_path = join(dirname(dirname(__file__)), 'Data\\slots_data.csv')
@@ -325,9 +329,9 @@ class EntryWigits(ttk.Frame):
         self.cashout.pack(fill='x')
         
         # adds the profit loss amount
-        self.profit_loss = LabelLabel(self, 'Profit/Loss', self.cashout.var.get() - self.cashin.var.get())
+        self.profit_loss = LabelLabel(self, 'Profit/Loss', self.cashout.get_var() - self.cashin.get_var())
         # binds keypresses to updating the ammount
-        parent.bind('<Key>', lambda _: self.profit_loss.var.set(f'{(self.cashout.var.get() - self.cashin.var.get()):.2f}'))
+        parent.bind('<Key>', lambda _: self.profit_loss.var.set(f'{(self.cashout.get_var() - self.cashin.get_var()):.2f}'))
         self.profit_loss.pack(fill='x')
         
         # adds the note entry
@@ -355,7 +359,7 @@ class EntryWigits(ttk.Frame):
         # adds all play imgs to the table
         for item in parent.play_imgs:
             self.table.insert(parent='', index=ttk.END, values=item)
-    
+        
 class ImageButtons(ttk.Frame):
     def __init__(self, parent):
         # initializes the frame
@@ -460,11 +464,7 @@ class ImageButtons(ttk.Frame):
             return
         
         path = parent.imgs[parent.pointer][0]
-        parent.entry_wigits.start_entry.var.set(path)
-        
-        parent.entry_wigits.date.var.set(parent.imgs[parent.pointer][2][:8])
-        
-        parent.entry_wigits.end_entry.var.set(parent.imgs[parent.pointer][0])
+        parent.entry_wigits.end_entry.var.set(path)
         
         self.add_button.configure(state='disabled')
         self.end_button.configure(state='disabled')
@@ -479,10 +479,9 @@ class ImageButtons(ttk.Frame):
             return
         
         path = parent.imgs[parent.pointer][0]
-        parent.entry_wigits.start_entry.var.set(path)
         
         
-        parent.play_imgs.append(parent.imgs[parent.pointer][0])
+        parent.play_imgs.append(path)
         
         parent.entry_wigits.update_table(parent)
         
