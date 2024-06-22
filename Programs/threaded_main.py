@@ -19,7 +19,7 @@ from Scripts.get_imgs_data import multi_get_img_data
 
 # imports file maipulations
 from os import makedirs, remove
-from os.path import join, dirname, basename, join
+from os.path import join, dirname, join
 
 from shutil import move
 
@@ -67,6 +67,7 @@ class App(ttk.Window):
             
         # the pointer that points to the current image
         self.pointer = 0
+        self.scale = 10
         
         # initializes the window
         super().__init__()
@@ -85,15 +86,18 @@ class App(ttk.Window):
         
         # creates the data entry wigits and places them on the left
         self.entry_wigits = EntryWigits(self)
-        self.entry_wigits.place(x=5, y=5)
+        self.entry_wigits.pack(side='left', padx=5, pady=5, fill='both')
         
         # creates the image display and places them on the right
-        self.image_display = ImageDisplay(self)
-        self.image_display.place(x=450, y=5)
+        image_frame = ttk.Frame(self)
+        
+        self.image_display = ImageDisplay(image_frame)
         
         # creates the buttons that control the play and places them in the middle
-        self.image_buttons = ImageButtons(self)
-        self.image_buttons.place(x=220, y=5)
+        self.image_buttons = ImageButtons(image_frame, self)
+        self.image_buttons.pack(side='top', padx=5, pady=5, anchor='nw')
+        self.image_display.pack(side='top', padx=5, pady=5)
+        image_frame.pack(side='left', fill='both')
         
         # creates the file menu at the top
         self.make_menu()
@@ -118,6 +122,10 @@ class App(ttk.Window):
         file_menu.add_command(label='Add Casino', command=self.add_casino)
         # adds a button that will open a sub window to enter a machine in
         file_menu.add_command(label='Add Machine', command=self.add_machine)
+        file_menu.add_separator()
+        
+        file_menu.add_command(label='Set Scale', command=self.set_scale)
+        
         menu.add_cascade(label='File', menu=file_menu)
     
     def open_folder(self):
@@ -160,21 +168,24 @@ class App(ttk.Window):
         # adds the new value to the machine values list if it is not None and not in it already
         if (new_machine is not None) and (new_machine not in self.machine_values):
             self.machine_values.append(new_machine)
+    
+    def set_scale(self):
+        scale = Querybox.get_integer('Enter a integer scale', 'Set scale', self.scale, 1)
+        if scale is None:
+            pass
+        else:
+            self.scale = scale
+        self.display_image()
 
     def display_image(self):
         if len(self.imgs) == 0:
             return
         
+        self.image_display.canvas.delete('all')
         # opens the image at the current pointer
         with Image.open(self.imgs[self.pointer][0]) as image:
-            # reduces the image size if it larger than 450 by 450 pixels
-            if image.size[0] >= 450 or image.size[1] >= 450:
-                # reduces the image by a factor of 10 if it is a .HEIC or .PNG file
-                if self.imgs[self.pointer][1] =='.HEIC' or self.imgs[self.pointer][1] == '.PNG':
-                    image = image.reduce(10)
-                # otherwise reduces the image by a factor of 2
-                else:
-                    image = image.reduce(5)
+            
+            image = image.reduce(self.scale)
             
             global imagetk
             # turns the image into a image that tkinter can display
@@ -184,8 +195,6 @@ class App(ttk.Window):
             x, y = image.size
             x, y = x/2, y/2
             
-            # clears the image canvas
-            self.image_display.canvas.delete('all')
             # adds the image to the canvas
             self.image_display.canvas.create_image(x, y, image=imagetk)
     
@@ -375,54 +384,54 @@ class EntryWigits(ttk.Frame):
             self.table.insert(parent='', index=ttk.END, values=item)
         
 class ImageButtons(ttk.Frame):
-    def __init__(self, parent):
+    def __init__(self, parent, window):
         # initializes the frame
         super().__init__(master=parent)
         # adds 2 columns and 4 rows
-        self.columnconfigure((0, 1), weight=1, uniform='a')
-        self.rowconfigure((0, 1, 2, 3), weight=1, uniform='a')
+        self.columnconfigure((0, 1, 2), weight=1, uniform='a')
+        self.rowconfigure((0, 1, 2), weight=1, uniform='a')
         
         # adds the previous button that calls self.prev_button_command when pressed
-        self.prev_button = ttk.Button(self, text='Prev', command=lambda: self.prev_button_command(parent))
-        self.prev_button.grid(column=0, row=0, sticky='nsew', padx=(0, 6), pady=(0, 6))
+        self.prev_button = ttk.Button(self, text='Prev', command=lambda: self.prev_button_command(window))
+        self.prev_button.grid(column=0, row=0, sticky='nsew', padx=(0, 4), pady=(0, 4))
         
         # adds the next button that calls self.next_button_command when pressed
-        self.next_button = ttk.Button(self, text='Next', command=lambda: self.next_button_command(parent))
-        self.next_button.grid(column=1, row=0, sticky='nsew', padx=(6, 0), pady=(0, 6))
+        self.next_button = ttk.Button(self, text='Next', command=lambda: self.next_button_command(window))
+        self.next_button.grid(column=1, row=0, sticky='nsew', padx=(4, 4), pady=(0, 4))
+        
+        self.return_button = ttk.Button(self, text='Return to Start', command=lambda: self.return_button_command(window))
+        self.return_button.grid(column=2, row=0, sticky='nsew', padx=(4, 0), pady=(0, 4))
         
         # adds the set start button that calls self.start_button_command when pressed
-        self.start_button = ttk.Button(self, text='Set Start', command=lambda: self.start_button_command(parent))
-        self.start_button.grid(column=0, row=1, sticky='nsew', padx=(0, 6), pady=(6, 6))
-        
-        # adds the set end button that calls self.end_button_command when pressed
-        self.end_button = ttk.Button(self, text='Set End', command=lambda: self.end_button_command(parent))
-        self.end_button.grid(column=1, row=1, sticky='nsew', padx=(6, 0), pady=(6, 6))
+        self.start_button = ttk.Button(self, text='Set Start', command=lambda: self.start_button_command(window))
+        self.start_button.grid(column=0, row=1, sticky='nsew', padx=(0, 4), pady=(4, 4))
         
         # adds the add image button that calls self.add_button_command when pressed
-        self.add_button = ttk.Button(self, text='Add Image', command=lambda: self.add_button_command(parent))
-        self.add_button.grid(column=0, row=2, sticky='nsew', padx=(0, 6), pady=(6, 6))
+        self.add_button = ttk.Button(self, text='Add Image', command=lambda: self.add_button_command(window))
+        self.add_button.grid(column=1, row=1, sticky='nsew', padx=(4, 4), pady=(4, 4))
         
-        # adds the remove image button that calls self.remove_button_command when pressed
-        self.remove_button = ttk.Button(self, text='Remove Image', command=lambda: self.remove_button_command(parent))
-        self.remove_button.grid(column=1, row=2, sticky='nsew', padx=(6, 0), pady=(6, 6))
+        # adds the set end button that calls self.end_button_command when pressed
+        self.end_button = ttk.Button(self, text='Set End', command=lambda: self.end_button_command(window))
+        self.end_button.grid(column=2, row=1, sticky='nsew', padx=(4, 0), pady=(4, 4))
         
         # adds the save button that calls parent.save when pressed
-        self.save_button = ttk.Button(self, text='Save Play', command=lambda: parent.save(), bootstyle='success')
-        self.save_button.grid(column=0, row=3, sticky='nsew', padx=(0, 6), pady=(6, 6))
+        self.save_button = ttk.Button(self, text='Save Play', command=lambda: window.save(), bootstyle='success')
+        self.save_button.grid(column=0, row=2, sticky='nsew', padx=(0, 4), pady=(4, 0))
+        
+        # adds the remove image button that calls self.remove_button_command when pressed
+        self.remove_button = ttk.Button(self, text='Remove Image', command=lambda: self.remove_button_command(window))
+        self.remove_button.grid(column=1, row=2, sticky='nsew', padx=(4, 4), pady=(4, 0))
         
         # adds the delete image button that calls self.delete_button_command when pressed
-        self.delete_button = ttk.Button(self, text='Delete Image', command=lambda: self.delete_button_command(parent), bootstyle='danger')
-        self.delete_button.grid(column=1, row=3, sticky='nsew', padx=(6, 0), pady=(6, 0))
+        self.delete_button = ttk.Button(self, text='Delete Image', command=lambda: self.delete_button_command(window), bootstyle='danger')
+        self.delete_button.grid(column=2, row=2, sticky='nsew', padx=(4, 0), pady=(4, 0))
 
     def next_button_command(self, parent):
-        self.next_button.configure(state='disabled')
         
         # increases the pointer by one to the max of the length of the image list
         parent.pointer = min((parent.pointer+1), (len(parent.imgs)-1))
         # updates the image display
         parent.display_image()
-        
-        self.next_button.configure(state='normal')
         
         if ((parent.imgs[parent.pointer][0] in parent.play_imgs) or
             (parent.entry_wigits.start_entry.var.get() == parent.imgs[parent.pointer][0]) or 
@@ -439,14 +448,30 @@ class ImageButtons(ttk.Frame):
             self.remove_button.configure(state='disabled')
     
     def prev_button_command(self, parent):
-        self.prev_button.configure(state='disabled')
         
         # decreases the pointer by one to the minimum of 0
         parent.pointer = max((parent.pointer-1), 0)
         # updates the image display
         parent.display_image()
         
-        self.prev_button.configure(state='normal')
+        if ((parent.imgs[parent.pointer][0] in parent.play_imgs) or
+            (parent.entry_wigits.start_entry.var.get() == parent.imgs[parent.pointer][0]) or 
+            (parent.entry_wigits.end_entry.var.get() == parent.imgs[parent.pointer][0])):
+            
+            self.add_button.configure(state='disabled')
+            self.start_button.configure(state='disabled')
+            self.end_button.configure(state='disabled')
+            self.remove_button.configure(state='normal')
+        else:
+            self.add_button.configure(state='normal')
+            self.start_button.configure(state='normal')
+            self.end_button.configure(state='normal')
+            self.remove_button.configure(state='disabled')
+    
+    def return_button_command(self, parent):
+        parent.pointer = 0
+        # updates the image display
+        parent.display_image()
         
         if ((parent.imgs[parent.pointer][0] in parent.play_imgs) or
             (parent.entry_wigits.start_entry.var.get() == parent.imgs[parent.pointer][0]) or 
@@ -562,7 +587,7 @@ class ImageDisplay(ttk.Frame):
         # initializes the frame
         super().__init__(master=parent)
         # creates the canvas with width 750 and height 750
-        self.canvas = ttk.Canvas(master=self, width=750, height=750)
+        self.canvas = ttk.Canvas(master=self, width=1500, height=1500)
         self.canvas.pack(fill='both')
 
 
