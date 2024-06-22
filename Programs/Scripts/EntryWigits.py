@@ -1,0 +1,118 @@
+import ttkbootstrap as ttk
+
+from Scripts.ComboboxLabel import ComboboxLabel
+from Scripts.EntryLabel import EntryLabel
+from Scripts.MoneyEntryLabel import MoneyEntryLabel
+from Scripts.LabelLabel import LabelLabel
+from Scripts.LargeEntryLabel import LargeEntryLabel
+
+def _no_tab(_, parent):
+    # focuses on the next wigit
+    parent.focus_get().tk_focusNext().focus()
+    return 'break'
+
+def _no_shift_tab(_, parent):
+    # focuses on the previous wigit
+    parent.focus_get().tk_focusPrev().focus()
+    return 'break'
+
+class EntryWigits(ttk.Frame):
+    def __init__(self, parent, window):
+        # initializes the frame
+        super().__init__(master=parent)
+        # creates a 'private' window variable
+        self._window = window
+        
+        # creates the entry fields
+        self._create_entries()
+        # places the entry fields onto the frame
+        self._place_entries()
+    
+    def _create_entries(self):
+        self._create_casino()
+        self._create_date()
+        self._create_machine()
+        self._create_cashin()
+        self._create_bet()
+        self._create_play_type()
+        self._create_initial_state()
+        self._create_cashout()
+        self._create_profit_loss()
+        self._create_note()
+        self._create_start_entry()
+        self._create_end_entry()
+        self._create_table()
+    
+    def _place_entries(self):
+        self.casino.pack(fill='x')
+        self.date.pack(fill='x')
+        self.machine.pack(fill='x')
+        self.cashin.pack(fill='x')
+        self.bet.pack(fill='x')
+        self.play_type.pack(fill='x')
+        self.initial_state.pack(fill='x')
+        self.cashout.pack(fill='x')
+        self.profit_loss.pack(fill='x')
+        self.note.pack(fill='x')
+        self.start_entry.pack(fill='x')
+        self.end_entry.pack(fill='x')
+        self.table.pack(fill='x')
+    
+    
+    def _create_casino(self):
+        self.casino = ComboboxLabel(self, 'Casino', self._window.casino_values, state='readonly')
+    
+    def _create_date(self):
+        self.date = EntryLabel(self, 'Date', state='readonly')
+    
+    def _create_machine(self):
+        self.machine = ComboboxLabel(self, 'Machine', self._window.machine_values)
+    
+    def _create_cashin(self):
+        self.cashin = MoneyEntryLabel(self, 'Cash In')
+    
+    def _create_bet(self):
+        self.bet = MoneyEntryLabel(self, 'Bet')
+    
+    def _create_play_type(self):
+        self.play_type = ComboboxLabel(self, 'Play Type', self._window.play_type)
+    
+    def _create_initial_state(self):
+        self.initial_state = LargeEntryLabel(self, 'Initial State')
+        # binds pressing tab to moving to the next wigit
+        self.initial_state.text.bind('<Tab>', lambda _: _no_tab(_, self._window))
+        # binds pressing shift and tab to moving to the previous wigit
+        self.initial_state.text.bind('<Shift-Tab>', lambda _: _no_shift_tab(_, self._window))
+    
+    def _create_cashout(self):
+        self.cashout = MoneyEntryLabel(self, 'Cash Out')
+    
+    def _create_profit_loss(self):
+        self.profit_loss = LabelLabel(self, 'Profit/Loss', 0.00)
+        # binds pressing any key to updateing the label
+        self._window.bind('<Key>', lambda _: self.profit_loss.var.set(f'{(self.cashout.get_var() - self.cashin.get_var()):.2f}'))
+    
+    def _create_note(self):
+        self.note = LargeEntryLabel(self, 'Note', height=8)
+        # binds pressing tab to moving to the next wigit
+        self.note.text.bind('<Tab>', lambda _: _no_tab(_, self._window))
+        # binds pressing shift and tab to moving to the previous wigit
+        self.note.text.bind('<Shift-Tab>', lambda _: _no_shift_tab(_, self._window))
+    
+    def _create_start_entry(self):
+        self.start_entry = EntryLabel(self, 'Start Image', self._window.start_img, state='readonly')
+    
+    def _create_end_entry(self):
+        self.end_entry = EntryLabel(self, 'End Image', self._window.end_img, state='readonly')
+    
+    def _create_table(self):
+        self.table = ttk.Treeview(self, columns='imgs', show='headings')
+        self.table.heading('imgs', text='Images')
+    
+    
+    def update_table(self, parent):
+        # removes all elements of the table
+        self.table.delete(*self.table.get_children())
+        # places all items in the play_imgs list onto the table
+        for item in parent.play_imgs:
+            self.table.insert(parent='', index=ttk.END, values=item)
