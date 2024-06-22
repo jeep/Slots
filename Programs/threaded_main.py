@@ -195,6 +195,19 @@ class App(ttk.Window):
             return
         if len(self.imgs) == 0:
             return
+
+        # gets the path to the data save
+        file_path = join(dirname(dirname(__file__)), 'Data\\slots_data.csv')
+        
+        try:
+            f = open(file_path, 'r')
+        except IOError:
+            Messagebox.show_error(f'Cannot open {file_path}. Please close and try again', 'File Open Error')
+        
+        try:
+            f.close()
+        except Exception:
+            pass
         
         # gets all entry values
         casino = self.entry_wigits.casino.var.get()
@@ -229,8 +242,7 @@ class App(ttk.Window):
         date = f'{date[:4]}-{date[4:6]}-{date[6:]}'
         values = [casino, date, machine, cash_in, bet, play_type, initial_state, cash_out, note, start_img, end_img, other]
         
-        # gets the path to the data save
-        file_path = join(dirname(dirname(__file__)), 'Data\\slots_data.csv')
+        
         # writes the entry values to the path
         with open(file_path, 'a+', newline='') as csvfile:
             writer = csv.writer(csvfile)
