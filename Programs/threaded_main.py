@@ -108,6 +108,12 @@ class App(ttk.Window):
         self.bind('<FocusOut>', lambda _: self.check_save_valid())
         # binds CTRL-s to save the current play
         self.bind('<Control-s>', lambda _: self.save())
+        self.bind('<Prior>', lambda _: self.image_buttons.prev_button_command())
+        self.bind('<Next>', lambda _: self.image_buttons.next_button_command())
+        self.bind('<Home>', lambda _: self.image_buttons.return_button_command())
+        self.bind('<Control-Key-1>', lambda _: self.image_buttons.start_button_command())
+        self.bind('<Control-Key-2>', lambda _: self.image_buttons.add_button_command())
+        self.bind('<Control-Key-3>', lambda _: self.image_buttons.end_button_command())
     
     def make_menu(self):
         # creates the menu wigit
@@ -577,6 +583,7 @@ class ImageButtons(ttk.Frame):
         # removes the image from the start entry, end entry, and play images table
         if parent.entry_wigits.start_entry.var.get() == path:
             parent.entry_wigits.start_entry.var.set('')
+            parent.entry_wigits.date.var.set('')
         elif parent.entry_wigits.end_entry.var.get() == path:
             parent.entry_wigits.end_entry.var.set('')
         elif path in parent.play_imgs:

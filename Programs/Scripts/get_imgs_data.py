@@ -16,39 +16,18 @@ def get_time(path):
     # opens the image at the path
     with Image.open(path) as image:
         try:
-            # tries to return the value of the date from the exif and format it
-            return datetime.strptime(tuple(v
-                                           for k, v in image.getexif().items()
-                                           if ((ExifTags.TAGS[k] == 'DateTime') and
-                                               (k in ExifTags.TAGS) and
-                                               (type(v) is not bytes)))[0],
-                                     r'%Y:%m:%d %H:%M:%S').strftime(r'%Y%m%d%H%M%S')
-        
-        except (KeyError, AttributeError, IndexError):
-            pass
-        
-        try:
-            # tries to return the value of the date from the exif and format it
-            return datetime.strptime(tuple(v
-                                           for k, v in image.getexif().items()
-                                           if ((ExifTags.TAGS[k] == 'DateTimeOriginal') and
-                                               (k in ExifTags.TAGS) and
-                                               (type(v) is not bytes)) )[0],
-                                     r'%Y:%m:%d %H:%M:%S').strftime(r'%Y%m%d%H%M%S')
-        except (KeyError, AttributeError, IndexError):
-            pass
-        
-        try:
-            # tries to return the value of the date from the exif and format it
-            return datetime.strptime(image.getexif()[306],r'%Y:%m:%d %H:%M:%S').strftime(r'%Y%m%d%H%M%S')
-        except (KeyError, AttributeError, KeyError):
-            pass
-        
-        try:
-            # tries to return the value of the file date and format it
-            return datetime.fromtimestamp(getctime(path)).strftime(r'%Y%m%d%H%M%S')
-        except Exception:
-            return None
+            image_exif = image._getexif()
+            exif = { ExifTags.TAGS[k]: v for k, v in image_exif.items() if k in ExifTags.TAGS and type(v) is not bytes }
+            date_obj = datetime.strptime(exif['DateTimeOriginal'], r'%Y:%m:%d %H:%M:%S').strftime(r'%Y%m%d%H%M%S')
+            return date_obj
+        except (KeyError, AttributeError):
+            try:
+                image_exif = image.getexif()
+                date_obj = datetime.strptime(image_exif[306], r'%Y:%m:%d %H:%M:%S').strftime(r'%Y%m%d%H%M%S')
+                return date_obj
+            except KeyError:
+                date_obj = datetime.fromtimestamp(getctime(path)).strftime(r'%Y%m%d%H%M%S')
+                return date_obj
 
 def get_img_data(file, directory):
     # gets the file path
