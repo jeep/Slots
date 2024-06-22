@@ -199,15 +199,13 @@ class App(ttk.Window):
         # gets the path to the data save
         file_path = join(dirname(dirname(__file__)), 'Data\\slots_data.csv')
         
-        try:
-            f = open(file_path, 'r')
-        except IOError:
-            Messagebox.show_error(f'Cannot open {file_path}. Please close and try again', 'File Open Error')
-        
-        try:
-            f.close()
-        except Exception:
-            pass
+        while True:
+            try:
+                f = open(file_path, 'r')
+                f.close()
+                break
+            except Exception:
+                Messagebox.show_error(f'Cannot open {file_path}.\nPlease close and try again', 'File Open Error')
         
         # gets all entry values
         casino = self.entry_wigits.casino.var.get()
