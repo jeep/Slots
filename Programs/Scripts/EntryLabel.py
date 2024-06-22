@@ -12,6 +12,6 @@ class EntryLabel(ttk.Frame):
         else:
             self.var = entry_var
             
-        self.entry = ttk.Entry(self, textvariable=self.var, state=state)
+        self.entry = ttk.Entry(self, textvariable=self.var, state=state, width=30)
             
         self.entry.pack(side='right')

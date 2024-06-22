@@ -3,6 +3,7 @@
 import ttkbootstrap as ttk
 # imports external dialog boxes
 from ttkbootstrap.dialogs import Querybox, Messagebox
+from ttkbootstrap.scrolled import ScrolledFrame
 
 # imports dialog box for opening a directory
 from tkinter.filedialog import askdirectory
@@ -582,10 +583,10 @@ class ImageButtons(ttk.Frame):
             parent.play_imgs.remove(path)
             parent.entry_wigits.update_table(parent)
 
-class ImageDisplay(ttk.Frame):
+class ImageDisplay(ScrolledFrame):
     def __init__(self, parent):
         # initializes the frame
-        super().__init__(master=parent)
+        super().__init__(master=parent, autohide=True, height=1000, width=1000)
         # creates the canvas with width 750 and height 750
         self.canvas = ttk.Canvas(master=self, width=1500, height=1500)
         self.canvas.pack(fill='both')
