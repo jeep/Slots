@@ -1,5 +1,8 @@
+'control h'
+
 import ttkbootstrap as ttk
 from ttkbootstrap.dialogs import Querybox, Messagebox
+import tkinter as tk
 
 from tkinter.filedialog import askdirectory
 
@@ -66,12 +69,12 @@ class App(ttk.Window):
         self.bind('<FocusOut>', lambda _: self.check_save_valid())
 
         self.bind('<Control-s>', lambda _: self.save())
-        self.bind('<Prior>', lambda _: self.image_buttons.prev_button_command())
-        self.bind('<Next>', lambda _: self.image_buttons.next_button_command())
-        self.bind('<Home>', lambda _: self.image_buttons.return_button_command())
-        self.bind('<Control-Key-1>', lambda _: self.image_buttons.start_button_command())
-        self.bind('<Control-Key-2>', lambda _: self.image_buttons.add_button_command())
-        self.bind('<Control-Key-3>', lambda _: self.image_buttons.end_button_command())
+        self.bind('<Prior>', lambda _: self.image_buttons.prev_button_command(self))
+        self.bind('<Next>', lambda _: self.image_buttons.next_button_command(self))
+        self.bind('<Home>', lambda _: self.image_buttons.return_button_command(self))
+        self.bind('<Control-Key-1>', lambda _: self.image_buttons.start_button_command(self))
+        self.bind('<Control-Key-2>', lambda _: self.image_buttons.add_button_command(self))
+        self.bind('<Control-Key-3>', lambda _: self.image_buttons.end_button_command(self))
     
     def make_menu(self):
         # creates the menu wigit
@@ -176,10 +179,11 @@ class App(ttk.Window):
         while True:
             try:
                 f = open(file_path, 'r')
-                f.close()
-                break
             except Exception:
                 Messagebox.show_error(f'Cannot open {file_path}.\nPlease close and try again', 'File Open Error')
+            else:
+                f.close()
+                break
         
         # gets all entry values
         casino = self.entry_wigits.casino.var.get()

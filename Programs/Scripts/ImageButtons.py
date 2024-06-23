@@ -243,6 +243,8 @@ class ImageButtons(ttk.Frame):
         # deletes the path
         remove(path)
         
+        parent.display_image()
+        
         # removes the image from the image list
         parent.imgs.pop(parent.pointer)
         
