@@ -247,7 +247,7 @@ class ImageButtons(ttk.Frame):
         
         # removes the image from the image list
         parent.imgs.pop(parent.pointer)
-        parent.pointer -= 1
+        parent.pointer = max((parent.pointer-1), 0)
         parent.display_image()
         
         # removes the image from the start entry, end entry or play images
