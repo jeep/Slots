@@ -3,7 +3,7 @@ from ttkbootstrap.dialogs import Messagebox
 
 from os import remove
 
-from HandPayWindow import HandPayWindow
+from Scripts.HandPayWindow import HandPayWindow
 
 
 class ImageButtons(ttk.Frame):
@@ -32,7 +32,7 @@ class ImageButtons(ttk.Frame):
         self.start_button   = ttk.Button(self, text='Set Start', command=lambda: self.start_button_command(self._window))
         self.add_button     = ttk.Button(self, text='Add Image', command=lambda: self.add_button_command(self._window))
         self.end_button     = ttk.Button(self, text='Set End', command=lambda: self.end_button_command(self._window))
-        self.hp_button = ttk.Button(self, text="Add HandPay", command=lambda: self._open_hpwin(None))
+        self.hp_button = ttk.Button(self, text="Add HandPay", command=lambda: self._open_hpwin(lambda hpd: self._get_hpwin_data(self._window, hpd)))
         
         # creates the third row of buttons
         self.save_button    = ttk.Button(self, text='Save Play', command=lambda: self._window.save(), bootstyle='success')
@@ -53,7 +53,7 @@ class ImageButtons(ttk.Frame):
         self.start_button.grid(column=0, row=1, sticky='nsew', padx=pad_back, pady=pad_double)
         self.add_button.grid(column=1, row=1, sticky='nsew', padx=pad_double, pady=pad_double)
         self.end_button.grid(column=2, row=1, sticky='nsew', padx=pad_front, pady=pad_double)
-        self.hp_button.grid(column=3, row=1, sticky='nsew', padx=pad_front, pady=pad_double)
+        self.hp_button.grid(column=3, row=1, sticky='nsew', padx=(8, 0), pady=pad_double)
         
         # places the third row of buttons
         self.save_button.grid(column=0, row=2, sticky='nsew', padx=pad_back, pady=pad_front)
@@ -62,7 +62,11 @@ class ImageButtons(ttk.Frame):
     
     
     def _open_hpwin(self, callback):
-        HandPayWindow(callback)
+        HandPayWindow(callback=callback)
+    
+    def _get_hpwin_data(self, parent, hp):
+        parent.hand_pay.append(hp)
+        parent.entry_wigits.update_hand_pay_table(parent)
         
         
     def prev_button_command(self, parent):

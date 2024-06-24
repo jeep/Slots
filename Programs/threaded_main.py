@@ -29,6 +29,7 @@ class App(ttk.Window):
     def __init__(self):
         self.imgs = []
         self.play_imgs = []
+        self.hand_pay = []
         self.play_type = ('AP', 'Gamble', 'Misplay', 'Non-play', 'Science', 'Tip', 'Tax Consequence')
         
         with open(f'casino_entry_values.csv', 'r') as csvfile:

@@ -1,10 +1,12 @@
 import ttkbootstrap as ttk
 
-from Scripts.ComboboxLabel import ComboboxLabel
-from Scripts.EntryLabel import EntryLabel
-from Scripts.MoneyEntryLabel import MoneyEntryLabel
-from Scripts.LabelLabel import LabelLabel
-from Scripts.LargeEntryLabel import LargeEntryLabel
+from Scripts.LabelPairs.ComboboxLabel import ComboboxLabel
+from Scripts.LabelPairs.EntryLabel import EntryLabel
+from Scripts.LabelPairs.MoneyEntryLabel import MoneyEntryLabel
+from Scripts.LabelPairs.LabelLabel import LabelLabel
+from Scripts.LabelPairs.LargeEntryLabel import LargeEntryLabel
+
+from Scripts.Handpay import Handpay
 
 def _no_tab(_, parent):
     # focuses on the next wigit
@@ -42,6 +44,7 @@ class EntryWigits(ttk.Frame):
         self._create_start_entry()
         self._create_end_entry()
         self._create_table()
+        self._create_hp_table()
     
     def _place_entries(self):
         self.casino.pack(fill='x')
@@ -57,6 +60,7 @@ class EntryWigits(ttk.Frame):
         self.start_entry.pack(fill='x')
         self.end_entry.pack(fill='x')
         self.table.pack(fill='x')
+        self.hp_table.pack(fill='x')
     
     
     def _create_casino(self):
@@ -109,9 +113,27 @@ class EntryWigits(ttk.Frame):
         self.table = ttk.Treeview(self, columns='imgs', show='headings')
         self.table.heading('imgs', text='Images')
     
+    def _create_hp_table(self):
+        self.hp_table = ttk.Treeview(self, columns=('hp', 'tip'), show='headings')
+        self.hp_table.heading('hp', text='Hand Pay')
+        self.hp_table.heading('tip', text='Tip')
+        self.hp_table.bind('<Delete>', self._hp_delete)
+        
     def update_table(self, parent):
         # removes all elements of the table
         self.table.delete(*self.table.get_children())
         # places all items in the play_imgs list onto the table
         for item in parent.play_imgs:
             self.table.insert(parent='', index=ttk.END, values=item)
+    
+    def update_hand_pay_table(self, parent):
+        self.hp_table.delete(*self.hp_table.get_children())
+        
+        for item in parent.hand_pay:
+            self.hp_table.insert(parent='', index=ttk.END, values=item)
+    
+    def _hp_delete(self, _):
+        for item in self.hp_table.selection():
+            values = self.hp_table.item(item)['values']
+            self._window.hand_pay.remove(Handpay(float(values[0]), float(values[1]), None))
+            self.hp_table.delete(item)
