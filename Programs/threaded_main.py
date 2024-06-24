@@ -2,7 +2,6 @@
 
 import ttkbootstrap as ttk
 from ttkbootstrap.dialogs import Querybox, Messagebox
-import tkinter as tk
 
 from tkinter.filedialog import askdirectory
 
@@ -24,6 +23,7 @@ from pillow_heif import register_heif_opener
 import csv
 
 register_heif_opener(decode_threads=8, thumbnails=False)
+
 
 class App(ttk.Window):
     def __init__(self):
