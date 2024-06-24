@@ -193,9 +193,9 @@ class App(ttk.Window):
         cash_in = self.entry_wigits.cashin.var.get()
         bet = self.entry_wigits.bet.var.get()
         play_type = self.entry_wigits.play_type.var.get()
-        initial_state = self.entry_wigits.initial_state.get_text()
+        initial_state = ' '.join(self.entry_wigits.initial_state.get_text().split(r'\r'))
         cash_out = self.entry_wigits.cashout.var.get()
-        note = self.entry_wigits.note.get_text()
+        note = ' '.join(self.entry_wigits.note.get_text().split(r'\r'))
         
         start_img = self.entry_wigits.start_entry.var.get()
         end_img = self.entry_wigits.end_entry.var.get()
