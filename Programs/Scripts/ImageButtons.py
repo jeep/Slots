@@ -3,12 +3,15 @@ from ttkbootstrap.dialogs import Messagebox
 
 from os import remove
 
+from HandPayWindow import HandPayWindow
+
+
 class ImageButtons(ttk.Frame):
     def __init__(self, parent, window):
         # initializes the frame
         super().__init__(master=parent)
         # creates 3 columns that are the same width ( x )
-        self.columnconfigure((0, 1, 2), weight=1, uniform='a')
+        self.columnconfigure((0, 1, 2, 3), weight=1, uniform='a')
         # creates 3 rows that are the same width ( y )
         self.rowconfigure((0, 1, 2), weight=1, uniform='a')
         # creates a 'private' window variable
@@ -29,6 +32,7 @@ class ImageButtons(ttk.Frame):
         self.start_button   = ttk.Button(self, text='Set Start', command=lambda: self.start_button_command(self._window))
         self.add_button     = ttk.Button(self, text='Add Image', command=lambda: self.add_button_command(self._window))
         self.end_button     = ttk.Button(self, text='Set End', command=lambda: self.end_button_command(self._window))
+        self.hp_button = ttk.Button(self, text="Add HandPay", command=lambda: self._open_hpwin(None))
         
         # creates the third row of buttons
         self.save_button    = ttk.Button(self, text='Save Play', command=lambda: self._window.save(), bootstyle='success')
@@ -49,6 +53,7 @@ class ImageButtons(ttk.Frame):
         self.start_button.grid(column=0, row=1, sticky='nsew', padx=pad_back, pady=pad_double)
         self.add_button.grid(column=1, row=1, sticky='nsew', padx=pad_double, pady=pad_double)
         self.end_button.grid(column=2, row=1, sticky='nsew', padx=pad_front, pady=pad_double)
+        self.hp_button.grid(column=3, row=1, sticky='nsew', padx=pad_front, pady=pad_double)
         
         # places the third row of buttons
         self.save_button.grid(column=0, row=2, sticky='nsew', padx=pad_back, pady=pad_front)
@@ -56,6 +61,10 @@ class ImageButtons(ttk.Frame):
         self.delete_button.grid(column=2, row=2, sticky='nsew', padx=pad_front, pady=pad_front)
     
     
+    def _open_hpwin(self, callback):
+        HandPayWindow(callback)
+        
+        
     def prev_button_command(self, parent):
         # does nothing if there are no images
         if len(parent.imgs) == 0:

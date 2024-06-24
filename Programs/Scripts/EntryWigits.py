@@ -83,7 +83,7 @@ class EntryWigits(ttk.Frame):
         self.initial_state.text.bind('<Tab>', lambda _: _no_tab(_, self._window))
         # binds pressing shift and tab to moving to the previous wigit
         self.initial_state.text.bind('<Shift-Tab>', lambda _: _no_shift_tab(_, self._window))
-    
+
     def _create_cashout(self):
         self.cashout = MoneyEntryLabel(self, 'Cash Out')
     
@@ -108,7 +108,6 @@ class EntryWigits(ttk.Frame):
     def _create_table(self):
         self.table = ttk.Treeview(self, columns='imgs', show='headings')
         self.table.heading('imgs', text='Images')
-    
     
     def update_table(self, parent):
         # removes all elements of the table
