@@ -1,0 +1,11 @@
+Data/slots_data.csv
+## Python files
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+
