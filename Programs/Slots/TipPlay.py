@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from Programs.Slots.Machine import Machine
 from Programs.Slots.Play import Play
 from babel.numbers import format_currency 
@@ -9,18 +9,14 @@ import pathlib
 
 @dataclass(repr=False, eq=False)
 class TipPlay(Play):
-    _casino: str = None
-    _machine = Machine('Tip', 'Non-AP')
-    _start_time: datetime = datetime.MINYEAR
-    _cash_in: list[Decimal]  = None
-    _note: str = None
-    _bet: Decimal = None
-    _play_type: str = 'Tip'
-    _cash_out: Decimal = Decimal(0.0)
-    _state: str = ""
-    _start_image: str = None
-    _addl_images: list[str] = None
-    _end_image: str = None
+    machine: Machine = field(default = Machine('Tip', 'Non-AP'), init = False)
+    _bet: Decimal = field(default = None, init = False)
+    _play_type: str =field(default = 'Tip', init = False)
+    _cash_out: Decimal =field(default = Decimal(0.0), init = False)
+    _state: str =field(default = "", init = False)
+    _start_image: str =field(default = None, init = False)
+    _addl_images: list[str] = field(default = None, init = False)
+    _end_image: str =field(default =  None, init = False)
 
     @property
     def bet(self) -> Decimal:
@@ -45,4 +41,4 @@ class TipPlay(Play):
     def __str__(self):
         start_date = self.start_time.strftime(r"%m/%d/%Y")
         note = f'"{self.note}"' if self.note else ""
-        return f"{self._casino},{start_date},{self.machine.get_name()},{format_currency(self.cash_in, 'USD', locale='en_US')},,{self.play_type},,{format_currency(self.cash_out, 'USD', locale='en_US')},{format_currency(self.pnl, 'USD', locale='en_US')},{note},{self.machine.get_family()},,,"
+        return f"{self.casino},{start_date},{self.machine.get_name()},{format_currency(self.cash_in, 'USD', locale='en_US')},,{self.play_type},,{format_currency(self.cash_out, 'USD', locale='en_US')},{format_currency(self.pnl, 'USD', locale='en_US')},{note},{self.machine.get_family()},,,"

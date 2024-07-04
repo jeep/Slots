@@ -17,23 +17,23 @@ class TestLuckyWealthCat(TestPlay):
         assert play.machine.get_family() ==  "Lucky Buddha/Lucky Wealth Cat"
 
     def test_state(self, play):
-        play._state_data["7xCat"] = 1
-        play._state_data["6xFish"] = 2
-        play._state_data["5xTree"] = 4
-        #play._state_data["3xA"]  left alone
-        play._state_data["3xK"] = 1
-        play._state_data["3xQ"] = 3
+        play.state_data["7xCat"] = 1
+        play.state_data["6xFish"] = 2
+        play.state_data["5xTree"] = 4
+        #play.state_data["3xA"]  left alone
+        play.state_data["3xK"] = 1
+        play.state_data["3xQ"] = 3
     
         expected = '{"7xCat": 1, "6xFish": 2, "5xTree": 4, "3xK": 1, "3xQ": 3}'
         assert play.state == expected
     
     def test_state2(self, play):
-        play._state_data["7xCat"] = 1
-        play._state_data["6xFish"] = 2
-        play._state_data["5xTree"] = 4
-        play._state_data["3xA"] = 1
-        play._state_data["3xK"] = 3
-        play._state_data["3xQ"] = 5
+        play.state_data["7xCat"] = 1
+        play.state_data["6xFish"] = 2
+        play.state_data["5xTree"] = 4
+        play.state_data["3xA"] = 1
+        play.state_data["3xK"] = 3
+        play.state_data["3xQ"] = 5
     
         expected = '{"7xCat": 1, "6xFish": 2, "5xTree": 4, "3xA": 1, "3xK": 3, "3xQ": 5}'
         assert play.state == expected
