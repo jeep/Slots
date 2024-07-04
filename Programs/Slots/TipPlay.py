@@ -7,20 +7,20 @@ from decimal import Decimal
 import datetime
 import pathlib
 
-@dataclass
+@dataclass(repr=False, eq=False)
 class TipPlay(Play):
-    _casino: str
-    _start_time: datetime
-    _note: str = None
-    _start_image: str = None
-    _end_image: str = None
+    _casino: str = None
     _machine = Machine('Tip', 'Non-AP')
-    _cash_in: list[Decimal] = [Decimal(0.00)]
+    _start_time: datetime = datetime.MINYEAR
+    _cash_in: list[Decimal]  = None
+    _note: str = None
+    _bet: Decimal = None
+    _play_type: str = 'Tip'
     _cash_out: Decimal = Decimal(0.0)
     _state: str = ""
-    _play_type: str = 'Tip'
-    _bet: Decimal = None
-    _addl_images: list[str] = []
+    _start_image: str = None
+    _addl_images: list[str] = None
+    _end_image: str = None
 
     @property
     def bet(self) -> Decimal:
@@ -29,13 +29,6 @@ class TipPlay(Play):
     @property
     def state(self) -> str:
         return self._state
-
-    @property
-    def note(self) -> str:
-        return self._note
-    @note.setter
-    def note(self, note: str) -> None:
-        self._note = note
 
     @property
     def play_type(self) -> Decimal:
@@ -49,24 +42,7 @@ class TipPlay(Play):
     def cash_out(self) -> Decimal:
         return self._cash_out
 
-    @property
-    def start_image(self) -> str:
-        return self._start_image
-    @start_image.setter
-    def start_image(self, start_image: str) -> None:
-        self._start_image = start_image
-
-    @property
-    def end_image(self) -> str:
-        return self._end_image
-    @end_image.setter
-    def end_image(self, end_image: str) -> None:
-        self._end_image = end_image
-
-    @property
-    def addl_images(self) -> list[str]:
-        return self._addl_images
-
-    @property
-    def pnl(self) -> Decimal:
-        return self.cash_out - self.cash_in
+    def __str__(self):
+        start_date = self.start_time.strftime(r"%m/%d/%Y")
+        note = f'"{self.note}"' if self.note else ""
+        return f"{self._casino},{start_date},{self.machine.get_name()},{format_currency(self.cash_in, 'USD', locale='en_US')},,{self.play_type},,{format_currency(self.cash_out, 'USD', locale='en_US')},{format_currency(self.pnl, 'USD', locale='en_US')},{note},{self.machine.get_family()},,,"

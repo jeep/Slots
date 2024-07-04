@@ -11,27 +11,35 @@ machine_for_test = Machine("Test Machine")
 class TestTipPlay():
     @pytest.fixture
     def play(self):
-        return TipPlay()
+        return TipPlay(_casino = "ilani", _start_time = datetime.datetime(2024, 1, 2), _cash_in = [Decimal(10.00)])
 
-#    def test_add_cash(self, play):
-#        pass
-
-#    def test_initial_cash_in(self, play):
-#        pass
+    def test_initial_cash_in(self, play):
+        assert play.initial_cash_in == Decimal(10.00)
     
     def test_play_type(self, play):
         assert play.play_type == "Tip"
     
-#    def test_cash_out(self, play):
-#        assert play.cash_out == Decimal(0.0)
+    def test_cash_out(self, play):
+        assert play.cash_out == Decimal(0.0)
+        with pytest.raises(Exception):
+            play.cash_out = Decimal("1.23")
     
-#    def test_note(self, play):
-#        assert play.note == None
-#        note = "This; is (a): note."
-#        play.note = note
-#        assert play.note == note
-    
-#    def test_play_as_str(self, play):
+    def test_set_bet_raises(self, play):
+        with pytest.raises(Exception):
+            play.bet = Decimal('1.23')
+
+    def test_set_state_raises(self, play):
+        with pytest.raises(Exception):
+            play.state = "This is a state"
+
+    def test_set_playtype_raises(self, play):
+        with pytest.raises(Exception):
+            play.play_type = "AP"
+
+    def test_play_as_str(self, play):
+        expected = r"""ilani,01/02/2024,Tip,$10.00,,Tip,,$0.00,-$10.00,,Non-AP,,,"""
+#
+        assert str(play) == expected
 #        casino = 'ilani'
 #        play.casino = casino
 #        d = datetime.datetime(2024, 1,2,3,4,5)
