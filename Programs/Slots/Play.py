@@ -6,56 +6,47 @@ from decimal import Decimal
 import datetime
 import pathlib
 
-@dataclass(repr=False, eq=False)
+@dataclass
+class HandPay:
+    pay_amount: Decimal
+    tip_amount: Decimal
+    image: str = None
+    addl_images: list[str] = field(default_factory=lambda: [])
+
+
+@dataclass(repr=False, eq=False, kw_only=True)
 class Play:
     machine: str 
     casino: str = None 
     start_time: datetime = datetime.MINYEAR
-    _cash_in: list[Decimal] = field(default_factory=lambda: [])
-    _bet: Decimal = None
-    _play_type: str = None
-    _state: str = ""
+    _cash_in: list[Decimal] = field(default_factory=lambda: [], init=False)
+    cash_in: Decimal = field(default=Decimal(0.00))
+    bet: Decimal = None
+    play_type: str = None
+    state: str = ""
     note: str = None
     start_image: str = None
     addl_images: list[str] = field(default_factory=lambda: [])
     end_image: str = None
-    _cash_out: Decimal = Decimal(0.0)
-
-    @property
-    def bet(self) -> Decimal:
-        return self._bet
-    @bet.setter
-    def bet(self, bet: Decimal) -> None:
-        self._bet = bet
-
-    @property
-    def state(self) -> str:
-        return self._state
-    @state.setter
-    def state(self, state: str) -> None:
-        self._state = state
-
-    @property
-    def play_type(self) -> Decimal:
-        return self._play_type
-    @play_type.setter
-    def play_type(self, play_type: str) -> None:
-        self._play_type = play_type
+    cash_out: Decimal = Decimal(0.0)
+    hand_pays: list[HandPay] = field(default_factory=lambda: [])
 
     @property 
     def initial_cash_in(self) -> Decimal:
-        return self._cash_in[0]
+        if self._cash_in:
+            return self._cash_in[0]
+        return Decimal(0.00)
 
     @property
     def cash_in(self) -> Decimal:
         return sum(self._cash_in)
-
-    @property
-    def cash_out(self) -> Decimal:
-        return self._cash_out
-    @cash_out.setter
-    def cash_out(self, cash_out: Decimal) -> None:
-        self._cash_out = cash_out
+    @cash_in.setter
+    def cash_in(self, val: Decimal) -> None:
+        #JEEP: Why do I need to do this?
+        if type(val) == Decimal:
+            self._cash_in = [val]
+        else:
+            self._cash_in = [Decimal(0.00)]
 
     @property
     def pnl(self) -> Decimal:
@@ -70,7 +61,19 @@ class Play:
     def add_images(self, imgs: list[pathlib.Path]) -> None:
         self.addl_images.extend(imgs)
 
+    def add_hand_pay(self, payment, tip, image = None, addl_images = None):
+        if not addl_images:
+            addl_images = []
+        self.hand_pays.append(HandPay(payment, tip, image, addl_images))
+
     def __str__(self):
         start_date = self.start_time.strftime(r"%m/%d/%Y")
         images = [str(pathlib.PureWindowsPath(f)) for f in self.addl_images]
-        return f"{self.casino},{start_date},{self.machine.get_name()},{format_currency(self.cash_in, 'USD', locale='en_US')},{format_currency(self.bet, 'USD', locale='en_US')},{self.play_type},\"{self.state}\",{format_currency(self.cash_out, 'USD', locale='en_US')},{format_currency(self.pnl, 'USD', locale='en_US')},\"{self.note}\",{self.machine.get_family()},{self.start_image},{self.end_image},{images}"
+        
+        outstr = f"{self.casino},{start_date},{self.machine.get_name()},{format_currency(self.cash_in, 'USD', locale='en_US')},{format_currency(self.bet, 'USD', locale='en_US')},{self.play_type},\"{self.state}\",{format_currency(self.cash_out, 'USD', locale='en_US')},{format_currency(self.pnl, 'USD', locale='en_US')},\"{self.note}\",{self.machine.get_family()},{self.start_image},{self.end_image},{images}"
+        for hp in self.hand_pays:
+            tax = Decimal(Decimal(0.27) * hp.pay_amount)
+            images = hp.addl_images if hp.addl_images else ""
+            outstr += f"\n{self.casino},{start_date},{self.machine.get_name()},{format_currency(tax, 'USD', locale='en_US')},,Tax Consequence,{format_currency(hp.pay_amount, 'USD', locale="en_US")},,{format_currency(-1*tax, 'USD', locale='en_US')},{format_currency(tax, 'USD', locale='en_US')},{self.machine.get_family()},{hp.image},,{images}"
+            outstr += f"\n{self.casino},{start_date},{self.machine.get_name()},{format_currency(hp.tip_amount, 'USD', locale='en_US')},,Tip,,{format_currency(0.00, 'USD', locale='en_US')},{format_currency(-1*hp.tip_amount, 'USD', locale='en_US')},,{self.machine.get_family()},,,"
+        return outstr

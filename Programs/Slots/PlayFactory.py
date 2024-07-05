@@ -12,4 +12,4 @@ class PlayFactory:
     def get_play(machine_name: str) -> Play:
         if machine_name in PlayFactory.play_for_machine:
             return PlayFactory.play_for_machine[machine_name]
-        return Play(Machine(machine_name))
+        return Play(machine=Machine(machine_name))

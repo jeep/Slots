@@ -12,7 +12,7 @@ machine_for_test = Machine("Test Machine")
 class TestPlay():
     @pytest.fixture
     def play(self):
-        return Play(machine_for_test)
+        return Play(machine=machine_for_test)
 
     def test_casino(self, play):
         assert play.casino is None 
@@ -32,7 +32,7 @@ class TestPlay():
         assert play.machine == machine_for_test
         
     def test_add_cash(self, play):
-        assert play.cash_in == 0
+        assert play.initial_cash_in == Decimal(0.00)
         play.add_cash(100)
         assert play.cash_in == Decimal(100)
         play.add_cash(500)
@@ -40,7 +40,8 @@ class TestPlay():
         #assert play.initial_cash_in == Decimal("12.34")
 
     def test_initial_cash_in(self, play):
-        assert play.cash_in == 0
+        assert play.cash_in == Decimal(0.00)
+
         play.add_cash(Decimal("12.34"))
         assert play.cash_in == Decimal("12.34")
     
@@ -116,7 +117,7 @@ class TestPlay():
         play.add_images([img1, img2, img3])
         assert play.addl_images == [img1, img2, img3]
     
-    def test_play_as_str(self, play):
+    def test_play_as_str_no_hp(self, play):
         casino = 'ilani'
         play.casino = casino
         d = datetime.datetime(2024, 1,2,3,4,5)
@@ -141,5 +142,34 @@ class TestPlay():
         play.add_images([img2, img3])
 
         expected = r"""ilani,01/02/2024,Test Machine,$600.00,$0.60,AP,"This; is (a): state",$12.34,-$587.66,"This; is (a): note.",Test Machine,d:\this\is\a\path\simage.png,d:\this\is\a\path\eimage.png,['d:\\this\\is\\a\\path\\image1.png', 'd:\\this\\is\\a\\path\\image2.png', 'd:\\this\\is\\a\\path\\image3.png']"""
+
+        assert str(play) == expected
+    
+    def test_play_as_str_with_hp(self, play):
+        play.casino = 'ilani'
+        play.start_time = datetime.datetime(2024, 1,2,3,4,5)
+        play.add_cash(100)
+        play.bet = Decimal("10.60")
+        play.play_type = "AP"
+        play.state = "This; is (a): state"
+        play.cash_out = Decimal("1234.56")
+        play.note = "This; is (a): note."
+        play.start_image = r"d:\this\is\a\path\simage.png"
+        play.end_image = r"d:\this\is\a\path\eimage.png"
+        play.add_image(pathlib.Path(r"d:\this\is\a\path\image1.png"))
+        img2 = r"d:\this\is\a\path\image2.png"
+        img3 = r"d:\this\is\a\path\image3.png"
+        play.add_images([img2, img3])
+        
+        img4 = r"d:\this\is\a\path\image4.png"
+        img5 = r"d:\this\is\a\path\image5.png"
+        play.add_hand_pay(Decimal(1201.00), Decimal(20.00), img4, [img5])
+        play.add_hand_pay(Decimal(2000.00), Decimal(40.00), img4)
+
+        expected = r"""ilani,01/02/2024,Test Machine,$100.00,$10.60,AP,"This; is (a): state",$1,234.56,$1,134.56,"This; is (a): note.",Test Machine,d:\this\is\a\path\simage.png,d:\this\is\a\path\eimage.png,['d:\\this\\is\\a\\path\\image1.png', 'd:\\this\\is\\a\\path\\image2.png', 'd:\\this\\is\\a\\path\\image3.png']
+ilani,01/02/2024,Test Machine,$324.27,,Tax Consequence,$1,201.00,,-$324.27,$324.27,Test Machine,d:\this\is\a\path\image4.png,,['d:\\this\\is\\a\\path\\image5.png']
+ilani,01/02/2024,Test Machine,$20.00,,Tip,,$0.00,-$20.00,,Test Machine,,,
+ilani,01/02/2024,Test Machine,$540.00,,Tax Consequence,$2,000.00,,-$540.00,$540.00,Test Machine,d:\this\is\a\path\image4.png,,
+ilani,01/02/2024,Test Machine,$40.00,,Tip,,$0.00,-$40.00,,Test Machine,,,"""
 
         assert str(play) == expected

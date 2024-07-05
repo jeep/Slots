@@ -64,7 +64,7 @@ class TestLuckyWealthCat(TestPlay):
         assert play.state == expected
     
     
-    def test_play_as_str(self, play):
+    def test_play_as_str_no_hp(self, play):
         casino = 'ilani'
         play.casino = casino
         d = datetime.datetime(2024, 1,2,3,4,5)
@@ -91,3 +91,6 @@ class TestLuckyWealthCat(TestPlay):
         expected = r"""ilani,01/02/2024,Lucky Wealth Cat,$600.00,$0.60,AP,"This; is (a): state",$12.34,-$587.66,"This; is (a): note.",Lucky Buddha/Lucky Wealth Cat,d:\this\is\a\path\simage.png,d:\this\is\a\path\eimage.png,['d:\\this\\is\\a\\path\\image1.png', 'd:\\this\\is\\a\\path\\image2.png', 'd:\\this\\is\\a\\path\\image3.png']"""
 
         assert str(play) == expected
+
+    def test_play_as_str_with_hp(self, play):
+        pass

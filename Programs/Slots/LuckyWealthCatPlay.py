@@ -8,6 +8,7 @@ from Programs.Slots.Play import Play
 class LuckyWealthCatPlay(Play):
     machine: Machine = Machine("Lucky Wealth Cat", "Lucky Buddha/Lucky Wealth Cat")
     state_data: dict = field(init=False, default_factory = lambda: {"7xCat": None, "6xFish": None, "5xTree": None, "3xA": None, "3xK": None, "3xQ": None})
+    _state: str = field(init=False)
 
     def get_entry_fields(self) -> list:
         return [EntryField(label='7xCat', field_type="int", val=self.set_cat_data),
@@ -42,7 +43,7 @@ class LuckyWealthCatPlay(Play):
             return self._state
 
         if self._state:
-            return ";".join([self.state, json.dumps(rv)])
+            return ";".join([self._state, rv])
         return json.dumps(rv)
 
     @state.setter

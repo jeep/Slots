@@ -10,33 +10,10 @@ import pathlib
 @dataclass(repr=False, eq=False)
 class TipPlay(Play):
     machine: Machine = field(default = Machine('Tip', 'Non-AP'), init = False)
-    _bet: Decimal = field(default = None, init = False)
-    _play_type: str =field(default = 'Tip', init = False)
-    _cash_out: Decimal =field(default = Decimal(0.0), init = False)
-    _state: str =field(default = "", init = False)
+    play_type: str =field(default = 'Tip', init = False)
     _start_image: str =field(default = None, init = False)
     _addl_images: list[str] = field(default = None, init = False)
     _end_image: str =field(default =  None, init = False)
-
-    @property
-    def bet(self) -> Decimal:
-        return self._bet
-
-    @property
-    def state(self) -> str:
-        return self._state
-
-    @property
-    def play_type(self) -> Decimal:
-        return self._play_type
-
-    @property 
-    def initial_cash_in(self) -> Decimal:
-        return self._cash_in[0]
-
-    @property
-    def cash_out(self) -> Decimal:
-        return self._cash_out
 
     def __str__(self):
         start_date = self.start_time.strftime(r"%m/%d/%Y")
