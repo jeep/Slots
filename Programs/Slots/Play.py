@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from Programs.Slots.Machine import Machine
+from .Machine import Machine
 from babel.numbers import format_currency 
 from typing import Optional
 from decimal import Decimal
@@ -11,25 +11,31 @@ class HandPay:
     pay_amount: Decimal
     tip_amount: Decimal
     image: str = None
-    addl_images: list[str] = field(default_factory=lambda: [])
+    addl_images: list[str] = field(default_factory=list)
 
 
 @dataclass(repr=False, eq=False, kw_only=True)
 class Play:
-    machine: str 
+    machine: Machine
     casino: str = None 
     start_time: datetime = datetime.MINYEAR
-    _cash_in: list[Decimal] = field(default_factory=lambda: [], init=False)
+    _cash_in: list[Decimal] = field(default_factory=list, init=False)
     cash_in: Decimal = field(default=Decimal(0.00))
     bet: Decimal = None
     play_type: str = None
     state: str = ""
     note: str = None
     start_image: str = None
-    addl_images: list[str] = field(default_factory=lambda: [])
+    addl_images: list[str] = field(default_factory=list)
     end_image: str = None
     cash_out: Decimal = Decimal(0.0)
-    hand_pays: list[HandPay] = field(default_factory=lambda: [])
+    hand_pays: list[HandPay] = field(default_factory=list)
+
+    def __post_init__(self):
+        self.identifier: str = self.create_id()
+
+    def create_id(self):
+        return f"{self.machine.get_name().replace(' ', '_')}-{self.bet}-{self.start_time.strftime('%Y-%m-%d-%H:%M:%S')}"
 
     @property 
     def initial_cash_in(self) -> Decimal:
@@ -61,10 +67,13 @@ class Play:
     def add_images(self, imgs: list[pathlib.Path]) -> None:
         self.addl_images.extend(imgs)
 
-    def add_hand_pay(self, payment, tip, image = None, addl_images = None):
+    def make_hand_pay(self, payment, tip, image = None, addl_images = None):
         if not addl_images:
             addl_images = []
         self.hand_pays.append(HandPay(payment, tip, image, addl_images))
+
+    def add_hand_pay(self, handpay: HandPay):
+        self.hand_pays.append(handpay)
 
     def __str__(self):
         start_date = self.start_time.strftime(r"%m/%d/%Y")

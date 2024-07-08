@@ -38,6 +38,8 @@ class ImageButtons(ttk.Frame):
         self.save_button    = ttk.Button(self, text='Save Play', command=lambda: self._window.save(), bootstyle='success')
         self.remove_button  = ttk.Button(self, text='Remove Image', command=lambda: self.remove_button_command(self._window))
         self.delete_button  = ttk.Button(self, text='Delete Image', command=lambda: self.delete_button_command(self._window), bootstyle='danger')
+
+        self.save_session_button    = ttk.Button(self, text='Save Session', command=lambda: self._window.save_session(), bootstyle='success')
     
     def _place_buttons(self):
         pad_double = (4, 4)
@@ -58,7 +60,8 @@ class ImageButtons(ttk.Frame):
         # places the third row of buttons
         self.save_button.grid(column=0, row=2, sticky='nsew', padx=pad_back, pady=pad_front)
         self.remove_button.grid(column=1, row=2, sticky='nsew', padx=pad_double, pady=pad_front)
-        self.delete_button.grid(column=2, row=2, sticky='nsew', padx=pad_front, pady=pad_front)
+        self.delete_button.grid(column=2, row=2, sticky='nsew', padx=pad_double, pady=pad_front)
+        self.save_session_button.grid(column=3, row=2, sticky='nsew', padx=pad_front, pady=pad_front)
     
     
     def _open_hpwin(self, callback):
@@ -177,6 +180,9 @@ class ImageButtons(ttk.Frame):
         
         # sets the date wigit to the date ( year month day ) of the current image
         parent.entry_wigits.date.var.set(parent.imgs[parent.pointer][2][:8])
+
+        if not parent.session_date.get():
+            parent.session_date.set(parent.imgs[parent.pointer][2][:8])
         
         # disables the buttons to add the image to the play
         self.add_button.configure(state='disabled')

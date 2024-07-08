@@ -1,5 +1,3 @@
-'control h'
-
 import ttkbootstrap as ttk
 from ttkbootstrap.dialogs import Querybox, Messagebox
 
@@ -10,17 +8,22 @@ from Scripts.get_imgs_data import multi_get_img_data
 from Scripts.ImageDisplay import ImageDisplay
 from Scripts.ImageButtons import ImageButtons
 from Scripts.EntryWigits import EntryWigits
+from Scripts.SessionTable import SessionTable
 
 from os import makedirs
 from os.path import join, dirname, join
 
 from shutil import move
-
 from PIL import Image, ImageTk
 
 from pillow_heif import register_heif_opener
+from decimal import Decimal
 
 import csv
+import datetime
+
+from Slots.Play import Play, HandPay
+from Slots.Machine import Machine
 
 register_heif_opener(decode_threads=8, thumbnails=False)
 
@@ -30,7 +33,9 @@ class App(ttk.Window):
         self.imgs = []
         self.play_imgs = []
         self.hand_pay = []
-        self.play_type = ('AP', 'Gamble', 'Misplay', 'Non-play', 'Science', 'Tip', 'Tax Consequence')
+        self.plays = []
+
+        self.play_type = ('AP', 'Gamble', 'Misplay', 'Non-play', 'Science', 'Tip')
         
         with open(f'casino_entry_values.csv', 'r') as csvfile:
             casino_values = list(csv.reader(csvfile))
@@ -46,12 +51,16 @@ class App(ttk.Window):
         super().__init__()
         self.title('Slots')
         self.minsize(450, 705)
-        self.geometry('1000x800')
+        self.geometry('1300x800')
         self.iconphoto(False, ttk.PhotoImage(file=r'Programs\Icon\slot_machine_icon.png'))
         
+        self.session_date = ttk.StringVar()
         self.start_img = ttk.StringVar()
         self.end_img = ttk.StringVar()
-        
+
+        self.session_table = SessionTable(self) 
+        self.session_table.pack(side='left', padx=5, pady=5, fill='both')
+
         self.entry_wigits = EntryWigits(self, self)
         self.entry_wigits.pack(side='left', padx=5, pady=5, fill='both')
         
@@ -66,6 +75,9 @@ class App(ttk.Window):
         
         self.make_menu()
         
+        self.setup_keybinds()
+
+    def setup_keybinds(self):
         self.bind('<FocusIn>', lambda _: self.check_save_valid())
         self.bind('<FocusOut>', lambda _: self.check_save_valid())
 
@@ -103,9 +115,10 @@ class App(ttk.Window):
         if directory == '':
             return
         
+        print ('Loading ', datetime.datetime.now())
         # multi threads geting the image data ( image path, image type, image date )
         self.imgs = [d for d in multi_get_img_data(directory) if d is not None]
-        print('Loaded')
+        print('Loaded ', datetime.datetime.now())
         
         # does nothing else if there are not images in the directory
         if len(self.imgs) == 0:
@@ -174,74 +187,95 @@ class App(ttk.Window):
         if len(self.imgs) == 0:
             return
 
-        # gets the path to the data save
-        file_path = join(dirname(dirname(__file__)), 'Data\\slots_data.csv')
-        
-        while True:
-            try:
-                f = open(file_path, 'r')
-            except Exception:
-                Messagebox.show_error(f'Cannot open {file_path}.\nPlease close and try again', 'File Open Error')
-            else:
-                f.close()
-                break
-        
         # gets all entry values
         casino = self.entry_wigits.casino.var.get()
         date = self.entry_wigits.date.var.get()
         machine = self.entry_wigits.machine.var.get()
-        cash_in = self.entry_wigits.cashin.var.get()
-        bet = self.entry_wigits.bet.var.get()
+        cash_in = Decimal(self.entry_wigits.cashin.var.get())
+        bet = Decimal(self.entry_wigits.bet.var.get())
         play_type = self.entry_wigits.play_type.var.get()
-        initial_state = ' '.join(self.entry_wigits.initial_state.get_text().split(r'\r'))
-        cash_out = self.entry_wigits.cashout.var.get()
-        note = ' '.join(self.entry_wigits.note.get_text().split(r'\r'))
+        initial_state = ' '.join(self.entry_wigits.initial_state.get_text().split(r'\n')).rstrip()
+        cash_out = Decimal(self.entry_wigits.cashout.var.get())
+        note = ' '.join(self.entry_wigits.note.get_text().split(r'\n')).rstrip()
         
         start_img = self.entry_wigits.start_entry.var.get()
         end_img = self.entry_wigits.end_entry.var.get()
         other = self.play_imgs
-        
+        xdate = datetime.datetime( int(date[:4]), int(date[4:6]), int(date[6:]))
+        # adding handpays is later
+        current_play = Play(machine=Machine(machine), casino=casino, start_time=xdate, cash_in=cash_in, bet=bet,play_type=play_type, state=initial_state, note=note, start_image=start_img, addl_images=other, end_image=end_img, cash_out=cash_out)
+        for hp in self.hand_pay:
+            current_play.add_hand_pay(hp)
+
+        self.plays.append(current_play) 
+        self.session_table.update_table(self)
+
         self.imgs = [d for d in self.imgs if ((d[0] not in other) and (d[0] != start_img) and (d[0] != end_img))]
         self.imgs = sorted(self.imgs, key=lambda item: item[2])
-        
-        new_path = join(dirname(dirname(self.entry_wigits.start_entry.var.get())), f'Sorted/{date}')
-        
-        try:
-            makedirs(new_path, exist_ok=False)
-        except Exception:
-            pass
-        
-        start_img = move(self.entry_wigits.start_entry.var.get(), new_path)
-        end_img = move(self.entry_wigits.end_entry.var.get(), new_path)
-        other = [move(path, new_path) for path in self.play_imgs]
-        
-        
-        date = f'{date[:4]}-{date[4:6]}-{date[6:]}'
-        values = [casino, date, machine, cash_in, bet, play_type, initial_state, cash_out, note, start_img, end_img, other]
-        
-        
-        # writes the entry values to the path
-        with open(file_path, 'a+', newline='') as csvfile:
-            writer = csv.writer(csvfile)
-            writer.writerow(values)
-        
+
         # clears all entry values
         self.entry_wigits.date.var.set('')
-        self.entry_wigits.machine.var.set('')
         self.entry_wigits.cashin.var.set(cash_out)
         self.entry_wigits.bet.var.set(0)
-        self.entry_wigits.play_type.var.set('')
         self.entry_wigits.initial_state.clear()
         self.entry_wigits.cashout.var.set(0)
         self.entry_wigits.note.clear()
         self.entry_wigits.start_entry.var.set('')
         self.entry_wigits.end_entry.var.set('') 
+
         self.play_imgs.clear()
-        
         self.entry_wigits.update_table(self)
-        self.pointer = 0
-        self.display_image()
+
+        self.hand_pay.clear()
+        self.entry_wigits.update_hand_pay_table(self)
         
+        # resets the save button to disabled
+        self.image_buttons.save_button.configure(state='disabled')
+
+
+    def save_session(self):
+        # gets the path to the data save
+        save_path = join(dirname(dirname(__file__)), 'Data')
+        file_path = join(save_path, 'slots_data.csv')
+        print(save_path)
+
+        makedirs(save_path, exist_ok=True)
+
+        while True:
+            try:
+                f = open(file_path, 'a+')
+            except Exception:
+                Messagebox.show_error(f'Cannot open "{file_path}".\nPlease close and try again', 'File Open Error')
+            else:
+                f.close()
+                break
+        
+        new_path = join(dirname(dirname(self.plays[0].start_image)), f'Sorted/{self.session_date.get()}')
+        
+        try:
+            makedirs(new_path, exist_ok=False)
+        except Exception:
+            pass
+
+        print("plays:", len(self.plays))
+        for p in self.plays:
+            if p.start_image is not None:
+                print("start", self.session_date.get(), p.start_image) 
+                p.start_image = move(p.start_image, new_path)
+            for i,a in enumerate(p.addl_images):
+                print("addl", self.session_date.get(), a) 
+                p.addl_images[i] = move(a, new_path)
+            if p.end_image:
+                print("end", self.session_date.get(), p.end_image) 
+                p.end_image = move(p.end_image, new_path)
+
+            with open(file_path, 'a+', newline='') as csvfile:
+                writer = csv.writer(csvfile)
+                writer.writerows(str(p).split('\n'))
+            
+        self.plays.clear()
+        self.session_table.update_table(self)
+
         self.image_buttons.add_button.configure(state='normal')
         self.image_buttons.start_button.configure(state='normal')
         self.image_buttons.end_button.configure(state='normal')
@@ -253,6 +287,7 @@ class App(ttk.Window):
     def check_save_valid(self):
         # gets the entry values that need to be filled to save
         casino = self.entry_wigits.casino.var.get()
+
         date = self.entry_wigits.date.var.get()
         machine = self.entry_wigits.machine.var.get()
         play_type = self.entry_wigits.play_type.var.get()

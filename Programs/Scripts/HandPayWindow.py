@@ -2,9 +2,10 @@ import ttkbootstrap as ttk
 
 
 import tkinter as tk
-from Scripts.Handpay import Handpay
+from Slots.Play import HandPay
 
 from Scripts.LabelPairs.MoneyEntryLabel import MoneyEntryLabel
+from decimal import Decimal
 
 
 class HandPayWindow(tk.Toplevel):
@@ -35,7 +36,7 @@ class HandPayWindow(tk.Toplevel):
         self.focus()
 
     def button_okay_pressed(self):
-        hp = Handpay(self.handpay.var.get(), self.tip.var.get(), None)
+        hp = HandPay(Decimal(self.handpay.var.get()), Decimal(self.tip.var.get()))
         self.callback(hp)
         self.destroy()
 

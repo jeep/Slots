@@ -4,7 +4,7 @@ import pathlib
 from decimal import Decimal
 
 from Programs.Slots.Machine import Machine
-from Programs.Slots.Play import Play
+from Programs.Slots.Play import Play, HandPay
 from Programs.Slots.LuckyWealthCatPlay import LuckyWealthCatPlay
 
 
@@ -163,8 +163,9 @@ class TestPlay():
         
         img4 = r"d:\this\is\a\path\image4.png"
         img5 = r"d:\this\is\a\path\image5.png"
-        play.add_hand_pay(Decimal(1201.00), Decimal(20.00), img4, [img5])
-        play.add_hand_pay(Decimal(2000.00), Decimal(40.00), img4)
+        play.make_hand_pay(Decimal(1201.00), Decimal(20.00), img4, [img5])
+        hp = HandPay(Decimal(2000.00), Decimal(40.00), img4)
+        play.add_hand_pay(hp)
 
         expected = r"""ilani,01/02/2024,Test Machine,$100.00,$10.60,AP,"This; is (a): state",$1,234.56,$1,134.56,"This; is (a): note.",Test Machine,d:\this\is\a\path\simage.png,d:\this\is\a\path\eimage.png,['d:\\this\\is\\a\\path\\image1.png', 'd:\\this\\is\\a\\path\\image2.png', 'd:\\this\\is\\a\\path\\image3.png']
 ilani,01/02/2024,Test Machine,$324.27,,Tax Consequence,$1,201.00,,-$324.27,$324.27,Test Machine,d:\this\is\a\path\image4.png,,['d:\\this\\is\\a\\path\\image5.png']
