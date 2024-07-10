@@ -30,12 +30,14 @@ class Play:
     end_image: str = None
     cash_out: Decimal = Decimal(0.0)
     hand_pays: list[HandPay] = field(default_factory=list)
+    identifier: str = None
 
-    def __post_init__(self):
-        self.identifier: str = self.create_id()
-
-    def create_id(self):
+    @property
+    def identifier(self):
         return f"{self.machine.get_name().replace(' ', '_')}-{self.bet}-{self.start_time.strftime('%Y-%m-%d-%H:%M:%S')}"
+    @identifier.setter
+    def identifier(self, ident):
+        pass
 
     @property 
     def initial_cash_in(self) -> Decimal:
@@ -74,6 +76,19 @@ class Play:
 
     def add_hand_pay(self, handpay: HandPay):
         self.hand_pays.append(handpay)
+
+    def get_csv_rows(self):
+        #JEEP: This doesn't belong in this class
+        start_date = self.start_time.strftime(r"%m/%d/%Y")
+        images = [str(pathlib.PureWindowsPath(f)) for f in self.addl_images]
+        
+        rows = [(self.casino, start_date, self.machine.get_name(), format_currency(self.cash_in, 'USD', locale='en_US'), format_currency(self.bet, 'USD', locale='en_US'), self.play_type, self.state, format_currency(self.cash_out, 'USD', locale='en_US'), format_currency(self.pnl, 'USD', locale='en_US'), self.note, self.machine.get_family(), self.start_image, self.end_image, images)]
+        for hp in self.hand_pays:
+            tax = Decimal(Decimal(0.27) * hp.pay_amount)
+            images = hp.addl_images if hp.addl_images else ""
+            rows.append((self.casino, start_date, self.machine.get_name(), format_currency(tax, 'USD', locale='en_US'),"","Tax Consequence",format_currency(hp.pay_amount, 'USD', locale="en_US"),"",format_currency(-1*tax, 'USD', locale='en_US'),format_currency(tax, 'USD', locale='en_US'), self.machine.get_family(), hp.image,"",images))
+            rows.append((self.casino, start_date, self.machine.get_name(), format_currency(hp.tip_amount, 'USD', locale='en_US'),"","Tip","",format_currency(0.00, 'USD', locale='en_US'), format_currency(-1*hp.tip_amount, 'USD', locale='en_US'),"",self.machine.get_family(),"","",""))
+        return rows
 
     def __str__(self):
         start_date = self.start_time.strftime(r"%m/%d/%Y")

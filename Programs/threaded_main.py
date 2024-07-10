@@ -22,6 +22,7 @@ from decimal import Decimal
 import csv
 import datetime
 
+from Slots.PlayFactory import PlayFactory
 from Slots.Play import Play, HandPay
 from Slots.Machine import Machine
 
@@ -33,8 +34,9 @@ class App(ttk.Window):
         self.imgs = []
         self.play_imgs = []
         self.hand_pay = []
-        self.plays = []
-
+        self.plays = {}
+        self._current_play = None
+        self.start_datetime = datetime.MINYEAR
         self.play_type = ('AP', 'Gamble', 'Misplay', 'Non-play', 'Science', 'Tip')
         
         with open(f'casino_entry_values.csv', 'r') as csvfile:
@@ -104,6 +106,7 @@ class App(ttk.Window):
         # adds a button that will open a sub window to enter a machine in
         file_menu.add_command(label='Add Machine', command=self.add_machine)
         file_menu.add_separator()
+        file_menu.add_command(label='Preload Test Play', command=self.load_test_play)
         
         file_menu.add_command(label='Set Scale', command=self.set_scale)
         
@@ -134,6 +137,17 @@ class App(ttk.Window):
         self.image_buttons.start_button.configure(state='normal')
         self.image_buttons.end_button.configure(state='normal')
         self.image_buttons.remove_button.configure(state='disabled')
+
+    def load_test_play(self):
+        self.entry_wigits.casino.var.set("ilani")
+        self.entry_wigits.date.var.set(datetime.datetime(2024,5,1, 12, 3, 5))
+        self.entry_wigits.machine.var.set("Lucky Wealth Cat")
+        self.entry_wigits.cashin.var.set(Decimal("100.00"))
+        self.entry_wigits.bet.var.set(Decimal("1.20"))
+        self.entry_wigits.play_type.var.set("AP")
+        self.entry_wigits.initial_state.text.insert('1.0', "This, is; a (state): 1223")
+        self.entry_wigits.cashout.var.set(120.00)
+
     
     def add_casino(self):
         # opens a window to ask for a casino
@@ -180,42 +194,43 @@ class App(ttk.Window):
             # adds the image to the canvas
             self.image_display.canvas.create_image(x, y, image=imagetk)
     
+    def create_play(self, machine_name):
+        self._current_play = PlayFactory.get_play(machine_name)
+
     def save(self):
         # does nothing if the save button is disabled
         if self.image_buttons.save_button.state() == 'disabled':
             return
-        if len(self.imgs) == 0:
-            return
+        #if len(self.imgs) == 0:
+        #    return
 
         # gets all entry values
-        casino = self.entry_wigits.casino.var.get()
-        date = self.entry_wigits.date.var.get()
-        machine = self.entry_wigits.machine.var.get()
-        cash_in = Decimal(self.entry_wigits.cashin.var.get())
-        bet = Decimal(self.entry_wigits.bet.var.get())
-        play_type = self.entry_wigits.play_type.var.get()
-        initial_state = ' '.join(self.entry_wigits.initial_state.get_text().split(r'\n')).rstrip()
-        cash_out = Decimal(self.entry_wigits.cashout.var.get())
-        note = ' '.join(self.entry_wigits.note.get_text().split(r'\n')).rstrip()
+        self._current_play.casino = self.entry_wigits.casino.var.get()
+        self._current_play.cash_in = Decimal(self.entry_wigits.cashin.var.get())
+        self._current_play.bet = Decimal(self.entry_wigits.bet.var.get())
+        self._current_play.play_type = self.entry_wigits.play_type.var.get()
+        self._current_play.state = ' '.join(self.entry_wigits.initial_state.get_text().split(r'\n')).rstrip()
+        self._current_play.cash_out = Decimal(self.entry_wigits.cashout.var.get())
+        self._current_play.note = ' '.join(self.entry_wigits.note.get_text().split(r'\n')).rstrip()
         
-        start_img = self.entry_wigits.start_entry.var.get()
-        end_img = self.entry_wigits.end_entry.var.get()
-        other = self.play_imgs
-        xdate = datetime.datetime( int(date[:4]), int(date[4:6]), int(date[6:]))
-        # adding handpays is later
-        current_play = Play(machine=Machine(machine), casino=casino, start_time=xdate, cash_in=cash_in, bet=bet,play_type=play_type, state=initial_state, note=note, start_image=start_img, addl_images=other, end_image=end_img, cash_out=cash_out)
-        for hp in self.hand_pay:
-            current_play.add_hand_pay(hp)
+        self._current_play.start_image = self.entry_wigits.start_entry.var.get()
+        self._current_play.end_image = self.entry_wigits.end_entry.var.get()
+        self._current_play.addl_images = self.play_imgs
+        self._current_play.start_time = datetime.datetime.strptime(self.entry_wigits.date.var.get(), '%Y-%m-%d %H:%M:%S')
+        print(self._current_play.start_time)
 
-        self.plays.append(current_play) 
+        for hp in self.hand_pay:
+            self._current_play.add_hand_pay(hp)
+
+        self.plays[self._current_play.identifier] = self._current_play 
         self.session_table.update_table(self)
 
-        self.imgs = [d for d in self.imgs if ((d[0] not in other) and (d[0] != start_img) and (d[0] != end_img))]
+        self.imgs = [d for d in self.imgs if ((d[0] not in self._current_play.addl_images) and (d[0] != self._current_play.start_image) and (d[0] != self._current_play.end_image))]
         self.imgs = sorted(self.imgs, key=lambda item: item[2])
 
         # clears all entry values
         self.entry_wigits.date.var.set('')
-        self.entry_wigits.cashin.var.set(cash_out)
+        self.entry_wigits.cashin.var.set(self._current_play.cash_out)
         self.entry_wigits.bet.var.set(0)
         self.entry_wigits.initial_state.clear()
         self.entry_wigits.cashout.var.set(0)
@@ -250,28 +265,35 @@ class App(ttk.Window):
                 f.close()
                 break
         
-        new_path = join(dirname(dirname(self.plays[0].start_image)), f'Sorted/{self.session_date.get()}')
-        
-        try:
-            makedirs(new_path, exist_ok=False)
-        except Exception:
-            pass
 
-        print("plays:", len(self.plays))
-        for p in self.plays:
-            if p.start_image is not None:
+        new_path = ""
+        if list(self.plays.values())[0].start_image:
+            new_path = join(dirname(dirname(list(self.plays.values())[0].start_image)), f'Sorted/{self.session_date.get()}')
+        
+            try:
+                makedirs(new_path, exist_ok=False)
+            except Exception:
+                pass
+
+            # move all images and update play values with new location
+        for p in list(self.plays.values()):
+            if p.start_image and new_path:
                 print("start", self.session_date.get(), p.start_image) 
                 p.start_image = move(p.start_image, new_path)
             for i,a in enumerate(p.addl_images):
                 print("addl", self.session_date.get(), a) 
                 p.addl_images[i] = move(a, new_path)
-            if p.end_image:
+            if p.end_image and new_path:
                 print("end", self.session_date.get(), p.end_image) 
                 p.end_image = move(p.end_image, new_path)
 
+            # Save csv
+            print(f"Writing to {file_path}\n")
             with open(file_path, 'a+', newline='') as csvfile:
                 writer = csv.writer(csvfile)
-                writer.writerows(str(p).split('\n'))
+                for row in p.get_csv_rows():
+                    writer.writerow(row)
+                    #csvfile.writelines(str(p))
             
         self.plays.clear()
         self.session_table.update_table(self)

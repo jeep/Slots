@@ -76,6 +76,7 @@ class EntryWigits(ttk.Frame):
     
     def _create_machine(self):
         self.machine = ComboboxLabel(self, 'Machine', self._window.machine_values)
+        self.machine.combobox.bind("<<ComboboxSelected>>", lambda _: self._window.create_play(self.machine.var.get()))
     
     def _create_cashin(self):
         self.cashin = MoneyEntryLabel(self, 'Cash In')
@@ -137,6 +138,7 @@ class EntryWigits(ttk.Frame):
         for item in parent.hand_pay:
             self.hp_table.insert(parent='', index=ttk.END, values=(item.pay_amount, item.tip_amount))
     
+
 #    def _hp_delete(self, _):
 #        for item in self.hp_table.selection():
 #            values = self.hp_table.item(item)['values']

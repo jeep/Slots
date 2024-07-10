@@ -1,8 +1,8 @@
 from dataclasses import dataclass, field
 import json
-from Programs.Slots.EntryField import EntryField
-from Programs.Slots.Machine import Machine
-from Programs.Slots.Play import Play
+from .EntryField import EntryField
+from .Machine import Machine
+from .Play import Play
 
 @dataclass(repr=False, eq=False)
 class LuckyWealthCatPlay(Play):
@@ -10,13 +10,17 @@ class LuckyWealthCatPlay(Play):
     state_data: dict = field(init=False, default_factory = lambda: {"7xCat": None, "6xFish": None, "5xTree": None, "3xA": None, "3xK": None, "3xQ": None})
     _state: str = field(init=False)
 
+    def __post_init__(self):
+        print("Made a LWC play:", self.machine, " ", type(self.machine))
+
+    
     def get_entry_fields(self) -> list:
-        return [EntryField(label='7xCat', field_type="int", val=self.set_cat_data),
-                EntryField(label='6xFish', field_type="int", val=self.set_fish_data),
-                EntryField(label='5xTree', field_type="int", val=self.set_tree_data),
-                EntryField(label='3xA', field_type="int", val=self.set_a_data),
-                EntryField(label='3xK', field_type="int", val=self.set_k_data),
-                EntryField(label='3xQ', field_type="int", val=self.set_q_data)]
+        return [EntryField(label='7xCat', field_type="int", callback=self.set_cat_data),
+                EntryField(label='6xFish', field_type="int", callback=self.set_fish_data),
+                EntryField(label='5xTree', field_type="int", callback=self.set_tree_data),
+                EntryField(label='3xA', field_type="int", callback=self.set_a_data),
+                EntryField(label='3xK', field_type="int", callback=self.set_k_data),
+                EntryField(label='3xQ', field_type="int", callback=self.set_q_data)]
 
     def set_cat_data(self, val: int) -> None:
         self.state_data["7xCat"] = val

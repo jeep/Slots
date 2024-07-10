@@ -179,7 +179,7 @@ class ImageButtons(ttk.Frame):
         parent.entry_wigits.start_entry.var.set(parent.imgs[parent.pointer][0])
         
         # sets the date wigit to the date ( year month day ) of the current image
-        parent.entry_wigits.date.var.set(parent.imgs[parent.pointer][2][:8])
+        parent.entry_wigits.date.var.set(parent.imgs[parent.pointer][2])
 
         if not parent.session_date.get():
             parent.session_date.set(parent.imgs[parent.pointer][2][:8])
