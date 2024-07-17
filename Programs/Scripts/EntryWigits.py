@@ -40,6 +40,7 @@ class EntryWigits(ttk.Frame):
         self._create_bet()
         self._create_play_type()
         self._create_initial_state()
+        self._create_state_val()
         self._create_cashout()
         self._create_profit_loss()
         self._create_note()
@@ -57,6 +58,7 @@ class EntryWigits(ttk.Frame):
         self.bet.pack(fill='x')
         self.play_type.pack(fill='x')
         self.initial_state.pack(fill='x')
+        self.state_val.pack(fill='x')
         self.cashout.pack(fill='x')
         self.profit_loss.pack(fill='x')
         self.note.pack(fill='x')
@@ -93,6 +95,12 @@ class EntryWigits(ttk.Frame):
         self.initial_state.text.bind('<Tab>', lambda _: _no_tab(_, self._window))
         # binds pressing shift and tab to moving to the previous wigit
         self.initial_state.text.bind('<Shift-Tab>', lambda _: _no_shift_tab(_, self._window))
+
+    def _create_state_val(self):
+        if self._window._current_play is None:
+            self.state_val = ttk.Label(self)
+            return
+        self.state_val = ttk.Label(self, textvariable= self._window._current_play.ttk_state)
 
     def _create_cashout(self):
         self.cashout = MoneyEntryLabel(self, 'Cash Out')

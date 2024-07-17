@@ -5,9 +5,9 @@ from .Machine import Machine
 from .Play import Play
 
 @dataclass(repr=False, eq=False)
-class LuckyWealthCatPlay(Play):
-    machine: Machine = Machine("Lucky Wealth Cat", "Lucky Buddha/Lucky Wealth Cat")
-    state_data: dict = field(init=False, default_factory = lambda: {"7xCat": None, "6xFish": None, "5xTree": None, "3xA": None, "3xK": None, "3xQ": None})
+class LuckyBuddhaPlay(Play):
+    machine: Machine = Machine("Lucky Buddha", "Lucky Buddha/Lucky Wealth Cat")
+    state_data: dict = field(init=False, default_factory = lambda: {"7xBuddha": None, "6xTurtle": None, "5xCat": None, "3xA": None, "3xK": None, "3xQ": None})
     _state: str = field(init=False)
 
     def __post_init__(self):
@@ -15,21 +15,21 @@ class LuckyWealthCatPlay(Play):
 
     
     def get_entry_fields(self) -> list:
-        return [EntryField(label='7xCat', callback=self.set_cat_data),
-                EntryField(label='6xFish', callback=self.set_fish_data),
-                EntryField(label='5xTree', callback=self.set_tree_data),
+        return [EntryField(label='7xBuddha', callback=self.set_buddha_data),
+                EntryField(label='6xTurtle', callback=self.set_turtle_data),
+                EntryField(label='5xCat', callback=self.set_cat_data),
                 EntryField(label='3xA', callback=self.set_a_data),
                 EntryField(label='3xK', callback=self.set_k_data),
                 EntryField(label='3xQ', callback=self.set_q_data)]
 
+    def set_buddha_data(self, val: int) -> None:
+        self.state_data["7xBuddha"] = val
+
+    def set_turtle_data(self, val: int) -> None:
+        self.state_data["6xTurtle"] = val
+
     def set_cat_data(self, val: int) -> None:
-        self.state_data["7xCat"] = val
-
-    def set_fish_data(self, val: int) -> None:
-        self.state_data["6xFish"] = val
-
-    def set_tree_data(self, val: int) -> None:
-        self.state_data["5xTree"] = val
+        self.state_data["5xCat"] = val
 
     def set_a_data(self, val: int) -> None:
         self.state_data["3xA"] = val

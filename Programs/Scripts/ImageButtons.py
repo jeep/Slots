@@ -4,6 +4,7 @@ from ttkbootstrap.dialogs import Messagebox
 from os import remove
 
 from Scripts.HandPayWindow import HandPayWindow
+from Scripts.StateEntryHelperWindow import StateEntryHelperWindow
 
 
 class ImageButtons(ttk.Frame):
@@ -27,6 +28,7 @@ class ImageButtons(ttk.Frame):
         self.prev_button    = ttk.Button(self, text='Prev', command=lambda: self.prev_button_command(self._window))
         self.next_button    = ttk.Button(self, text='Next', command=lambda: self.next_button_command(self._window))
         self.return_button  = ttk.Button(self, text='Return to Start', command=lambda: self.return_button_command(self._window))
+        self.state_button = ttk.Button(self, text="Open State Helper", command=lambda: self._open_state_helperwin(self._window))
         
         # creates the second row of buttons
         self.start_button   = ttk.Button(self, text='Set Start', command=lambda: self.start_button_command(self._window))
@@ -50,6 +52,7 @@ class ImageButtons(ttk.Frame):
         self.prev_button.grid(column=0, row=0, sticky='nsew', padx=pad_back, pady=pad_back)
         self.next_button.grid(column=1, row=0, sticky='nsew', padx=pad_double, pady=pad_back)
         self.return_button.grid(column=2, row=0, sticky='nsew', padx=pad_front, pady=pad_back)
+        self.state_button.grid(column=3, row=0, sticky='nsew', padx=pad_front, pady=pad_back)
         
         # places the second row of buttons
         self.start_button.grid(column=0, row=1, sticky='nsew', padx=pad_back, pady=pad_double)
@@ -63,9 +66,14 @@ class ImageButtons(ttk.Frame):
         self.delete_button.grid(column=2, row=2, sticky='nsew', padx=pad_double, pady=pad_front)
         self.save_session_button.grid(column=3, row=2, sticky='nsew', padx=pad_front, pady=pad_front)
     
-    
     def _open_hpwin(self, callback):
         HandPayWindow(callback=callback)
+
+    def _open_state_helperwin(self, parent):
+        if self._window._current_play is not None:
+            StateEntryHelperWindow(play=self._window._current_play)
+        else:
+            print("No helper available")
     
     def _get_hpwin_data(self, parent, hp):
         parent.hand_pay.append(hp)

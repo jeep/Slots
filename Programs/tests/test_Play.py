@@ -40,11 +40,14 @@ class TestPlay():
         #assert play.initial_cash_in == Decimal("12.34")
 
     def test_initial_cash_in(self, play):
-        assert play.cash_in == Decimal(0.00)
-
+        assert play.initial_cash_in == Decimal(0.00)
         play.add_cash(Decimal("12.34"))
-        assert play.cash_in == Decimal("12.34")
+        assert play.initial_cash_in == Decimal("12.34")
     
+    def test_initial_cash_in_defaults_0(self, play):
+        assert play.cash_in == Decimal(0.00)
+        assert play.initial_cash_in == Decimal("0.00")
+
     def test_bet(self, play):
         assert play.bet is None
         play.bet = Decimal("0.60")
@@ -141,7 +144,7 @@ class TestPlay():
         img3 = r"d:\this\is\a\path\image3.png"
         play.add_images([img2, img3])
 
-        expected = r"""ilani,01/02/2024,Test Machine,$600.00,$0.60,AP,"This; is (a): state",$12.34,-$587.66,"This; is (a): note.",Test Machine,d:\this\is\a\path\simage.png,d:\this\is\a\path\eimage.png,['d:\\this\\is\\a\\path\\image1.png', 'd:\\this\\is\\a\\path\\image2.png', 'd:\\this\\is\\a\\path\\image3.png']"""
+        expected = r"""Test_Machine-0.60-2024-01-02-03:04:05,ilani,01/02/2024,Test Machine,$600.00,$0.60,AP,"This; is (a): state",$12.34,-$587.66,"This; is (a): note.",Test Machine,d:\this\is\a\path\simage.png,d:\this\is\a\path\eimage.png,['d:\\this\\is\\a\\path\\image1.png', 'd:\\this\\is\\a\\path\\image2.png', 'd:\\this\\is\\a\\path\\image3.png']"""
 
         assert str(play) == expected
     
@@ -163,14 +166,14 @@ class TestPlay():
         
         img4 = r"d:\this\is\a\path\image4.png"
         img5 = r"d:\this\is\a\path\image5.png"
-        play.make_hand_pay(Decimal(1201.00), Decimal(20.00), img4, [img5])
-        hp = HandPay(Decimal(2000.00), Decimal(40.00), img4)
+        play.make_hand_pay(Decimal(1201.00), Decimal(20.00), img4)
+        hp = HandPay(Decimal(2000.00), Decimal(40.00), img4, [img5])
         play.add_hand_pay(hp)
 
-        expected = r"""ilani,01/02/2024,Test Machine,$100.00,$10.60,AP,"This; is (a): state",$1,234.56,$1,134.56,"This; is (a): note.",Test Machine,d:\this\is\a\path\simage.png,d:\this\is\a\path\eimage.png,['d:\\this\\is\\a\\path\\image1.png', 'd:\\this\\is\\a\\path\\image2.png', 'd:\\this\\is\\a\\path\\image3.png']
-ilani,01/02/2024,Test Machine,$324.27,,Tax Consequence,$1,201.00,,-$324.27,$324.27,Test Machine,d:\this\is\a\path\image4.png,,['d:\\this\\is\\a\\path\\image5.png']
-ilani,01/02/2024,Test Machine,$20.00,,Tip,,$0.00,-$20.00,,Test Machine,,,
-ilani,01/02/2024,Test Machine,$540.00,,Tax Consequence,$2,000.00,,-$540.00,$540.00,Test Machine,d:\this\is\a\path\image4.png,,
-ilani,01/02/2024,Test Machine,$40.00,,Tip,,$0.00,-$40.00,,Test Machine,,,"""
+        expected = r"""Test_Machine-10.60-2024-01-02-03:04:05,ilani,01/02/2024,Test Machine,$100.00,$10.60,AP,"This; is (a): state",$1,234.56,$1,134.56,"This; is (a): note.",Test Machine,d:\this\is\a\path\simage.png,d:\this\is\a\path\eimage.png,['d:\\this\\is\\a\\path\\image1.png', 'd:\\this\\is\\a\\path\\image2.png', 'd:\\this\\is\\a\\path\\image3.png']
+Test_Machine-10.60-2024-01-02-03:04:05,ilani,01/02/2024,Test Machine,$324.27,,Tax Consequence,$1,201.00,,-$324.27,$324.27,Test Machine,d:\this\is\a\path\image4.png,,
+Test_Machine-10.60-2024-01-02-03:04:05,ilani,01/02/2024,Test Machine,$20.00,,Tip,,$0.00,-$20.00,,Test Machine,,,
+Test_Machine-10.60-2024-01-02-03:04:05,ilani,01/02/2024,Test Machine,$540.00,,Tax Consequence,$2,000.00,,-$540.00,$540.00,Test Machine,d:\this\is\a\path\image4.png,,['d:\\this\\is\\a\\path\\image5.png']
+Test_Machine-10.60-2024-01-02-03:04:05,ilani,01/02/2024,Test Machine,$40.00,,Tip,,$0.00,-$40.00,,Test Machine,,,"""
 
         assert str(play) == expected
