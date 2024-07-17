@@ -6,7 +6,8 @@ from Scripts.LabelPairs.MoneyEntryLabel import MoneyEntryLabel
 from Scripts.LabelPairs.LabelLabel import LabelLabel
 from Scripts.LabelPairs.LargeEntryLabel import LargeEntryLabel
 
-from Scripts.Handpay import Handpay
+from Slots.Play import HandPay
+from decimal import Decimal
 
 def _no_tab(_, parent):
     # focuses on the next wigit
@@ -31,6 +32,7 @@ class EntryWigits(ttk.Frame):
         self._place_entries()
     
     def _create_entries(self):
+        self._create_session_date()
         self._create_casino()
         self._create_date()
         self._create_machine()
@@ -38,6 +40,7 @@ class EntryWigits(ttk.Frame):
         self._create_bet()
         self._create_play_type()
         self._create_initial_state()
+        self._create_state_val()
         self._create_cashout()
         self._create_profit_loss()
         self._create_note()
@@ -47,6 +50,7 @@ class EntryWigits(ttk.Frame):
         self._create_hp_table()
     
     def _place_entries(self):
+        self.session_date.pack(fill='x')
         self.casino.pack(fill='x')
         self.date.pack(fill='x')
         self.machine.pack(fill='x')
@@ -54,6 +58,7 @@ class EntryWigits(ttk.Frame):
         self.bet.pack(fill='x')
         self.play_type.pack(fill='x')
         self.initial_state.pack(fill='x')
+        self.state_val.pack(fill='x')
         self.cashout.pack(fill='x')
         self.profit_loss.pack(fill='x')
         self.note.pack(fill='x')
@@ -62,7 +67,9 @@ class EntryWigits(ttk.Frame):
         self.table.pack(fill='x')
         self.hp_table.pack(fill='x')
     
-    
+    def _create_session_date(self):
+        self.session_date = LabelLabel(self, 'Session Date', label_var=self._window.session_date)
+
     def _create_casino(self):
         self.casino = ComboboxLabel(self, 'Casino', self._window.casino_values, state='readonly')
     
@@ -71,6 +78,7 @@ class EntryWigits(ttk.Frame):
     
     def _create_machine(self):
         self.machine = ComboboxLabel(self, 'Machine', self._window.machine_values)
+        self.machine.combobox.bind("<<ComboboxSelected>>", lambda _: self._window.create_play(self.machine.var.get()))
     
     def _create_cashin(self):
         self.cashin = MoneyEntryLabel(self, 'Cash In')
@@ -88,13 +96,19 @@ class EntryWigits(ttk.Frame):
         # binds pressing shift and tab to moving to the previous wigit
         self.initial_state.text.bind('<Shift-Tab>', lambda _: _no_shift_tab(_, self._window))
 
+    def _create_state_val(self):
+        if self._window._current_play is None:
+            self.state_val = ttk.Label(self)
+            return
+        self.state_val = ttk.Label(self, textvariable= self._window._current_play.ttk_state)
+
     def _create_cashout(self):
         self.cashout = MoneyEntryLabel(self, 'Cash Out')
     
     def _create_profit_loss(self):
         self.profit_loss = LabelLabel(self, 'Profit/Loss', 0.00)
         # binds pressing any key to updateing the label
-        self._window.bind('<Key>', lambda _: self.profit_loss.var.set(f'{(self.cashout.get_var() - self.cashin.get_var()):.2f}'))
+        self._window.bind('<Key>', lambda _: self.profit_loss.var.set(f'{(Decimal(self.cashout.get_var()) - Decimal(self.cashin.get_var())):.2f}'))
     
     def _create_note(self):
         self.note = LargeEntryLabel(self, 'Note', height=8)
@@ -117,7 +131,7 @@ class EntryWigits(ttk.Frame):
         self.hp_table = ttk.Treeview(self, columns=('hp', 'tip'), show='headings')
         self.hp_table.heading('hp', text='Hand Pay')
         self.hp_table.heading('tip', text='Tip')
-        self.hp_table.bind('<Delete>', self._hp_delete)
+        #self.hp_table.bind('<Delete>', self._hp_delete)
         
     def update_table(self, parent):
         # removes all elements of the table
@@ -130,10 +144,11 @@ class EntryWigits(ttk.Frame):
         self.hp_table.delete(*self.hp_table.get_children())
         
         for item in parent.hand_pay:
-            self.hp_table.insert(parent='', index=ttk.END, values=item)
+            self.hp_table.insert(parent='', index=ttk.END, values=(item.pay_amount, item.tip_amount))
     
-    def _hp_delete(self, _):
-        for item in self.hp_table.selection():
-            values = self.hp_table.item(item)['values']
-            self._window.hand_pay.remove(Handpay(float(values[0]), float(values[1]), None))
-            self.hp_table.delete(item)
+
+#    def _hp_delete(self, _):
+#        for item in self.hp_table.selection():
+#            values = self.hp_table.item(item)['values']
+#            self._window.hand_pay.remove(Handpay(float(values[0]), float(values[1]), None))
+#            self.hp_table.delete(item)

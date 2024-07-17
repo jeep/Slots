@@ -1,7 +1,7 @@
 import ttkbootstrap as ttk
 
 class EntryLabel(ttk.Frame):
-    def __init__(self, parent, label_text='', entry_var=None, state='normal'):
+    def __init__(self, parent, label_text='', entry_var=None, state='normal', callback=None):
         
         super().__init__(master=parent)
         self.label = ttk.Label(self, text=label_text)
@@ -15,3 +15,9 @@ class EntryLabel(ttk.Frame):
         self.entry = ttk.Entry(self, textvariable=self.var, state=state, width=30)
             
         self.entry.pack(side='right')
+
+        self.callback = callback
+
+
+    def execute(self):
+        self.callback(self.var.get())
