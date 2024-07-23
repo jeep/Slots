@@ -1,3 +1,7 @@
+import ttkbootstrap as ttk
+import tkinter as tk
+
+
 from dataclasses import dataclass, field
 import json
 from .EntryField import EntryField

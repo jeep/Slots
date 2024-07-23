@@ -9,7 +9,9 @@ class LabelLabel(ttk.Frame):
 
         super().__init__(master=parent)
         self.label = ttk.Label(self, text=label_text)
-        self.label.pack(side='left', )
+        self.label.grid(row=0, column=0, padx=5, pady=5)
+        #self.label.pack(side='left', )
         
         self.entry = ttk.Label(self, textvariable=self.var)
-        self.entry.pack(side='right')
+        #self.entry.pack(side='right')
+        self.entry.grid(row=0, column=1, padx=5, pady=5)

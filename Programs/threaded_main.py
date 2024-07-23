@@ -1,3 +1,5 @@
+import os
+
 import ttkbootstrap as ttk
 from ttkbootstrap.dialogs import Querybox, Messagebox
 
@@ -9,6 +11,7 @@ from Scripts.ImageDisplay import ImageDisplay
 from Scripts.ImageButtons import ImageButtons
 from Scripts.EntryWigits import EntryWigits
 from Scripts.SessionTable import SessionTable
+from Scripts.SessionFrame import SessionFrame
 
 from os import makedirs
 from os.path import join, dirname, join
@@ -28,7 +31,6 @@ from Slots.Machine import Machine
 
 register_heif_opener(decode_threads=8, thumbnails=False)
 
-
 class App(ttk.Window):
     def __init__(self):
         self.imgs = []
@@ -37,15 +39,11 @@ class App(ttk.Window):
         self.plays = {}
         self._current_play = None
         self.start_datetime = datetime.MINYEAR
-        self.play_type = ('AP', 'Gamble', 'Misplay', 'Non-play', 'Science', 'Tip')
-        
-        with open(f'casino_entry_values.csv', 'r') as csvfile:
-            casino_values = list(csv.reader(csvfile))
-            self.casino_values = [val.strip() for sublist in casino_values for val in sublist if (val.strip() != '')]
-        
-        with open(f'machine_entry_values.csv', 'r') as csvfile:
-            machine_values = list(csv.reader(csvfile))
-            self.machine_values = [val for sublist in machine_values for val in sublist]
+
+        self.play_types = App.get_play_types() 
+        self.casino_values = App.get_casinos()
+        self.machine_values = App.get_machines()
+        self.denom_values = App.get_denoms()
             
         self.pointer = 0
         self.scale = 10
@@ -56,41 +54,76 @@ class App(ttk.Window):
         self.geometry('1300x800')
         self.iconphoto(False, ttk.PhotoImage(file=r'Programs\Icon\slot_machine_icon.png'))
         
-        self.session_date = ttk.StringVar()
+        self.default_session_date = "Load first play"
+        self.session_date = ttk.StringVar(value=self.default_session_date)
         self.start_img = ttk.StringVar()
         self.end_img = ttk.StringVar()
+        self.ttk_state = ttk.StringVar()
+
+        self.columnconfigure(0, uniform='a', weight=1)
+        self.columnconfigure(1, uniform='a', weight=3)
+        self.columnconfigure(2, uniform='a', weight=2)
 
         self.session_table = SessionTable(self) 
-        self.session_table.pack(side='left', padx=5, pady=5, fill='both')
+        self.session_table.grid(row=0, column=0, sticky='nsew')
 
-        self.entry_wigits = EntryWigits(self, self)
-        self.entry_wigits.pack(side='left', padx=5, pady=5, fill='both')
+        self.info_frame = ttk.Frame(self)
+        self.session_frame = SessionFrame(self.info_frame, self)
+        self.session_frame.pack(anchor='center')
+        self.entry_wigits = EntryWigits(self.info_frame, self)
+        self.entry_wigits.pack(anchor='center')
+        self.info_frame.grid(row=0, column=1, sticky='nsew')
         
         image_frame = ttk.Frame(self)
-        
         self.image_display = ImageDisplay(image_frame)
         
         self.image_buttons = ImageButtons(image_frame, self)
-        self.image_buttons.pack(side='top', padx=5, pady=5, anchor='nw')
+        self.image_buttons.pack(side='top', padx=5, pady=5, anchor='n')
         self.image_display.pack(side='top', padx=5, pady=5)
-        image_frame.pack(side='left', fill='both')
+        #image_frame.pack(side='right', fill='both', anchor='ne')
+        image_frame.grid(row=0, column=2, sticky='nsew')
         
         self.make_menu()
         
         self.setup_keybinds()
 
-    def setup_keybinds(self):
-        self.bind('<FocusIn>', lambda _: self.check_save_valid())
-        self.bind('<FocusOut>', lambda _: self.check_save_valid())
+    @staticmethod
+    def get_entry_values(file_name, defaults=None):
+        if os.path.exists(file_name):
+            with open(file_name, 'r') as csvfile:
+                values = list(csv.reader(csvfile))
+                values = [val.strip() for sublist in values for val in sublist if (val.strip() != '')]
+                return values
 
-        self.bind('<Control-s>', lambda _: self.save())
-        self.bind('<Prior>', lambda _: self.image_buttons.prev_button_command(self))
-        self.bind('<Next>', lambda _: self.image_buttons.next_button_command(self))
-        self.bind('<Home>', lambda _: self.image_buttons.return_button_command(self))
-        self.bind('<Control-Key-1>', lambda _: self.image_buttons.start_button_command(self))
-        self.bind('<Control-Key-2>', lambda _: self.image_buttons.add_button_command(self))
-        self.bind('<Control-Key-3>', lambda _: self.image_buttons.end_button_command(self))
-    
+        msg = f"{file_name} not found."
+        if defaults:
+            print(msg, " Using defaults.")
+            return defaults
+
+        print(msg)
+        return []
+
+    @staticmethod
+    def get_play_types():
+        play_type_defaults = ('AP', 'Gamble', 'Misplay', 'Non-play', 'Science', 'Tip')
+        play_types_file = 'play_types.csv'
+        return App.get_entry_values(play_types_file, play_type_defaults) 
+
+    @staticmethod
+    def get_casinos():
+        casinos_file = f'casino_entry_values.csv'
+        return App.get_entry_values(casinos_file)
+
+    @staticmethod
+    def get_machines():
+        machines_file = f'machine_entry_values.csv'
+        return App.get_entry_values(machines_file)
+
+    @staticmethod
+    def get_denoms():
+        denom_file = f'denom_entry_values.csv'
+        return App.get_entry_values(denom_file)
+
     def make_menu(self):
         # creates the menu wigit
         menu = ttk.Menu(master=self)
@@ -112,6 +145,7 @@ class App(ttk.Window):
         
         menu.add_cascade(label='File', menu=file_menu)
     
+
     def open_folder(self):
         # opens a file menu to open a directory
         directory = askdirectory(mustexist=True)
@@ -139,16 +173,16 @@ class App(ttk.Window):
         self.image_buttons.remove_button.configure(state='disabled')
 
     def load_test_play(self):
-        self.entry_wigits.casino.var.set("ilani")
-        self.entry_wigits.date.var.set(datetime.datetime(2024,5,1, 12, 3, 5))
-        self.entry_wigits.machine.var.set("Lucky Wealth Cat")
-        self.entry_wigits.cashin.var.set(Decimal("100.00"))
-        self.entry_wigits.bet.var.set(Decimal("1.20"))
+        self.session_frame.casino.var.set("ilani")
+        self.session_date.set(datetime.datetime(2024,5,1).strftime('%Y-%m-%d'))
+        self.entry_wigits.dt.var.set(datetime.datetime(2024,5,1, 12, 3, 5).strftime('%Y-%m-%dT%H:%M:%S'))
+        self.entry_wigits.machine_cb.var.set("Lucky Wealth Cat")
+        self.entry_wigits.cashin.var.set("100.00")
+        self.entry_wigits.bet.var.set("1.20")
         self.entry_wigits.play_type.var.set("AP")
         self.entry_wigits.initial_state.text.insert('1.0', "This, is; a (state): 1223")
-        self.entry_wigits.cashout.var.set(120.00)
+        self.entry_wigits.cashout.var.set("120.00")
 
-    
     def add_casino(self):
         # opens a window to ask for a casino
         new_casino = Querybox.get_string(prompt='Enter a casino', title='Casino Entry')
@@ -195,6 +229,7 @@ class App(ttk.Window):
             self.image_display.canvas.create_image(x, y, image=imagetk)
     
     def create_play(self, machine_name):
+        print(f"Creating play for {machine_name}")
         self._current_play = PlayFactory.get_play(machine_name)
 
     def save(self):
@@ -205,7 +240,7 @@ class App(ttk.Window):
         #    return
 
         # gets all entry values
-        self._current_play.casino = self.entry_wigits.casino.var.get()
+        self._current_play.casino = self.session_frame.casino.var.get()
         self._current_play.cash_in = Decimal(self.entry_wigits.cashin.var.get())
         self._current_play.bet = Decimal(self.entry_wigits.bet.var.get())
         self._current_play.play_type = self.entry_wigits.play_type.var.get()
@@ -216,7 +251,7 @@ class App(ttk.Window):
         self._current_play.start_image = self.entry_wigits.start_entry.var.get()
         self._current_play.end_image = self.entry_wigits.end_entry.var.get()
         self._current_play.addl_images = self.play_imgs
-        self._current_play.start_time = datetime.datetime.strptime(self.entry_wigits.date.var.get(), '%Y-%m-%d %H:%M:%S')
+        self._current_play.start_time = datetime.datetime.strptime(self.entry_wigits.dt.var.get(), '%Y-%m-%d %H:%M:%S')
         print(self._current_play.start_time)
 
         for hp in self.hand_pay:
@@ -229,7 +264,7 @@ class App(ttk.Window):
         self.imgs = sorted(self.imgs, key=lambda item: item[2])
 
         # clears all entry values
-        self.entry_wigits.date.var.set('')
+        self.entry_wigits.dt.var.set('')
         self.entry_wigits.cashin.var.set(self._current_play.cash_out)
         self.entry_wigits.bet.var.set(0)
         self.entry_wigits.initial_state.clear()
@@ -246,7 +281,6 @@ class App(ttk.Window):
         
         # resets the save button to disabled
         self.image_buttons.save_button.configure(state='disabled')
-
 
     def save_session(self):
         # gets the path to the data save
@@ -307,15 +341,15 @@ class App(ttk.Window):
         self.image_buttons.save_button.configure(state='disabled')
     
     def check_save_valid(self):
-        # gets the entry values that need to be filled to save
-        casino = self.entry_wigits.casino.var.get()
+        casino = self.session_frame.casino.var.get()
 
-        date = self.entry_wigits.date.var.get()
-        machine = self.entry_wigits.machine.var.get()
+        dt = self.entry_wigits.dt.var.get()
+        machine = self.entry_wigits.machine_cb.var.get()
+
         play_type = self.entry_wigits.play_type.var.get()
         
         # checks if they are empty
-        if casino=='' or date=='' or machine=='' or play_type=='':
+        if casino=='' or dt=='' or machine=='' or play_type=='':
             # disables the save button
             self.image_buttons.save_button.configure(state='disabled')
         else:
@@ -323,21 +357,25 @@ class App(ttk.Window):
             self.image_buttons.save_button.configure(state='normal')
         
     def save_externals(self):
-        # gets the path to casino entry values csv file
-        file_path = join(dirname(dirname(__file__)), 'casino_entry_values.csv')
-        # saves the casino entry values to the csv file
-        with open(file_path, 'w', newline='') as csvfile:
-            writer = csv.writer(csvfile)
-            for item in self.casino_values:
-                writer.writerow([item])
+        externals = {'casino_entry_values.csv': self.casino_values, 'machine_entry_values.csv': self.machine_values, 'denom_entry_values.csv': self.denom_values, 'playtype_entry_values.csv': self.play_types}
+        for f, var in externals.items():
+            file_path = join(dirname(dirname(__file__)), f)
+            with open(file_path, 'w', newline='') as csvfile:
+                writer = csv.writer(csvfile)
+                for item in var:
+                    writer.writerow([item])
         
-        # gets teh path to the machine entry values csv file
-        file_path = join(dirname(dirname(__file__)), 'machine_entry_values.csv')
-        # saves the machine entry values to the csv file
-        with open(file_path, 'w', newline='') as csvfile:
-            writer = csv.writer(csvfile)
-            for item in self.machine_values:
-                writer.writerow([item])
+    def setup_keybinds(self):
+        self.bind('<FocusIn>', lambda _: self.check_save_valid())
+        self.bind('<FocusOut>', lambda _: self.check_save_valid())
+
+        self.bind('<Control-s>', lambda _: self.save())
+        self.bind('<Prior>', lambda _: self.image_buttons.prev_button_command(self))
+        self.bind('<Next>', lambda _: self.image_buttons.next_button_command(self))
+        self.bind('<Home>', lambda _: self.image_buttons.return_button_command(self))
+        self.bind('<Control-Key-1>', lambda _: self.image_buttons.start_button_command(self))
+        self.bind('<Control-Key-2>', lambda _: self.image_buttons.add_button_command(self))
+        self.bind('<Control-Key-3>', lambda _: self.image_buttons.end_button_command(self))
 
 
 if __name__ == '__main__':

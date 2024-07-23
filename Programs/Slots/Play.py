@@ -83,6 +83,9 @@ class Play:
     def get_entry_fields(self):
         return None
 
+    def get_state_helper(self):
+        return None
+
     def get_csv_rows(self):
         #JEEP: This doesn't belong in this class
         start_date = self.start_time.strftime(r"%m/%d/%Y")
@@ -107,10 +110,3 @@ class Play:
             outstr += f"\n{self.identifier},{self.casino},{start_date},{self.machine.get_name()},{format_currency(tax, 'USD', locale='en_US')},,Tax Consequence,{format_currency(hp.pay_amount, 'USD', locale="en_US")},,{format_currency(-1*tax, 'USD', locale='en_US')},{format_currency(tax, 'USD', locale='en_US')},{self.machine.get_family()},{hp.image},,{images}"
             outstr += f"\n{self.identifier},{self.casino},{start_date},{self.machine.get_name()},{format_currency(hp.tip_amount, 'USD', locale='en_US')},,Tip,,{format_currency(0.00, 'USD', locale='en_US')},{format_currency(-1*hp.tip_amount, 'USD', locale='en_US')},,{self.machine.get_family()},,,"
         return outstr
-
-    @property
-    def ttk_state(self):
-        if self.state is not None:
-            return StringVar(self.state)
-        else:
-            return StringVar("")

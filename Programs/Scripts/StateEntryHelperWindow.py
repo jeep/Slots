@@ -14,9 +14,11 @@ class StateEntryHelperWindow(tk.Toplevel):
         self.title('State Entry')
         self.minsize(300, 300)
         self.iconphoto(False, ttk.PhotoImage(file=r'Programs\Icon\slot_machine_icon.png'))
+
         self.fields = play.get_entry_fields()
         if self.fields is None:
-            print("This should be a dialog, but there are not fields for this machine.")
+            print(f"This should be a dialog, but there are not fields for this machine. {play.machine.get_name()}")
+            return
 
         self.entries = []
         for f in self.fields:
@@ -41,7 +43,6 @@ class StateEntryHelperWindow(tk.Toplevel):
     def button_okay_pressed(self):
         for e in self.entries:
             e.execute()
-
         self.destroy()
 
     def button_cancel_pressed(self):
