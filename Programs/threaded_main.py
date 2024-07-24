@@ -115,11 +115,9 @@ class App(ttk.Window):
         return []
 
     def make_menu(self):
-        # creates the menu wigit
         menu = ttk.Menu(master=self)
         self.configure(menu=menu)
         
-        # creates sub menu
         file_menu = ttk.Menu(menu, tearoff=False)
         file_menu.add_command(label='Open Folder', command=self.open_folder)
         file_menu.add_separator()
@@ -134,7 +132,6 @@ class App(ttk.Window):
         menu.add_cascade(label='File', menu=file_menu)
 
     def open_folder(self):
-        # opens a file menu to open a directory
         directory = askdirectory(mustexist=True)
         if directory == '':
             return
@@ -144,13 +141,10 @@ class App(ttk.Window):
         self.imgs = [d for d in multi_get_img_data(directory) if d is not None]
         print('Loaded ', datetime.datetime.now())
         
-        # does nothing else if there are not images in the directory
         if len(self.imgs) == 0:
             return
         
-        # sorts images in the image list by date
         self.imgs = sorted(self.imgs, key=lambda item: item[2])
-        # displays the oldest image
         self.display_image()
         
         self.image_buttons.save_button.configure(state='disabled')
