@@ -10,8 +10,8 @@ from .Play import Play
 class PlayFactory:
     play_for_machine = {
         "Lucky Wealth Cat": LuckyWealthCatPlay,
-        "Lucky Buddha": LuckyBuddhaPlay,
         "Lucky Wealth Cat (Bingo)": LuckyWealthCatPlay,
+        "Lucky Buddha": LuckyBuddhaPlay,
         "Lucky Buddha (Bingo)": LuckyBuddhaPlay,
         "Frankenstein": FrankensteinPlay,
         "Frankenstein (Bingo)": FrankensteinPlay,

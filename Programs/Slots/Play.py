@@ -105,7 +105,7 @@ class Play:
         start_date = self.start_time.strftime(r"%m/%d/%Y")
         images = [str(pathlib.PureWindowsPath(f)) for f in self.addl_images]
         
-        outstr = f"{self.identifier},{self.casino},{start_date},{self.machine.get_name()},{format_currency(self.cash_in, 'USD', locale='en_US')},{format_currency(self.bet, 'USD', locale='en_US')},{self.play_type}, {self.denom},\"{self.state}\",{format_currency(self.cash_out, 'USD', locale='en_US')},{format_currency(self.pnl, 'USD', locale='en_US')},\"{self.note}\",{self.machine.get_family()},{self.start_image},{self.end_image},{images}"
+        outstr = f"{self.identifier},{self.casino},{start_date},{self.machine.get_name()},{format_currency(self.cash_in, 'USD', locale='en_US')},{format_currency(self.bet, 'USD', locale='en_US')},{self.play_type},{self.denom},\"{self.state}\",{format_currency(self.cash_out, 'USD', locale='en_US')},{format_currency(self.pnl, 'USD', locale='en_US')},\"{self.note}\",{self.machine.get_family()},{self.start_image},{self.end_image},{images}"
         for hp in self.hand_pays:
             tax = Decimal(Decimal(0.27) * hp.pay_amount)
             images = hp.addl_images if hp.addl_images else ""
