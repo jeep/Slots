@@ -10,15 +10,14 @@ from decimal import Decimal
 
 class StateEntryHelperWindow(tk.Toplevel):
     def __init__(self, *args, play: Play, **kwargs):
+        self.fields = play.get_entry_fields()
+        if self.fields is None:
+            return
+
         super().__init__(*args, **kwargs)
         self.title('State Entry')
         self.minsize(300, 300)
         self.iconphoto(False, ttk.PhotoImage(file=r'Programs\Icon\slot_machine_icon.png'))
-
-        self.fields = play.get_entry_fields()
-        if self.fields is None:
-            print(f"This should be a dialog, but there are not fields for this machine. {play.machine.get_name()}")
-            return
 
         self.entries = []
         for f in self.fields:

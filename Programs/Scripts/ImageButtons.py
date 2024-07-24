@@ -186,8 +186,15 @@ class ImageButtons(ttk.Frame):
         # sets the start entry wigit to the path of the current image
         parent.entry_wigits.start_entry.var.set(parent.imgs[parent.pointer][0])
         
-        # sets the date wigit to the date ( year month day ) of the current image
-        parent.entry_wigits.dt.var.set(parent.imgs[parent.pointer][2])
+        image_dt = parent.imgs[parent.pointer][2]
+        image_y = image_dt[:4]
+        image_m = image_dt[4:6]
+        image_d = image_dt[6:8]
+        image_h = image_dt[8:10]
+        image_M = image_dt[10:12]
+        image_s = image_dt[12:14]
+        image_dt = f'{image_y}-{image_m}-{image_d} {image_h}:{image_M}:{image_s}'
+        parent.entry_wigits.dt.var.set(image_dt)
 
         if not parent.session_date.get() or parent.session_date.get() == parent.default_session_date:
             parent.session_date.set(parent.imgs[parent.pointer][2][:8])
@@ -224,6 +231,7 @@ class ImageButtons(ttk.Frame):
         
         # sets the end entry wigit to the path of the current image
         parent.entry_wigits.end_entry.var.set(parent.imgs[parent.pointer][0])
+        parent.entry_wigits.end_dt.var.set(parent.imgs[parent.pointer][2])
         
         # disables the buttons to add the image to the play
         self.add_button.configure(state='disabled')

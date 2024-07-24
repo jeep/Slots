@@ -47,7 +47,7 @@ class TestLuckyWealthCat(TestPlay):
         play.state_data["3xK"] = 3
         play.state_data["3xQ"] = 5
     
-        expected = 'This was a play.;{"7xCat": 1, "6xFish": 2, "5xTree": 4, "3xA": 1, "3xK": 3, "3xQ": 5}'
+        expected = 'This was a play.; {"7xCat": 1, "6xFish": 2, "5xTree": 4, "3xA": 1, "3xK": 3, "3xQ": 5}'
         assert play.state == expected
 
     def test_get_entry_fields(self, play):

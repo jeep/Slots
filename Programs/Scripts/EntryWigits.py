@@ -33,6 +33,7 @@ class EntryWigits(ttk.Frame):
         self._create_header()
         self._create_machine()
         self._create_date()
+        self._create_end_datetime()
         self._create_bet()
         self._create_play_type()
         self._create_denom()
@@ -56,23 +57,25 @@ class EntryWigits(ttk.Frame):
         self.machine_cb.combobox.bind("<<ComboboxSelected>>", lambda _: self._create_play(self.machine_cb.var.get()))
 
     def _create_play(self, machine):
-        print(f"Creating play for {machine}") 
         self._window.create_play(machine)
 
     def _create_date(self):
         self.dt = EntryLabel(self, 'Date')
-        self.dt.var.set("Auto / YYYY-MM-DD")
+        self.dt.var.set(self._window.default_dt)
     
     def _create_play_type(self):
          self.play_type = ComboboxLabel(self, 'Play Type', self._window.play_types)
          self.play_type.var.set("AP")
+         self.play_type.bind("<FocusOut>", self._window.update_play_type)
 
     def _create_denom(self):
         self.denom_cb = ComboboxLabel(self, '', self._window.denom_values, auto=False)
         self.denom_cb.combobox.current(0)
+        self.denom_cb.combobox.bind("<<ComboboxSelected>>", self._window.update_denom)
 
     def _create_bet(self):
         self.bet = MoneyEntryLabel(self, 'Bet')
+        self.bet.bind("<FocusOut>", self._window.update_bet)
     
     def _create_cashin(self):
         self.cashin = MoneyEntryLabel(self, 'Cash In')
@@ -85,6 +88,9 @@ class EntryWigits(ttk.Frame):
         # binds pressing any key to updateing the label
         self._window.bind('<Key>', lambda _: self.profit_loss.var.set(f'{(Decimal(self.cashout.get_var()) - Decimal(self.cashin.get_var())):.2f}'))
 
+    def _create_end_datetime(self):
+        self.end_dt = LabelLabel(self, 'End time', "")
+
     def _create_initial_state(self):
         self.initial_state = LargeEntryLabel(self, 'Initial State')
         self.initial_state.text.bind('<Tab>', lambda _: _no_tab(_, self._window))
@@ -93,12 +99,13 @@ class EntryWigits(ttk.Frame):
 
     def _update_state(self, _):
         if self._window._current_play:
+            self._window._current_play.state = self.initial_state.text.get(1.0, 'end')
             self._window.ttk_state.set(self._window._current_play.state)
         else: 
-            self._window.ttk_state.set(self.initial_state.text.get(1.0))
+            self._window.ttk_state.set(self.initial_state.text.get(1.0, 'end'))
 
     def _create_state_val(self):
-        self.state_val = LabelLabel(self, 'State', '', self._window.state)
+        self.state_val = LabelLabel(self, 'State', '', self._window.ttk_state)
 
     def _create_note(self):
         self.note = LargeEntryLabel(self, 'Note')
@@ -143,13 +150,14 @@ class EntryWigits(ttk.Frame):
 
     def _place_entries(self):
 
-        self.columnconfigure((1,2,3), weight=1, uniform='b')
+        self.columnconfigure((0, 1,2), weight=1, uniform='b')
         row = 0
         self._header.grid(row=row, column=0, columnspan=3)
 
         row = 1
         self.machine_cb.grid(row=row, column=0, sticky='we', padx=5, pady=5)
         self.dt.grid(row=row, column=1, columnspan=2, sticky='we', padx=5, pady=5)
+        self.end_dt.grid(row=row, column=2, sticky='we', padx=5, pady=5)
 
         row = 2
         self.bet.grid(row=row, column=0, sticky='we',  padx=5, pady=5)

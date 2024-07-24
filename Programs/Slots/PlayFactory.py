@@ -1,6 +1,8 @@
 from .LuckyWealthCatPlay import LuckyWealthCatPlay
+from .LuckyBuddhaPlay import LuckyBuddhaPlay
 from .PowerPushPlay import PowerPushPlay
 from .PinwheelPrizesPlay import PinwheelPrizesPlay
+from .FrankensteinPlay import FrankensteinPlay
 from .Machine import Machine
 from .Play import Play
 
@@ -8,7 +10,11 @@ from .Play import Play
 class PlayFactory:
     play_for_machine = {
         "Lucky Wealth Cat": LuckyWealthCatPlay,
+        "Lucky Buddha": LuckyBuddhaPlay,
         "Lucky Wealth Cat (Bingo)": LuckyWealthCatPlay,
+        "Lucky Buddha (Bingo)": LuckyBuddhaPlay,
+        "Frankenstein": FrankensteinPlay,
+        "Frankenstein (Bingo)": FrankensteinPlay,
         "Pinwheel Prizes": PinwheelPrizesPlay,
         "Pinwheel Prizes (Bingo)": PinwheelPrizesPlay,
         "Power Push": PowerPushPlay,
