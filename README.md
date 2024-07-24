@@ -36,6 +36,14 @@ Use at your own risk
 13. Remove Image will remove the current image from the current play
 14. Save Play will save the play to memory and a generated id will be listed in the PlayID box
 15. Save Session will write the plays to Data\slots_data.csv and will MOVE all the files in the plays to a folder parallel to the current image folder named "Sorted" and in a subfolder named for the session date
+16. Shortcuts:
+    * Ctrl-s : Save
+    * PgUp : Previous Image
+    * PgDn : Next Image
+    * Home : Return to Start Image
+    * Ctrl-1 : Set Start Image
+    * Ctrl-2 : Add Image
+    * Ctrl-3 : Set End Image
 
 # Known bugs/limitations
 * Once you save you cannot open a folder
