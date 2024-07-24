@@ -404,7 +404,7 @@ class App(ttk.Window):
         cashin = self.entry_wigits.cashin.var.get()
         cashout = self.entry_wigits.cashout.var.get()
         
-        if casino=='' or dt==self.default_dt or machine=='Select Machine' or play_type=='':
+        if casino=='' or dt==self.default_dt or dt == "" or machine=='Select Machine' or play_type=='':
             self.image_buttons.save_button.configure(state='disabled')
         elif bet == '0' or cashin == '0' or cashout=='0':
             self.image_buttons.save_button.configure(state='normal', bootstyle='warning')

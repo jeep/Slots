@@ -257,6 +257,8 @@ class ImageButtons(ttk.Frame):
         elif path in parent.play_imgs:
             parent.play_imgs.remove(path)
             parent.entry_wigits.update_table(parent)
+
+        self.add_button.configure(state='normal')
     
     def delete_button_command(self, parent):
         # does nothing if there are no images
