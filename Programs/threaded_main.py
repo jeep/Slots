@@ -1,34 +1,26 @@
 import os
+from os import makedirs
+from os.path import join, dirname, join
 
 import ttkbootstrap as ttk
 from ttkbootstrap.dialogs import Querybox, Messagebox
-
 from tkinter.filedialog import askdirectory
 
-from Scripts.get_imgs_data import multi_get_img_data
+from collections import namedtuple
+from shutil import move
+from PIL import Image, ImageTk
+from pillow_heif import register_heif_opener
+from decimal import Decimal
+import csv
+import datetime
 
+from Scripts.get_imgs_data import multi_get_img_data
 from Scripts.ImageDisplay import ImageDisplay
 from Scripts.ImageButtons import ImageButtons
 from Scripts.EntryWigits import EntryWigits
 from Scripts.SessionTable import SessionTable
 from Scripts.SessionFrame import SessionFrame
-
-from os import makedirs
-from os.path import join, dirname, join
-from collections import namedtuple
-
-from shutil import move
-from PIL import Image, ImageTk
-
-from pillow_heif import register_heif_opener
-from decimal import Decimal
-
-import csv
-import datetime
-
 from Slots.PlayFactory import PlayFactory
-from Slots.Play import Play, HandPay
-from Slots.Machine import Machine
 
 register_heif_opener(decode_threads=8, thumbnails=False)
 
@@ -55,7 +47,7 @@ class App(ttk.Window):
         self.scale = 7
         
         super().__init__()
-        self.title('Slots')
+        self.title('Slot Data Entry')
         self.minsize(450, 705)
         self.geometry('1300x800')
         self.iconphoto(False, ttk.PhotoImage(file=r'Programs\Icon\slot_machine_icon.png'))
