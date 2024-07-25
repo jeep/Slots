@@ -202,6 +202,8 @@ class App(ttk.Window):
             self.image_display.canvas.create_image(x, y, image=imagetk)
     
     def update_session_date(self):
+        if self._current_play is None:
+            return
         if self.entry_wigits.end_dt.var.get() != "":
             fmt = '%Y%m%d'
             self._current_play.session_date = datetime.datetime.strptime(self.session_date.get(), fmt)
@@ -220,6 +222,8 @@ class App(ttk.Window):
             self._current_play.start_time = datetime.datetime.strptime(self.entry_wigits.dt.var.get(), fmt)
 
     def update_end_datetime(self):
+        if self._current_play is None:
+            return
         if self.entry_wigits.end_dt.var.get() != "":
             fmt = '%Y%m%d%H%M%S'
             self._current_play.end_time = datetime.datetime.strptime(self.entry_wigits.end_dt.var.get(), fmt)
@@ -231,6 +235,8 @@ class App(ttk.Window):
             self._current_play.bet = Decimal(self.entry_wigits.bet.var.get())
 
     def update_play_type(self, play_type=None):
+        if self._current_play is None:
+            return
         if self.entry_wigits.play_type.var.get():
             self._current_play.play_type = self.entry_wigits.play_type.var.get()
 
@@ -241,32 +247,46 @@ class App(ttk.Window):
             self._current_play.denom = self.entry_wigits.denom_cb.var.get()
 
     def update_cashin(self):
+        if self._current_play is None:
+            return
         if self.entry_wigits.cashin.var.get():
             self._current_play.cash_in = Decimal(self.entry_wigits.cashin.var.get())
 
     def update_cashout(self):
+        if self._current_play is None:
+            return
         if self.entry_wigits.cashout.var.get():
             self._current_play.cash_out = Decimal(self.entry_wigits.cashout.var.get())
 
     def update_init_state(self):
+        if self._current_play is None:
+            return
         lines = self.entry_wigits.initial_state.get_text().split(r'\n')
         line = " ".join(lines)
         line = line.strip()
         self._current_play.state = line
 
     def update_play_note(self):
+        if self._current_play is None:
+            return
         lines = self.entry_wigits.note.get_text().split(r'\n')
         line = " ".join(lines)
         line = line.strip()
         self._current_play.note = line
 
     def update_start_image(self):
+        if self._current_play is None:
+            return
         self._current_play.start_image = self.entry_wigits.start_entry.var.get()
     
     def update_end_image(self):
+        if self._current_play is None:
+            return
         self._current_play.end_image = self.entry_wigits.end_entry.var.get()
 
     def update_addl_images(self):
+        if self._current_play is None:
+            return
         self._current_play.add_images(self.play_imgs)
 
     def update_handpays(self):
