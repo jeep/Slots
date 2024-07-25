@@ -34,6 +34,13 @@ externals = {
 
 class App(ttk.Window):
     def __init__(self):
+        super().__init__()
+
+        self.title('Slot Data Entry')
+        self.minsize(450, 705)
+        self.geometry('1300x800')
+        self.iconphoto(False, ttk.PhotoImage(file=r'Programs\Icon\slot_machine_icon.png'))
+        
         self.imgs = []
         self.play_imgs = []
         self.hand_pay = []
@@ -45,12 +52,6 @@ class App(ttk.Window):
 
         self.pointer = 0
         self.scale = 7
-        
-        super().__init__()
-        self.title('Slot Data Entry')
-        self.minsize(450, 705)
-        self.geometry('1300x800')
-        self.iconphoto(False, ttk.PhotoImage(file=r'Programs\Icon\slot_machine_icon.png'))
         
         self.default_session_date = "Load first play"
         self.default_dt = "Auto / YYYY-MM-DD"
@@ -125,13 +126,21 @@ class App(ttk.Window):
         file_menu.add_command(label='Add Denom', command=self.add_denom)
         file_menu.add_command(label='Add PlayType', command=self.add_playtype)
         file_menu.add_separator()
-        file_menu.add_command(label='Preload Test Play', command=self.load_test_play)
         file_menu.add_command(label='Set Scale', command=self.set_scale)
+        file_menu.add_separator()
+        file_menu.add_command(label='Preload Test Play', command=self.load_test_play)
+        file_menu.add_command(label='Open Test Folder', command=self.open_test_folder)
         
         menu.add_cascade(label='File', menu=file_menu)
 
-    def open_folder(self):
-        directory = askdirectory(mustexist=True)
+    def open_test_folder(self):
+        folder = r"C:\Users\jeepe\dev\Pics\Unsorted"
+        self.open_folder(folder)
+
+    def open_folder(self, directory=''):
+        if directory == '':
+            directory = askdirectory(mustexist=True)
+
         if directory == '':
             return
         
