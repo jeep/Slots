@@ -17,7 +17,6 @@ class RichLittlePiggiesPlay(StateHelperPlay):
 
     @property
     def state(self) ->str:
-        print("There")
         rv = {k: v for k,v in self.state_data.items() if v and v != ""}
         if not len(rv):
             return self._state
