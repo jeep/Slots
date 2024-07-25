@@ -79,14 +79,14 @@ class EntryWigits(ttk.Frame):
     
     def _create_cashin(self):
         self.cashin = MoneyEntryLabel(self, 'Cash In')
+        self.cashin.bind("<FocusOut>", self._window.update_cashin)
 
     def _create_cashout(self):
         self.cashout = MoneyEntryLabel(self, 'Cash Out')
+        self.cashout.bind("<FocusOut>", self._window.update_cashout)
 
     def _create_profit_loss(self):
         self.profit_loss = LabelLabel(self, 'Profit/Loss', 0.00)
-        # binds pressing any key to updateing the label
-        self._window.bind('<Key>', lambda _: self.profit_loss.var.set(f'{(Decimal(self.cashout.get_var()) - Decimal(self.cashin.get_var())):.2f}'))
 
     def _create_end_datetime(self):
         self.end_dt = LabelLabel(self, 'End time', "")

@@ -75,10 +75,22 @@ class ImageButtons(ttk.Frame):
     def image_is_in_current_play(self, img, parent):
         return ((img in parent.play_imgs) or (img == parent.entry_wigits.start_entry.var.get()) or (img == parent.entry_wigits.end_entry.var.get()))
 
+    def set_image_navigation(self, state):
+        self.prev_button.configure(state=state)
+        self.next_button.configure(state=state)
+        self.return_button.configure(state=state)
+
+    def opposite_state(self, state):
+        if state == 'disabled':
+            return 'normal'
+        if state=='normal':
+            return 'disabled'
+
     def set_image_adders(self, state):
         self.add_button.configure(state=state)
         self.start_button.configure(state=state)
         self.end_button.configure(state=state)
+        self.remove_button.configure(state=self.opposite_state(state))
 
     def prev_button_command(self, parent):
         # does nothing if there are no images
@@ -93,10 +105,8 @@ class ImageButtons(ttk.Frame):
         
         if self.image_is_in_current_play(current_image_path, parent):
             self.set_image_adders('disabled')
-            self.remove_button.configure(state='normal')
         else:
             self.set_image_adders('normal')
-            self.remove_button.configure(state='disabled')
     
     def next_button_command(self, parent):
         if len(parent.imgs) == 0:
@@ -109,10 +119,8 @@ class ImageButtons(ttk.Frame):
         
         if self.image_is_in_current_play(current_image_path, parent):
             self.set_image_adders('disabled')
-            self.remove_button.configure(state='normal')
         else:
-            self.end_button.configure(state='normal')
-            self.remove_button.configure(state='disabled')
+            self.set_image_adders('normal')
     
     def return_button_command(self, parent):
         if len(parent.imgs) == 0:
@@ -126,10 +134,8 @@ class ImageButtons(ttk.Frame):
         
         if self.image_is_in_current_play(current_image_path, parent):
             self.set_image_adders('disabled')
-            self.remove_button.configure(state='normal')
         else:
             self.set_image_adders('normal')
-            self.remove_button.configure(state='disabled')
     
     def start_button_command(self, parent):
         if len(parent.imgs) == 0:
@@ -152,7 +158,6 @@ class ImageButtons(ttk.Frame):
             parent.session_date.set(parent.imgs[parent.pointer][2][:8])
         
         self.set_image_adders('disabled')
-        self.remove_button.configure(state='normal')
     
     def add_button_command(self, parent):
         if len(parent.imgs) == 0:
@@ -164,7 +169,6 @@ class ImageButtons(ttk.Frame):
         parent.entry_wigits.update_table(parent)
         
         self.set_image_adders('disabled')
-        self.remove_button.configure(state='normal')
     
     def end_button_command(self, parent):
         if len(parent.imgs) == 0:
@@ -172,9 +176,7 @@ class ImageButtons(ttk.Frame):
         
         parent.entry_wigits.end_entry.var.set(parent.imgs[parent.pointer][0])
         parent.entry_wigits.end_dt.var.set(parent.imgs[parent.pointer][2])
-        
-        self.start_button.configure(state='disabled')
-        self.remove_button.configure(state='normal')
+        self.set_image_adders('disabled')
     
     def remove_button_command(self, parent):
         if len(parent.imgs) == 0:
@@ -184,7 +186,7 @@ class ImageButtons(ttk.Frame):
         
         if parent.entry_wigits.start_entry.var.get() == path:
             parent.entry_wigits.start_entry.var.set('')
-            parent.entry_wigits.date.var.set('')
+            parent.entry_wigits.dt.var.set('')
         elif parent.entry_wigits.end_entry.var.get() == path:
             parent.entry_wigits.end_entry.var.set('')
         elif path in parent.play_imgs:

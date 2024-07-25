@@ -93,6 +93,13 @@ class App(ttk.Window):
         
         self.setup_keybinds()
 
+        self.image_buttons.save_button.configure(state='disabled')
+        self.image_buttons.save_session_button.configure(state='disabled')
+        self.image_buttons.set_image_adders('disabled')
+        self.image_buttons.remove_button.configure(state='disabled')
+        self.image_buttons.set_image_navigation('disabled')
+
+
     def get_dropdown_data(self):
         self.play_types = App.get_entry_values(externals['play_type'])
         self.casino_values = App.get_entry_values(externals['casino'])
@@ -146,13 +153,9 @@ class App(ttk.Window):
         
         self.imgs = sorted(self.imgs, key=lambda item: item[2])
         self.display_image()
+        self.image_buttons.set_image_adders('normal')
+        self.image_buttons.set_image_navigation('normal')
         
-        self.image_buttons.save_button.configure(state='disabled')
-        self.image_buttons.add_button.configure(state='normal')
-        self.image_buttons.start_button.configure(state='normal')
-        self.image_buttons.end_button.configure(state='normal')
-        self.image_buttons.remove_button.configure(state='disabled')
-
     def add_casino(self):
         new_casino = Querybox.get_string(prompt='Enter a casino', title='Casino Entry')
         if (new_casino is not None) and (new_casino not in self.casino_values):
@@ -246,17 +249,22 @@ class App(ttk.Window):
         if self.entry_wigits.denom_cb.var.get():
             self._current_play.denom = self.entry_wigits.denom_cb.var.get()
 
-    def update_cashin(self):
+    def update_pnl(self):
+        self.entry_wigits.profit_loss.var.set(f'{(Decimal(self.entry_wigits.cashout.get_var()) - Decimal(self.entry_wigits.cashin.get_var())):.2f}')
+
+    def update_cashin(self, cashin=None):
         if self._current_play is None:
             return
         if self.entry_wigits.cashin.var.get():
             self._current_play.cash_in = Decimal(self.entry_wigits.cashin.var.get())
+            self.update_pnl()
 
-    def update_cashout(self):
+    def update_cashout(self, cashout=None):
         if self._current_play is None:
             return
         if self.entry_wigits.cashout.var.get():
             self._current_play.cash_out = Decimal(self.entry_wigits.cashout.var.get())
+            self.update_pnl()
 
     def update_init_state(self):
         if self._current_play is None:
@@ -351,6 +359,7 @@ class App(ttk.Window):
         
         # resets the save button to disabled
         self.image_buttons.save_button.configure(state='disabled')
+        self.image_buttons.save_session_button.configure(state='enabled')
         self.create_play()
 
     def save_session(self):
@@ -400,13 +409,10 @@ class App(ttk.Window):
         self.plays.clear()
         self.session_table.update_table(self)
 
-        self.image_buttons.add_button.configure(state='normal')
-        self.image_buttons.start_button.configure(state='normal')
-        self.image_buttons.end_button.configure(state='normal')
-        self.image_buttons.remove_button.configure(state='disabled')
+        self.image_buttons.set_image_adders('normal')
         
-        # resets the save button to disabled
         self.image_buttons.save_button.configure(state='disabled')
+        self.image_buttons.save_session_button.configure(state='disabled')
     
     def check_save_valid(self):
         casino = self.session_frame.casino.var.get()
