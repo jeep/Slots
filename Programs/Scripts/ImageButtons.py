@@ -189,6 +189,7 @@ class ImageButtons(ttk.Frame):
             parent.entry_wigits.dt.var.set('')
         elif parent.entry_wigits.end_entry.var.get() == path:
             parent.entry_wigits.end_entry.var.set('')
+            parent.entry_wigits.end_dt.var.set('')
         elif path in parent.play_imgs:
             parent.play_imgs.remove(path)
             parent.entry_wigits.update_table(parent)
