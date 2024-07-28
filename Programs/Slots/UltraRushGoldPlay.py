@@ -26,7 +26,7 @@ class UltraRushGoldPlay(StateHelperPlay):
         
         golds = []
         for k in ["Ball 1 Val","Ball 2 Val","Ball 3 Val","Ball 4 Val","Ball 5 Val"]:
-            if k in self.state_data:
+            if k in self.state_data and self.state_data[k]:
                 golds.append(self.state_data[k])
 
         if "Number of Gold" in self.state_data:

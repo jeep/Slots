@@ -208,8 +208,8 @@ class App(ttk.Window):
     def update_session_date(self):
         if self._current_play is None:
             return
-        if self.entry_wigits.end_dt.var.get() != "":
-            fmt = '%Y%m%d'
+        if self.session_date.get() != "":
+            fmt = '%Y-%m-%d'
             self._current_play.session_date = datetime.datetime.strptime(self.session_date.get(), fmt)
 
     def update_casino(self, casino=None):
@@ -228,7 +228,7 @@ class App(ttk.Window):
     def update_end_datetime(self):
         if self._current_play is None:
             return
-        if self.entry_wigits.end_dt.var.get() != "":
+        if self.entry_wigits.end_dt.var.get() != "" and self.entry_wigits.end_dt.var.get() != '1':
             fmt = '%Y%m%d%H%M%S'
             self._current_play.end_time = datetime.datetime.strptime(self.entry_wigits.end_dt.var.get(), fmt)
 
@@ -301,6 +301,34 @@ class App(ttk.Window):
     def update_handpays(self):
         for hp in self.hand_pay:
             self._current_play.add_hand_pay(hp)
+
+    def load_play(self, playid):
+        self._current_play = self.plays[playid]
+        self.entry_wigits.machine_cb.var.set(self._current_play.machine.get_name())
+        print(self._current_play.session_date)
+        self.session_date.set(self._current_play.session_date.strftime("%Y-%m-%d"))
+        self.session_frame.casino.var.set(self._current_play.casino)
+        self.entry_wigits.dt.var.set(self._current_play.start_time)
+        self.entry_wigits.end_dt.var.set(self._current_play.end_time)
+        self.entry_wigits.bet.var.set(self._current_play.bet)
+        self.entry_wigits.denom_cb.var.set(self._current_play.denom)
+        self.entry_wigits.play_type.var.set(self._current_play.play_type)
+        self.entry_wigits.cashin.var.set(self._current_play.cash_in)
+        self.entry_wigits.cashout.var.set(self._current_play.cash_out)
+        self.update_pnl()
+        self.entry_wigits.initial_state.set_text(self._current_play.state)
+        self.entry_wigits.note.set_text(self._current_play.note)
+        self.entry_wigits.start_entry.var.set(self._current_play.start_image)
+        self.entry_wigits.end_entry.var.set(self._current_play.end_image)
+        self.play_imgs = self._current_play.addl_images
+        # TODO Add Hand pays
+
+        # self.imgs.append(self._current_play.start_image)
+        # self.imgs.append(self._current_play.end_image)
+        # self.imgs.extend(self._current_play.addl_images)
+        # self.imgs = sorted(self.imgs, key=lambda item: item[2])
+        self.image_buttons.save_button.configure(state='normal', bootstyle='normal')
+
 
     def create_play(self, machine_name=None):
         if machine_name is None:
@@ -456,7 +484,7 @@ class App(ttk.Window):
     def load_test_play(self):
         self.session_frame.casino.var.set("ilani")
         self.session_date.set(datetime.datetime(2024,5,1).strftime('%Y-%m-%d'))
-        self.entry_wigits.dt.var.set(datetime.datetime(2024,5,1, 12, 3, 5).strftime('%Y-%m-%dT%H:%M:%S'))
+        self.entry_wigits.dt.var.set(datetime.datetime(2024,5,1, 12, 3, 5).strftime('%Y-%m-%d %H:%M:%S'))
         self.entry_wigits.machine_cb.var.set("Lucky Wealth Cat")
         self.entry_wigits.cashin.var.set("100.00")
         self.entry_wigits.bet.var.set("1.20")
