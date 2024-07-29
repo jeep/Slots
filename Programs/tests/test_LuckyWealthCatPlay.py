@@ -47,7 +47,7 @@ class TestLuckyWealthCat(TestPlay):
         play.state_data["3xK"] = 3
         play.state_data["3xQ"] = 5
     
-        expected = 'This was a play.;{"7xCat": 1, "6xFish": 2, "5xTree": 4, "3xA": 1, "3xK": 3, "3xQ": 5}'
+        expected = 'This was a play.; {"7xCat": 1, "6xFish": 2, "5xTree": 4, "3xA": 1, "3xK": 3, "3xQ": 5}'
         assert play.state == expected
 
     def test_get_entry_fields(self, play):
@@ -79,6 +79,7 @@ class TestLuckyWealthCat(TestPlay):
         play.add_cash(500)
         play.bet = Decimal("0.60")
         play.play_type = "AP"
+        play.denom = "1cent"
         state = "This; is (a): state"
         play.state = state
         play.cash_out = Decimal("12.34")
@@ -94,7 +95,7 @@ class TestLuckyWealthCat(TestPlay):
         img3 = r"d:\this\is\a\path\image3.png"
         play.add_images([img2, img3])
 
-        expected = r"""Lucky_Wealth_Cat-0.60-2024-01-02-03:04:05,ilani,01/02/2024,Lucky Wealth Cat,$600.00,$0.60,AP,"This; is (a): state",$12.34,-$587.66,"This; is (a): note.",Lucky Buddha/Lucky Wealth Cat,d:\this\is\a\path\simage.png,d:\this\is\a\path\eimage.png,['d:\\this\\is\\a\\path\\image1.png', 'd:\\this\\is\\a\\path\\image2.png', 'd:\\this\\is\\a\\path\\image3.png']"""
+        expected = r"""Lucky_Wealth_Cat-0.60-2024-01-02-03:04:05,ilani,01/02/2024,Lucky Wealth Cat,$600.00,$0.60,AP,1cent,"This; is (a): state",$12.34,-$587.66,"This; is (a): note.",Lucky Buddha/Lucky Wealth Cat,d:\this\is\a\path\simage.png,d:\this\is\a\path\eimage.png,['d:\\this\\is\\a\\path\\image1.png', 'd:\\this\\is\\a\\path\\image2.png', 'd:\\this\\is\\a\\path\\image3.png']"""
 
         assert str(play) == expected
 

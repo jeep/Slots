@@ -1,120 +1,146 @@
+import os
+from os import makedirs
+from os.path import join, dirname, join
+
 import ttkbootstrap as ttk
 from ttkbootstrap.dialogs import Querybox, Messagebox
-
 from tkinter.filedialog import askdirectory
 
-from Scripts.get_imgs_data import multi_get_img_data
+from collections import namedtuple
+from shutil import move
+from PIL import Image, ImageTk
+from pillow_heif import register_heif_opener
+from decimal import Decimal
+import csv
+import datetime
 
+from Scripts.get_imgs_data import multi_get_img_data
 from Scripts.ImageDisplay import ImageDisplay
 from Scripts.ImageButtons import ImageButtons
 from Scripts.EntryWigits import EntryWigits
 from Scripts.SessionTable import SessionTable
-
-from os import makedirs
-from os.path import join, dirname, join
-
-from shutil import move
-from PIL import Image, ImageTk
-
-from pillow_heif import register_heif_opener
-from decimal import Decimal
-
-import csv
-import datetime
-
+from Scripts.SessionFrame import SessionFrame
 from Slots.PlayFactory import PlayFactory
-from Slots.Play import Play, HandPay
-from Slots.Machine import Machine
 
 register_heif_opener(decode_threads=8, thumbnails=False)
 
+Dropdown_data = namedtuple('Dropdown_data', ['filename', 'defaults'])
+externals = {
+    'play_type': Dropdown_data('playtype_entry_values.csv', ['AP', 'Gamble', 'Misplay', 'Non-play', 'Science', 'Tip']),
+    'casino': Dropdown_data('casino_entry_values.csv', ['ilani', 'Spirit Mountain']),
+    'denom': Dropdown_data('denom_entry_values.csv', ['1cent', '2cent', '5cent', '10cent', '25cent', '$1', '$2']),
+    'machine': Dropdown_data('machine_entry_values.csv', ['Frankenstein', 'Lucky Wealth Cat', 'Pinwheel Prizes', 'Power Push'])
+}
 
 class App(ttk.Window):
     def __init__(self):
+        super().__init__()
+
+        self.title('Slot Data Entry')
+        self.minsize(450, 705)
+        self.geometry('1300x800')
+        self.iconphoto(False, ttk.PhotoImage(file=r'Programs\Icon\slot_machine_icon.png'))
+        
         self.imgs = []
         self.play_imgs = []
         self.hand_pay = []
         self.plays = {}
         self._current_play = None
         self.start_datetime = datetime.MINYEAR
-        self.play_type = ('AP', 'Gamble', 'Misplay', 'Non-play', 'Science', 'Tip')
-        
-        with open(f'casino_entry_values.csv', 'r') as csvfile:
-            casino_values = list(csv.reader(csvfile))
-            self.casino_values = [val.strip() for sublist in casino_values for val in sublist if (val.strip() != '')]
-        
-        with open(f'machine_entry_values.csv', 'r') as csvfile:
-            machine_values = list(csv.reader(csvfile))
-            self.machine_values = [val for sublist in machine_values for val in sublist]
-            
+
+        self.get_dropdown_data()
+
         self.pointer = 0
-        self.scale = 10
+        self.scale = 7
         
-        super().__init__()
-        self.title('Slots')
-        self.minsize(450, 705)
-        self.geometry('1300x800')
-        self.iconphoto(False, ttk.PhotoImage(file=r'Programs\Icon\slot_machine_icon.png'))
-        
-        self.session_date = ttk.StringVar()
+        self.default_session_date = "Load first play"
+        self.default_dt = "Auto / YYYY-MM-DD"
+        self.session_date = ttk.StringVar(value=self.default_session_date)
         self.start_img = ttk.StringVar()
         self.end_img = ttk.StringVar()
+        self.ttk_state = ttk.StringVar()
+
+        self.columnconfigure(0, uniform='a', weight=1)
+        self.columnconfigure(1, uniform='a', weight=2)
+        self.columnconfigure(2, uniform='a', weight=2)
 
         self.session_table = SessionTable(self) 
-        self.session_table.pack(side='left', padx=5, pady=5, fill='both')
+        self.session_table.grid(row=0, column=0, sticky='nsew')
 
-        self.entry_wigits = EntryWigits(self, self)
-        self.entry_wigits.pack(side='left', padx=5, pady=5, fill='both')
+        self.info_frame = ttk.Frame(self)
+        self.session_frame = SessionFrame(self.info_frame, self)
+        self.session_frame.pack(anchor='center')
+        self.entry_wigits = EntryWigits(self.info_frame, self)
+        self.entry_wigits.pack(anchor='center')
+        self.info_frame.grid(row=0, column=1, sticky='nsew')
         
         image_frame = ttk.Frame(self)
-        
-        self.image_display = ImageDisplay(image_frame)
-        
         self.image_buttons = ImageButtons(image_frame, self)
-        self.image_buttons.pack(side='top', padx=5, pady=5, anchor='nw')
+        self.image_buttons.pack(side='top', padx=5, pady=5, anchor='n')
+        self.image_display = ImageDisplay(image_frame)
         self.image_display.pack(side='top', padx=5, pady=5)
-        image_frame.pack(side='left', fill='both')
+        #image_frame.pack(side='right', fill='both', anchor='ne')
+        image_frame.grid(row=0, column=2, sticky='nsew')
         
         self.make_menu()
         
         self.setup_keybinds()
 
-    def setup_keybinds(self):
-        self.bind('<FocusIn>', lambda _: self.check_save_valid())
-        self.bind('<FocusOut>', lambda _: self.check_save_valid())
+        self.image_buttons.save_button.configure(state='disabled')
+        self.image_buttons.save_session_button.configure(state='disabled')
+        self.image_buttons.set_image_adders('disabled')
+        self.image_buttons.remove_button.configure(state='disabled')
+        self.image_buttons.set_image_navigation('disabled')
 
-        self.bind('<Control-s>', lambda _: self.save())
-        self.bind('<Prior>', lambda _: self.image_buttons.prev_button_command(self))
-        self.bind('<Next>', lambda _: self.image_buttons.next_button_command(self))
-        self.bind('<Home>', lambda _: self.image_buttons.return_button_command(self))
-        self.bind('<Control-Key-1>', lambda _: self.image_buttons.start_button_command(self))
-        self.bind('<Control-Key-2>', lambda _: self.image_buttons.add_button_command(self))
-        self.bind('<Control-Key-3>', lambda _: self.image_buttons.end_button_command(self))
-    
+
+    def get_dropdown_data(self):
+        self.play_types = App.get_entry_values(externals['play_type'])
+        self.casino_values = App.get_entry_values(externals['casino'])
+        self.machine_values = App.get_entry_values(externals['machine'])
+        self.denom_values = App.get_entry_values(externals['denom'])
+            
+    @staticmethod
+    def get_entry_values(dd_data: Dropdown_data):
+        if os.path.exists(dd_data.filename):
+            with open(dd_data.filename, 'r') as csvfile:
+                values = list(csv.reader(csvfile))
+                values = [val.strip() for sublist in values for val in sublist if (val.strip() != '')]
+                return values
+
+        msg = f"{dd_data.filename} not found."
+        if dd_data.defaults:
+            print(msg, " Using defaults.")
+            return dd_data.defaults
+
+        return []
+
     def make_menu(self):
-        # creates the menu wigit
         menu = ttk.Menu(master=self)
         self.configure(menu=menu)
         
-        # creates sub menu
         file_menu = ttk.Menu(menu, tearoff=False)
-        # adds a button in the sub menu that opens a folder
         file_menu.add_command(label='Open Folder', command=self.open_folder)
         file_menu.add_separator()
-        # adds a button that will open a sub window to enter a casino in
         file_menu.add_command(label='Add Casino', command=self.add_casino)
-        # adds a button that will open a sub window to enter a machine in
         file_menu.add_command(label='Add Machine', command=self.add_machine)
+        file_menu.add_command(label='Add Denom', command=self.add_denom)
+        file_menu.add_command(label='Add PlayType', command=self.add_playtype)
+        file_menu.add_separator()
+        file_menu.add_command(label='Set Scale', command=self.set_scale)
         file_menu.add_separator()
         file_menu.add_command(label='Preload Test Play', command=self.load_test_play)
-        
-        file_menu.add_command(label='Set Scale', command=self.set_scale)
+        file_menu.add_command(label='Open Test Folder', command=self.open_test_folder)
         
         menu.add_cascade(label='File', menu=file_menu)
-    
-    def open_folder(self):
-        # opens a file menu to open a directory
-        directory = askdirectory(mustexist=True)
+
+    def open_test_folder(self):
+        folder = r"C:\Users\jeepe\dev\Pics\Unsorted"
+        self.open_folder(folder)
+
+    def open_folder(self, directory=''):
+        if directory == '':
+            directory = askdirectory(mustexist=True)
+
         if directory == '':
             return
         
@@ -123,50 +149,36 @@ class App(ttk.Window):
         self.imgs = [d for d in multi_get_img_data(directory) if d is not None]
         print('Loaded ', datetime.datetime.now())
         
-        # does nothing else if there are not images in the directory
         if len(self.imgs) == 0:
             return
         
-        # sorts images in the image list by date
         self.imgs = sorted(self.imgs, key=lambda item: item[2])
-        # displays the oldest image
         self.display_image()
+        self.image_buttons.set_image_adders('normal')
+        self.image_buttons.set_image_navigation('normal')
         
-        self.image_buttons.save_button.configure(state='disabled')
-        self.image_buttons.add_button.configure(state='normal')
-        self.image_buttons.start_button.configure(state='normal')
-        self.image_buttons.end_button.configure(state='normal')
-        self.image_buttons.remove_button.configure(state='disabled')
-
-    def load_test_play(self):
-        self.entry_wigits.casino.var.set("ilani")
-        self.entry_wigits.date.var.set(datetime.datetime(2024,5,1, 12, 3, 5))
-        self.entry_wigits.machine.var.set("Lucky Wealth Cat")
-        self.entry_wigits.cashin.var.set(Decimal("100.00"))
-        self.entry_wigits.bet.var.set(Decimal("1.20"))
-        self.entry_wigits.play_type.var.set("AP")
-        self.entry_wigits.initial_state.text.insert('1.0', "This, is; a (state): 1223")
-        self.entry_wigits.cashout.var.set(120.00)
-
-    
     def add_casino(self):
-        # opens a window to ask for a casino
         new_casino = Querybox.get_string(prompt='Enter a casino', title='Casino Entry')
-        
-        # adds the new value to the casino values list if it is not None and not in it already
         if (new_casino is not None) and (new_casino not in self.casino_values):
             self.casino_values.append(new_casino)
     
     def add_machine(self):
-        # opens a window to ask for a machine
         new_machine = Querybox.get_string(prompt='Enter a machine', title='Machine Entry')
-        
-        # adds the new value to the machine values list if it is not None and not in it already
         if (new_machine is not None) and (new_machine not in self.machine_values):
             self.machine_values.append(new_machine)
     
+    def add_playtype(self):
+        new = Querybox.get_string(prompt='Enter a play type', title='PlayType Entry')
+        if (new is not None) and (new not in self.play_types):
+            self.play_types.append(new)
+
+    def add_denom(self):
+        new = Querybox.get_string(prompt='Enter a denomination', title='Denom Entry')
+        if (new is not None) and (new not in self.denom_values):
+            self.denom_values.append(new)
+
     def set_scale(self):
-        scale = Querybox.get_integer('Enter a integer scale', 'Set scale', self.scale, 1)
+        scale = Querybox.get_integer('Enter a integer scale. Larger makes the image smaller', 'Set scale', self.scale, 1)
         if scale is None:
             pass
         else:
@@ -180,7 +192,6 @@ class App(ttk.Window):
         self.image_display.canvas.delete('all')
         # opens the image at the current pointer
         with Image.open(self.imgs[self.pointer][0]) as image:
-            
             image = image.reduce(self.scale)
             
             global imagetk
@@ -194,33 +205,162 @@ class App(ttk.Window):
             # adds the image to the canvas
             self.image_display.canvas.create_image(x, y, image=imagetk)
     
-    def create_play(self, machine_name):
-        self._current_play = PlayFactory.get_play(machine_name)
-
-    def save(self):
-        # does nothing if the save button is disabled
-        if self.image_buttons.save_button.state() == 'disabled':
+    def update_session_date(self):
+        if self._current_play is None:
             return
-        #if len(self.imgs) == 0:
-        #    return
+        if self.session_date.get() != "":
+            fmt = '%Y-%m-%d'
+            self._current_play.session_date = datetime.datetime.strptime(self.session_date.get(), fmt)
 
-        # gets all entry values
-        self._current_play.casino = self.entry_wigits.casino.var.get()
-        self._current_play.cash_in = Decimal(self.entry_wigits.cashin.var.get())
-        self._current_play.bet = Decimal(self.entry_wigits.bet.var.get())
-        self._current_play.play_type = self.entry_wigits.play_type.var.get()
-        self._current_play.state = ' '.join(self.entry_wigits.initial_state.get_text().split(r'\n')).rstrip()
-        self._current_play.cash_out = Decimal(self.entry_wigits.cashout.var.get())
-        self._current_play.note = ' '.join(self.entry_wigits.note.get_text().split(r'\n')).rstrip()
-        
+    def update_casino(self, casino=None):
+        if self._current_play is None:
+            return
+        if self.session_frame.casino.var.get():
+            self._current_play.casino = self.session_frame.casino.var.get()
+
+    def update_start_datetime(self):
+        if self.entry_wigits.dt.var.get() != self.default_dt and self.entry_wigits.dt.var.get() != "":
+            fmt = '%Y-%m-%d %H:%M:%S'
+            if len(self.entry_wigits.dt.var.get()) == 10:
+                fmt = '%Y-%m-%d'
+            self._current_play.start_time = datetime.datetime.strptime(self.entry_wigits.dt.var.get(), fmt)
+
+    def update_end_datetime(self):
+        if self._current_play is None:
+            return
+        if self.entry_wigits.end_dt.var.get() != "" and self.entry_wigits.end_dt.var.get() != '1':
+            fmt = '%Y%m%d%H%M%S'
+            self._current_play.end_time = datetime.datetime.strptime(self.entry_wigits.end_dt.var.get(), fmt)
+
+    def update_bet(self, bet=None):
+        if self._current_play is None:
+            return
+        if self.entry_wigits.bet.var.get():
+            self._current_play.bet = Decimal(self.entry_wigits.bet.var.get())
+
+    def update_play_type(self, play_type=None):
+        if self._current_play is None:
+            return
+        if self.entry_wigits.play_type.var.get():
+            self._current_play.play_type = self.entry_wigits.play_type.var.get()
+
+    def update_denom(self, denom=None):
+        if self._current_play is None:
+            return
+        if self.entry_wigits.denom_cb.var.get():
+            self._current_play.denom = self.entry_wigits.denom_cb.var.get()
+
+    def update_pnl(self):
+        self.entry_wigits.profit_loss.var.set(f'{(Decimal(self.entry_wigits.cashout.get_var()) - Decimal(self.entry_wigits.cashin.get_var())):.2f}')
+
+    def update_cashin(self, cashin=None):
+        if self._current_play is None:
+            return
+        if self.entry_wigits.cashin.var.get():
+            self._current_play.cash_in = Decimal(self.entry_wigits.cashin.var.get())
+            self.update_pnl()
+
+    def update_cashout(self, cashout=None):
+        if self._current_play is None:
+            return
+        if self.entry_wigits.cashout.var.get():
+            self._current_play.cash_out = Decimal(self.entry_wigits.cashout.var.get())
+            self.update_pnl()
+
+    def update_init_state(self):
+        if self._current_play is None:
+            return
+        lines = self.entry_wigits.initial_state.get_text().split(r'\n')
+        line = " ".join(lines)
+        line = line.strip()
+        self._current_play.state = line
+
+    def update_play_note(self):
+        if self._current_play is None:
+            return
+        lines = self.entry_wigits.note.get_text().split(r'\n')
+        line = " ".join(lines)
+        line = line.strip()
+        self._current_play.note = line
+
+    def update_start_image(self):
+        if self._current_play is None:
+            return
         self._current_play.start_image = self.entry_wigits.start_entry.var.get()
+    
+    def update_end_image(self):
+        if self._current_play is None:
+            return
         self._current_play.end_image = self.entry_wigits.end_entry.var.get()
-        self._current_play.addl_images = self.play_imgs
-        self._current_play.start_time = datetime.datetime.strptime(self.entry_wigits.date.var.get(), '%Y-%m-%d %H:%M:%S')
-        print(self._current_play.start_time)
 
+    def update_addl_images(self):
+        if self._current_play is None:
+            return
+        self._current_play.add_images(self.play_imgs)
+
+    def update_handpays(self):
         for hp in self.hand_pay:
             self._current_play.add_hand_pay(hp)
+
+    def load_play(self, playid):
+        self._current_play = self.plays[playid]
+        self.entry_wigits.machine_cb.var.set(self._current_play.machine.get_name())
+        print(self._current_play.session_date)
+        self.session_date.set(self._current_play.session_date.strftime("%Y-%m-%d"))
+        self.session_frame.casino.var.set(self._current_play.casino)
+        self.entry_wigits.dt.var.set(self._current_play.start_time)
+        self.entry_wigits.end_dt.var.set(self._current_play.end_time)
+        self.entry_wigits.bet.var.set(self._current_play.bet)
+        self.entry_wigits.denom_cb.var.set(self._current_play.denom)
+        self.entry_wigits.play_type.var.set(self._current_play.play_type)
+        self.entry_wigits.cashin.var.set(self._current_play.cash_in)
+        self.entry_wigits.cashout.var.set(self._current_play.cash_out)
+        self.update_pnl()
+        self.entry_wigits.initial_state.set_text(self._current_play.state)
+        self.entry_wigits.note.set_text(self._current_play.note)
+        self.entry_wigits.start_entry.var.set(self._current_play.start_image)
+        self.entry_wigits.end_entry.var.set(self._current_play.end_image)
+        self.play_imgs = self._current_play.addl_images
+        # TODO Add Hand pays
+
+        # self.imgs.append(self._current_play.start_image)
+        # self.imgs.append(self._current_play.end_image)
+        # self.imgs.extend(self._current_play.addl_images)
+        # self.imgs = sorted(self.imgs, key=lambda item: item[2])
+        self.image_buttons.save_button.configure(state='normal', bootstyle='normal')
+
+
+    def create_play(self, machine_name=None):
+        if machine_name is None:
+            machine_name = self.entry_wigits.machine_cb.var.get()
+        self._current_play = PlayFactory.get_play(machine_name)
+        self.update_all_play_values()
+
+    def update_all_play_values(self):
+        self.update_session_date()
+        self.update_casino()
+        self.update_start_datetime()
+        self.update_end_datetime()
+        self.update_bet()
+        self.update_denom()
+        self.update_play_type()
+        self.update_cashin()
+        self.update_cashout()
+        self.update_init_state()
+        self.update_play_note()
+        self.update_start_image()
+        self.update_end_image()
+        self.update_addl_images()
+        self.update_handpays()
+        
+    def save(self):
+        if self.image_buttons.save_button.state() == 'disabled':
+            return
+
+        if self._current_play is None:
+            self.create_play()
+        else:
+            self.update_all_play_values()
 
         self.plays[self._current_play.identifier] = self._current_play 
         self.session_table.update_table(self)
@@ -229,11 +369,13 @@ class App(ttk.Window):
         self.imgs = sorted(self.imgs, key=lambda item: item[2])
 
         # clears all entry values
-        self.entry_wigits.date.var.set('')
-        self.entry_wigits.cashin.var.set(self._current_play.cash_out)
+        self.entry_wigits.dt.var.set('')
+        self.entry_wigits.end_dt.var.set('')
         self.entry_wigits.bet.var.set(0)
-        self.entry_wigits.initial_state.clear()
+        self.entry_wigits.cashin.var.set(self._current_play.cash_out)
         self.entry_wigits.cashout.var.set(0)
+        self.entry_wigits.initial_state.clear()
+        self.ttk_state.set("")
         self.entry_wigits.note.clear()
         self.entry_wigits.start_entry.var.set('')
         self.entry_wigits.end_entry.var.set('') 
@@ -246,7 +388,8 @@ class App(ttk.Window):
         
         # resets the save button to disabled
         self.image_buttons.save_button.configure(state='disabled')
-
+        self.image_buttons.save_session_button.configure(state='enabled')
+        self.create_play()
 
     def save_session(self):
         # gets the path to the data save
@@ -278,13 +421,10 @@ class App(ttk.Window):
             # move all images and update play values with new location
         for p in list(self.plays.values()):
             if p.start_image and new_path:
-                print("start", self.session_date.get(), p.start_image) 
                 p.start_image = move(p.start_image, new_path)
             for i,a in enumerate(p.addl_images):
-                print("addl", self.session_date.get(), a) 
                 p.addl_images[i] = move(a, new_path)
             if p.end_image and new_path:
-                print("end", self.session_date.get(), p.end_image) 
                 p.end_image = move(p.end_image, new_path)
 
             # Save csv
@@ -298,47 +438,59 @@ class App(ttk.Window):
         self.plays.clear()
         self.session_table.update_table(self)
 
-        self.image_buttons.add_button.configure(state='normal')
-        self.image_buttons.start_button.configure(state='normal')
-        self.image_buttons.end_button.configure(state='normal')
-        self.image_buttons.remove_button.configure(state='disabled')
+        self.image_buttons.set_image_adders('normal')
         
-        # resets the save button to disabled
         self.image_buttons.save_button.configure(state='disabled')
+        self.image_buttons.save_session_button.configure(state='disabled')
     
     def check_save_valid(self):
-        # gets the entry values that need to be filled to save
-        casino = self.entry_wigits.casino.var.get()
-
-        date = self.entry_wigits.date.var.get()
-        machine = self.entry_wigits.machine.var.get()
+        casino = self.session_frame.casino.var.get()
+        dt = self.entry_wigits.dt.var.get()
+        machine = self.entry_wigits.machine_cb.var.get()
         play_type = self.entry_wigits.play_type.var.get()
+
+        bet = self.entry_wigits.bet.var.get()
+        cashin = self.entry_wigits.cashin.var.get()
+        cashout = self.entry_wigits.cashout.var.get()
         
-        # checks if they are empty
-        if casino=='' or date=='' or machine=='' or play_type=='':
-            # disables the save button
+        if casino=='' or dt==self.default_dt or dt == "" or machine=='Select Machine' or play_type=='':
             self.image_buttons.save_button.configure(state='disabled')
+        elif bet == '0' or cashin == '0' or cashout=='0':
+            self.image_buttons.save_button.configure(state='normal', bootstyle='warning')
         else:
-            # enables the save button
-            self.image_buttons.save_button.configure(state='normal')
+            self.image_buttons.save_button.configure(state='normal', bootstyle='normal')
         
     def save_externals(self):
-        # gets the path to casino entry values csv file
-        file_path = join(dirname(dirname(__file__)), 'casino_entry_values.csv')
-        # saves the casino entry values to the csv file
-        with open(file_path, 'w', newline='') as csvfile:
-            writer = csv.writer(csvfile)
-            for item in self.casino_values:
-                writer.writerow([item])
+        externals = {'casino_entry_values.csv': self.casino_values, 'machine_entry_values.csv': self.machine_values, 'denom_entry_values.csv': self.denom_values, 'playtype_entry_values.csv': self.play_types}
+        for f, var in externals.items():
+            file_path = join(dirname(dirname(__file__)), f)
+            with open(file_path, 'w', newline='') as csvfile:
+                writer = csv.writer(csvfile)
+                for item in var:
+                    writer.writerow([item])
         
-        # gets teh path to the machine entry values csv file
-        file_path = join(dirname(dirname(__file__)), 'machine_entry_values.csv')
-        # saves the machine entry values to the csv file
-        with open(file_path, 'w', newline='') as csvfile:
-            writer = csv.writer(csvfile)
-            for item in self.machine_values:
-                writer.writerow([item])
+    def setup_keybinds(self):
+        self.bind('<FocusIn>', lambda _: self.check_save_valid())
+        self.bind('<FocusOut>', lambda _: self.check_save_valid())
 
+        self.bind('<Control-s>', lambda _: self.save())
+        self.bind('<Prior>', lambda _: self.image_buttons.prev_button_command(self))
+        self.bind('<Next>', lambda _: self.image_buttons.next_button_command(self))
+        self.bind('<Home>', lambda _: self.image_buttons.return_button_command(self))
+        self.bind('<Control-Key-1>', lambda _: self.image_buttons.start_button_command(self))
+        self.bind('<Control-Key-2>', lambda _: self.image_buttons.add_button_command(self))
+        self.bind('<Control-Key-3>', lambda _: self.image_buttons.end_button_command(self))
+
+    def load_test_play(self):
+        self.session_frame.casino.var.set("ilani")
+        self.session_date.set(datetime.datetime(2024,5,1).strftime('%Y-%m-%d'))
+        self.entry_wigits.dt.var.set(datetime.datetime(2024,5,1, 12, 3, 5).strftime('%Y-%m-%d %H:%M:%S'))
+        self.entry_wigits.machine_cb.var.set("Lucky Wealth Cat")
+        self.entry_wigits.cashin.var.set("100.00")
+        self.entry_wigits.bet.var.set("1.20")
+        self.entry_wigits.play_type.var.set("AP")
+        self.entry_wigits.initial_state.text.insert('1.0', "This, is; a (state): 1223")
+        self.entry_wigits.cashout.var.set("120.00")
 
 if __name__ == '__main__':
     # calls the app

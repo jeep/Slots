@@ -15,7 +15,7 @@ class MoneyEntryLabel(ttk.Frame):
         self.label.pack(side='left')
         
         self.var = ttk.StringVar(value=0)
-        self.entry = ttk.Entry(self, textvariable=self.var, validate='key', validatecommand=(self.register(self.validate), '%P'), width=30)
+        self.entry = ttk.Entry(self, textvariable=self.var, validate='key', validatecommand=(self.register(self.validate), '%P'), width=10)
         self.entry.pack(side='right')
         
         self.entry.bind('.', lambda _: period(_, self))

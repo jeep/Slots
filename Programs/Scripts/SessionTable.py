@@ -6,6 +6,7 @@ class SessionTable(ttk.Treeview):
         self._parent = parent
         self.heading('id', text="Play ID")
         self.bind('<Delete>', self.delete_play)
+        self.bind('<Double-Button-1>', self.load_play)
         
     def update_table(self, parent):
         self.delete(*self.get_children())
@@ -18,3 +19,5 @@ class SessionTable(ttk.Treeview):
             del self._parent.plays[value]
             self.delete(item)
 
+    def load_play(self, _):
+        self._parent.load_play(self.item(self.selection())['values'][0])
