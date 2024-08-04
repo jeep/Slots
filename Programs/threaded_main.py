@@ -41,6 +41,7 @@ class App(ttk.Window):
         self.geometry('1300x800')
         self.iconphoto(False, ttk.PhotoImage(file=r'Programs\Icon\slot_machine_icon.png'))
         
+        self._current_index = None
         self.imgs = []
         self.play_imgs = []
         self.hand_pay = []
@@ -303,9 +304,10 @@ class App(ttk.Window):
             self._current_play.add_hand_pay(hp)
 
     def load_play(self, playid):
+        self._loaded_play_id = playid
+        self._current_index = list(self.plays.keys()).index(playid)
         self._current_play = self.plays[playid]
         self.entry_wigits.machine_cb.var.set(self._current_play.machine.get_name())
-        print(self._current_play.session_date)
         self.session_date.set(self._current_play.session_date.strftime("%Y-%m-%d"))
         self.session_frame.casino.var.set(self._current_play.casino)
         self.entry_wigits.dt.var.set(self._current_play.start_time)
@@ -359,16 +361,27 @@ class App(ttk.Window):
 
         if self._current_play is None:
             self.create_play()
-        else:
-            self.update_all_play_values()
 
-        self.plays[self._current_play.identifier] = self._current_play 
-        self.session_table.update_table(self)
+        if self._current_index is not None:
+            li = list(self.plays.items())
+            li[self._current_index] = (self._current_play.identifier, self._current_play)
+            self.plays = dict(li)
+        else:
+            if self._current_play.identifier in self.plays:
+                button = Messagebox.okcancel(f'You are not editing an exiting play and this will overwrite a play. Proceed?', f'Overwrite Warning')
+                print(button)
+                if button != 'OK':
+                    return
+            self.plays[self._current_play.identifier] = self._current_play 
+
+        self.update_all_play_values()
+        self.session_table.update_table()
 
         self.imgs = [d for d in self.imgs if ((d[0] not in self._current_play.addl_images) and (d[0] != self._current_play.start_image) and (d[0] != self._current_play.end_image))]
         self.imgs = sorted(self.imgs, key=lambda item: item[2])
 
         # clears all entry values
+        self._current_index = None
         self.entry_wigits.dt.var.set('')
         self.entry_wigits.end_dt.var.set('')
         self.entry_wigits.bet.var.set(0)
@@ -436,13 +449,18 @@ class App(ttk.Window):
                     #csvfile.writelines(str(p))
             
         self.plays.clear()
-        self.session_table.update_table(self)
+        self.session_table.update_table()
 
         self.image_buttons.set_image_adders('normal')
         
         self.image_buttons.save_button.configure(state='disabled')
         self.image_buttons.save_session_button.configure(state='disabled')
-    
+
+    def remove_play(self, key):
+        del self.plays[key]
+        if len(self.plays) == 0:
+            self.image_buttons.save_session_button.configure(state='disabled')
+
     def check_save_valid(self):
         casino = self.session_frame.casino.var.get()
         dt = self.entry_wigits.dt.var.get()
@@ -469,6 +487,13 @@ class App(ttk.Window):
                 for item in var:
                     writer.writerow([item])
         
+    def reset_play(self):
+        self._current_index = None
+        self.session_table.clear_selection()
+        self.create_play()
+        print(self._current_index)
+        print(self._current_play)
+
     def setup_keybinds(self):
         self.bind('<FocusIn>', lambda _: self.check_save_valid())
         self.bind('<FocusOut>', lambda _: self.check_save_valid())
@@ -480,6 +505,7 @@ class App(ttk.Window):
         self.bind('<Control-Key-1>', lambda _: self.image_buttons.start_button_command(self))
         self.bind('<Control-Key-2>', lambda _: self.image_buttons.add_button_command(self))
         self.bind('<Control-Key-3>', lambda _: self.image_buttons.end_button_command(self))
+        self.bind('<Escape>', lambda _: self.reset_play())
 
     def load_test_play(self):
         self.session_frame.casino.var.set("ilani")

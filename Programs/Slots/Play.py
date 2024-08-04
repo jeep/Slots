@@ -102,7 +102,10 @@ class Play:
         return rows
 
     def __str__(self):
-        start_date = self.start_time.strftime(r"%m/%d/%Y")
+        if self.start_time != datetime.MINYEAR:
+            start_date = self.start_time.strftime(r"%m/%d/%Y")
+        else:
+            start_date = "??"
         images = [str(pathlib.PureWindowsPath(f)) for f in self.addl_images]
         
         outstr = f"{self.identifier},{self.casino},{start_date},{self.machine.get_name()},{format_currency(self.cash_in, 'USD', locale='en_US')},{format_currency(self.bet, 'USD', locale='en_US')},{self.play_type},{self.denom},\"{self.state}\",{format_currency(self.cash_out, 'USD', locale='en_US')},{format_currency(self.pnl, 'USD', locale='en_US')},\"{self.note}\",{self.machine.get_family()},{self.start_image},{self.end_image},{images}"

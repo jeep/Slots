@@ -21,9 +21,7 @@ def _no_shift_tab(_, parent):
 
 class EntryWigits(ttk.Frame):
     def __init__(self, parent, window):
-        # initializes the frame
         super().__init__(master=parent)
-        # creates a 'private' window variable
         self._window = window
         
         self._create_entries()
@@ -129,9 +127,7 @@ class EntryWigits(ttk.Frame):
         #self.hp_table.bind('<Delete>', self._hp_delete)
         
     def update_table(self, parent):
-        # removes all elements of the table
         self.image_table.delete(*self.image_table.get_children())
-        # places all items in the play_imgs list onto the table
         for item in parent.play_imgs:
             self.image_table.insert(parent='', index=ttk.END, values=item)
     
