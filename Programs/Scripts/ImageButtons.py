@@ -44,20 +44,20 @@ class ImageButtons(ttk.Frame):
         row = 0
         self.prev_button.grid(column=0, row=row, sticky='nsew', padx=pad_back, pady=pad_back)
         self.next_button.grid(column=1, row=row, sticky='nsew', padx=pad_double, pady=pad_back)
-        self.return_button.grid(column=2, row=row, sticky='nsew', padx=pad_front, pady=pad_back)
+        self.return_button.grid(column=2, row=row, sticky='nsew', padx=pad_double, pady=pad_back)
         self.state_button.grid(column=3, row=row, sticky='nsew', padx=pad_front, pady=pad_back)
         
         row = 1
         self.start_button.grid(column=0, row=row, sticky='nsew', padx=pad_back, pady=pad_double)
         self.add_button.grid(column=1, row=row, sticky='nsew', padx=pad_double, pady=pad_double)
-        self.end_button.grid(column=2, row=row, sticky='nsew', padx=pad_front, pady=pad_double)
-        self.hp_button.grid(column=3, row=row, sticky='nsew', padx=(8, 0), pady=pad_double)
+        self.end_button.grid(column=2, row=row, sticky='nsew', padx=pad_double, pady=pad_double)
+        self.hp_button.grid(column=3, row=row, sticky='nsew', padx=pad_front, pady=pad_double)
         
         row = 2
         self.save_button.grid(column=0, row=row, sticky='nsew', padx=pad_back, pady=pad_front)
         self.remove_button.grid(column=1, row=row, sticky='nsew', padx=pad_double, pady=pad_front)
         self.delete_button.grid(column=2, row=row, sticky='nsew', padx=pad_double, pady=pad_front)
-        self.save_session_button.grid(column=row, row=2, sticky='nsew', padx=pad_front, pady=pad_front)
+        self.save_session_button.grid(column=3, row=row, sticky='nsew', padx=pad_front, pady=pad_front)
     
     def _open_hpwin(self, callback):
         HandPayWindow(callback=callback)

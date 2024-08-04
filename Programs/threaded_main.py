@@ -91,6 +91,7 @@ class App(ttk.Window):
         self.image_buttons.save_session_button.configure(state='disabled')
         self.image_buttons.set_image_adders('disabled')
         self.image_buttons.remove_button.configure(state='disabled')
+        self.image_buttons.delete_button.configure(state='disabled')
         self.image_buttons.set_image_navigation('disabled')
 
 
@@ -156,6 +157,7 @@ class App(ttk.Window):
         self.imgs = sorted(self.imgs, key=lambda item: item[2])
         self.display_image()
         self.image_buttons.set_image_adders('normal')
+        self.image_buttons.delete_button.configure(state='warning')
         self.image_buttons.set_image_navigation('normal')
         
     def add_casino(self):
