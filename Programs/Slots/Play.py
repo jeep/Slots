@@ -69,10 +69,12 @@ class Play:
             self._cash_in.append(cash)
     
     def add_image(self, img: pathlib.Path) -> None:
-        self.addl_images.append(img)
+        if img not in self.addl_images:
+            self.addl_images.append(img)
 
     def add_images(self, imgs: list[pathlib.Path]) -> None:
-        self.addl_images.extend(imgs)
+        for img in imgs:
+            self.add_image(img)
 
     def make_hand_pay(self, payment, tip, image = None, addl_images = None):
         if not addl_images:

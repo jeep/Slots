@@ -297,7 +297,9 @@ class App(ttk.Window):
     def update_addl_images(self):
         if self._current_play is None:
             return
-        self._current_play.add_images(self.play_imgs)
+        #filter duplicates
+        to_add = list(dict.fromkeys(self.play_imgs))
+        self._current_play.add_images(to_add)
 
     def update_handpays(self):
         for hp in self.hand_pay:
@@ -320,14 +322,13 @@ class App(ttk.Window):
         self.update_pnl()
         self.entry_wigits.initial_state.set_text(self._current_play.state)
         self.entry_wigits.note.set_text(self._current_play.note)
+
         self.entry_wigits.start_entry.var.set(self._current_play.start_image)
         self.entry_wigits.end_entry.var.set(self._current_play.end_image)
         self.play_imgs = self._current_play.addl_images
+        self.entry_wigits.update_table(self)
         # TODO Add Hand pays
 
-        # self.imgs.append(self._current_play.start_image)
-        # self.imgs.append(self._current_play.end_image)
-        # self.imgs.extend(self._current_play.addl_images)
         # self.imgs = sorted(self.imgs, key=lambda item: item[2])
         self.image_buttons.save_button.configure(state='normal', bootstyle='normal')
 
@@ -369,7 +370,6 @@ class App(ttk.Window):
         else:
             if self._current_play.identifier in self.plays:
                 button = Messagebox.okcancel(f'You are not editing an exiting play and this will overwrite a play. Proceed?', f'Overwrite Warning')
-                print(button)
                 if button != 'OK':
                     return
             self.plays[self._current_play.identifier] = self._current_play 
@@ -408,7 +408,6 @@ class App(ttk.Window):
         # gets the path to the data save
         save_path = join(dirname(dirname(__file__)), 'Data')
         file_path = join(save_path, 'slots_data.csv')
-        print(save_path)
 
         makedirs(save_path, exist_ok=True)
 
