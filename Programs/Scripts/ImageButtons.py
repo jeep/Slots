@@ -164,7 +164,7 @@ class ImageButtons(ttk.Frame):
             return
         
         # adds the path to the play images list
-        parent.play_imgs.append(parent.imgs[parent.pointer][0])
+        parent.play_imgs.append(parent.imgs[parent.pointer][0].replace('\\', '\\\\'))
         
         parent.entry_wigits.update_table(parent)
         
