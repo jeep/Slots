@@ -327,9 +327,10 @@ class App(ttk.Window):
         self.entry_wigits.end_entry.var.set(self._current_play.end_image)
         self.play_imgs = self._current_play.addl_images
         self.entry_wigits.update_table(self)
-        # TODO Add Hand pays
 
-        # self.imgs = sorted(self.imgs, key=lambda item: item[2])
+        self.hand_pay = self._current_play.hand_pays
+        self.entry_wigits.update_hand_pay_table(self) 
+
         self.image_buttons.save_button.configure(state='normal', bootstyle='normal')
 
 
