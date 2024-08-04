@@ -302,6 +302,7 @@ class App(ttk.Window):
         self._current_play.add_images(to_add)
 
     def update_handpays(self):
+        self._current_play.hand_pays.clear()
         for hp in self.hand_pay:
             self._current_play.add_hand_pay(hp)
 
