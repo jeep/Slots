@@ -490,9 +490,9 @@ class App(ttk.Window):
     def reset_play(self):
         self._current_index = None
         self.session_table.clear_selection()
+        if self._current_play is None:
+            return
         self.create_play()
-        print(self._current_index)
-        print(self._current_play)
 
     def setup_keybinds(self):
         self.bind('<FocusIn>', lambda _: self.check_save_valid())
