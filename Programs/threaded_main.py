@@ -211,8 +211,8 @@ class App(ttk.Window):
     def update_session_date(self):
         if self._current_play is None:
             return
-        if self.session_date.get() != "":
-            fmt = '%Y-%m-%d'
+        if self.session_date.get() != "" and self.session_date.get() != self.default_session_date:
+            fmt = '%Y%m%d'
             self._current_play.session_date = datetime.datetime.strptime(self.session_date.get(), fmt)
 
     def update_casino(self, casino=None):
@@ -371,14 +371,15 @@ class App(ttk.Window):
             li = list(self.plays.items())
             li[self._current_index] = (self._current_play.identifier, self._current_play)
             self.plays = dict(li)
+            self.update_all_play_values()
         else:
+            self.update_all_play_values()
             if self._current_play.identifier in self.plays:
                 button = Messagebox.okcancel(f'You are not editing an exiting play and this will overwrite a play. Proceed?', f'Overwrite Warning')
                 if button != 'OK':
                     return
             self.plays[self._current_play.identifier] = self._current_play 
 
-        self.update_all_play_values()
         self.session_table.update_table()
 
         self.imgs = [d for d in self.imgs if ((d[0] not in self._current_play.addl_images) and (d[0] != self._current_play.start_image) and (d[0] != self._current_play.end_image))]
@@ -458,6 +459,7 @@ class App(ttk.Window):
         
         self.image_buttons.save_button.configure(state='disabled')
         self.image_buttons.save_session_button.configure(state='disabled')
+        self.session_date.set(self.default_session_date)
 
     def remove_play(self, key):
         del self.plays[key]
@@ -512,7 +514,7 @@ class App(ttk.Window):
 
     def load_test_play(self):
         self.session_frame.casino.var.set("ilani")
-        self.session_date.set(datetime.datetime(2024,5,1).strftime('%Y-%m-%d'))
+        self.session_date.set(datetime.datetime(2024,5,1).strftime('%Y%m%d'))
         self.entry_wigits.dt.var.set(datetime.datetime(2024,5,1, 12, 3, 5).strftime('%Y-%m-%d %H:%M:%S'))
         self.entry_wigits.machine_cb.var.set("Lucky Wealth Cat")
         self.entry_wigits.cashin.var.set("100.00")
