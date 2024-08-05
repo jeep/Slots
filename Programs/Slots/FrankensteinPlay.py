@@ -57,7 +57,7 @@ class FrankensteinPlay(StateHelperPlay):
             Messagebox.show_error("You must set both the denom and bet first")
             return False
         if (FrankensteinPlay.d(self.bet), self.denom) not in self.states:
-            Messagebox("Error", f"This combination of {self.bet} bet and {self.denom} denom is not known")
+            Messagebox.show_error(f"This combination of {self.bet} bet and {self.denom} denom is not known")
             return False 
         self.state_data = self.states[(FrankensteinPlay.d(self.bet), self.denom)]
         return True
