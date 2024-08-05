@@ -136,7 +136,7 @@ class App(ttk.Window):
         menu.add_cascade(label='File', menu=file_menu)
 
     def open_test_folder(self):
-        folder = r"C:\Users\jeepe\dev\Pics\Unsorted"
+        folder = join(dirname(dirname(__file__)), 'Data', 'test_pics')
         self.open_folder(folder)
 
     def open_folder(self, directory=''):
