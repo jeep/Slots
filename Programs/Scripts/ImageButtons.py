@@ -72,9 +72,6 @@ class ImageButtons(ttk.Frame):
         parent.hand_pay.append(hp)
         parent.entry_wigits.update_hand_pay_table(parent)
         
-    def image_is_in_current_play(self, img, parent):
-        return ((img in parent.play_imgs) or (img == parent.entry_wigits.start_entry.var.get()) or (img == parent.entry_wigits.end_entry.var.get()))
-
     def set_image_navigation(self, state):
         self.prev_button.configure(state=state)
         self.next_button.configure(state=state)
@@ -103,7 +100,7 @@ class ImageButtons(ttk.Frame):
         # gets the path of the current image
         current_image_path = parent.imgs[parent.pointer][0]
         
-        if self.image_is_in_current_play(current_image_path, parent):
+        if parent.image_is_in_current_play(current_image_path):
             self.set_image_adders('disabled')
         else:
             self.set_image_adders('normal')
@@ -117,25 +114,13 @@ class ImageButtons(ttk.Frame):
         
         current_image_path = parent.imgs[parent.pointer][0]
         
-        if self.image_is_in_current_play(current_image_path, parent):
+        if parent.image_is_in_current_play(current_image_path):
             self.set_image_adders('disabled')
         else:
             self.set_image_adders('normal')
     
     def return_button_command(self, parent):
-        if len(parent.imgs) == 0:
-            return
-        
-        parent.pointer = 0
-        parent.display_image()
-        
-        # gets the path of the current image
-        current_image_path = parent.imgs[parent.pointer][0]
-        
-        if self.image_is_in_current_play(current_image_path, parent):
-            self.set_image_adders('disabled')
-        else:
-            self.set_image_adders('normal')
+        parent.display_first_image()
     
     def start_button_command(self, parent):
         if len(parent.imgs) == 0:

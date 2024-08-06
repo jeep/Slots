@@ -455,20 +455,34 @@ class App(ttk.Window):
             for row in p.get_csv_rows():
                 writer.writerow(row)
             
-        
-        self.plays.clear()
-        self.session_table.update_table()
-
         self.imgs = [d for d in self.imgs if (d[0] not in pics_to_remove)]
         self.imgs = sorted(self.imgs, key=lambda item: item[2])
-        self.image_buttons.return_button_command(self)
+        self.display_first_image()
 
+        self.plays.clear()
+        self.session_table.update_table()
 
         self.image_buttons.set_image_adders('normal')
         
         self.image_buttons.save_button.configure(state='disabled')
         self.image_buttons.save_session_button.configure(state='disabled')
         self.session_date.set(self.default_session_date)
+
+    def image_is_in_current_play(self, img):
+        return ((img in self.play_imgs) or (img == self.entry_wigits.start_entry.var.get()) or (img == self.entry_wigits.end_entry.var.get()))
+
+    def display_first_image(self):
+        if len(self.imgs) == 0:
+            return
+        
+        self.pointer = 0
+        self.display_image()
+        
+        current_image_path = self.imgs[self.pointer][0]
+        if self.image_is_in_current_play(current_image_path):
+            self.image_buttons.set_image_adders('disabled')
+        else:
+            self.image_buttons.set_image_adders('normal')
 
     def remove_play(self, key):
         del self.plays[key]
