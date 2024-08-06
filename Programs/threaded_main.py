@@ -359,6 +359,9 @@ class App(ttk.Window):
         self.update_end_image()
         self.update_addl_images()
         self.update_handpays()
+    
+    def editing_play(self):
+        return self._current_index is not None
         
     def save(self):
         if self.image_buttons.save_button.state() == 'disabled':
@@ -367,7 +370,7 @@ class App(ttk.Window):
         if self._current_play is None:
             self.create_play()
 
-        if self._current_index is not None:
+        if self.editing_play():
             li = list(self.plays.items())
             li[self._current_index] = (self._current_play.identifier, self._current_play)
             self.plays = dict(li)
@@ -381,9 +384,6 @@ class App(ttk.Window):
             self.plays[self._current_play.identifier] = self._current_play 
 
         self.session_table.update_table()
-
-        self.imgs = [d for d in self.imgs if ((d[0] not in self._current_play.addl_images) and (d[0] != self._current_play.start_image) and (d[0] != self._current_play.end_image))]
-        self.imgs = sorted(self.imgs, key=lambda item: item[2])
 
         # clears all entry values
         self._current_index = None
@@ -435,25 +435,34 @@ class App(ttk.Window):
             except Exception:
                 pass
 
-            # move all images and update play values with new location
-        for p in list(self.plays.values()):
-            if p.start_image and new_path:
-                p.start_image = move(p.start_image, new_path)
-            for i,a in enumerate(p.addl_images):
-                p.addl_images[i] = move(a, new_path)
-            if p.end_image and new_path:
-                p.end_image = move(p.end_image, new_path)
+        pics_to_remove = []
+        # move all images and update play values with new location
+        with open(file_path, 'a+', newline='') as csvfile:
+            writer = csv.writer(csvfile)
+            for p in list(self.plays.values()):
+                if p.start_image and new_path:
+                    pics_to_remove.append(p.start_image)
+                    p.start_image = move(p.start_image, new_path)
 
-            # Save csv
-            print(f"Writing to {file_path}\n")
-            with open(file_path, 'a+', newline='') as csvfile:
-                writer = csv.writer(csvfile)
-                for row in p.get_csv_rows():
-                    writer.writerow(row)
-                    #csvfile.writelines(str(p))
+                pics_to_remove.extend(p.addl_images)
+                for i,a in enumerate(p.addl_images):
+                    p.addl_images[i] = move(a, new_path)
+
+                if p.end_image and new_path:
+                    pics_to_remove.append(p.end_image)
+                    p.end_image = move(p.end_image, new_path)
+
+            for row in p.get_csv_rows():
+                writer.writerow(row)
             
+        
         self.plays.clear()
         self.session_table.update_table()
+
+        self.imgs = [d for d in self.imgs if (d[0] not in pics_to_remove)]
+        self.imgs = sorted(self.imgs, key=lambda item: item[2])
+        self.image_buttons.return_button_command(self)
+
 
         self.image_buttons.set_image_adders('normal')
         
