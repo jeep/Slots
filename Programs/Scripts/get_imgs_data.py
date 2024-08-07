@@ -66,6 +66,5 @@ def multi_get_img_data(directory):
     # return the list of the results
     return results
 
-
-
-
+def no_threading_get_img_data(directory):
+    return tuple(get_img_data(file, directory) for file in listdir(directory))
