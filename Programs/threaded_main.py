@@ -41,6 +41,7 @@ class App(ttk.Window):
         self.geometry('1300x800')
         self.iconphoto(False, ttk.PhotoImage(file=r'Programs\Icon\slot_machine_icon.png'))
         
+        self._current_index = None
         self.imgs = []
         self.play_imgs = []
         self.hand_pay = []
@@ -90,6 +91,7 @@ class App(ttk.Window):
         self.image_buttons.save_session_button.configure(state='disabled')
         self.image_buttons.set_image_adders('disabled')
         self.image_buttons.remove_button.configure(state='disabled')
+        self.image_buttons.delete_button.configure(state='disabled')
         self.image_buttons.set_image_navigation('disabled')
 
 
@@ -134,7 +136,7 @@ class App(ttk.Window):
         menu.add_cascade(label='File', menu=file_menu)
 
     def open_test_folder(self):
-        folder = r"C:\Users\jeepe\dev\Pics\Unsorted"
+        folder = join(dirname(dirname(__file__)), 'Data', 'test_pics')
         self.open_folder(folder)
 
     def open_folder(self, directory=''):
@@ -155,6 +157,7 @@ class App(ttk.Window):
         self.imgs = sorted(self.imgs, key=lambda item: item[2])
         self.display_image()
         self.image_buttons.set_image_adders('normal')
+        self.image_buttons.delete_button.configure(state='warning')
         self.image_buttons.set_image_navigation('normal')
         
     def add_casino(self):
@@ -208,8 +211,8 @@ class App(ttk.Window):
     def update_session_date(self):
         if self._current_play is None:
             return
-        if self.session_date.get() != "":
-            fmt = '%Y-%m-%d'
+        if self.session_date.get() != "" and self.session_date.get() != self.default_session_date:
+            fmt = '%Y%m%d'
             self._current_play.session_date = datetime.datetime.strptime(self.session_date.get(), fmt)
 
     def update_casino(self, casino=None):
@@ -296,16 +299,20 @@ class App(ttk.Window):
     def update_addl_images(self):
         if self._current_play is None:
             return
-        self._current_play.add_images(self.play_imgs)
+        #filter duplicates
+        to_add = list(dict.fromkeys(self.play_imgs))
+        self._current_play.add_images(to_add)
 
     def update_handpays(self):
+        self._current_play.hand_pays.clear()
         for hp in self.hand_pay:
             self._current_play.add_hand_pay(hp)
 
     def load_play(self, playid):
+        self._loaded_play_id = playid
+        self._current_index = list(self.plays.keys()).index(playid)
         self._current_play = self.plays[playid]
         self.entry_wigits.machine_cb.var.set(self._current_play.machine.get_name())
-        print(self._current_play.session_date)
         self.session_date.set(self._current_play.session_date.strftime("%Y-%m-%d"))
         self.session_frame.casino.var.set(self._current_play.casino)
         self.entry_wigits.dt.var.set(self._current_play.start_time)
@@ -318,15 +325,15 @@ class App(ttk.Window):
         self.update_pnl()
         self.entry_wigits.initial_state.set_text(self._current_play.state)
         self.entry_wigits.note.set_text(self._current_play.note)
+
         self.entry_wigits.start_entry.var.set(self._current_play.start_image)
         self.entry_wigits.end_entry.var.set(self._current_play.end_image)
         self.play_imgs = self._current_play.addl_images
-        # TODO Add Hand pays
+        self.entry_wigits.update_table(self)
 
-        # self.imgs.append(self._current_play.start_image)
-        # self.imgs.append(self._current_play.end_image)
-        # self.imgs.extend(self._current_play.addl_images)
-        # self.imgs = sorted(self.imgs, key=lambda item: item[2])
+        self.hand_pay = self._current_play.hand_pays
+        self.entry_wigits.update_hand_pay_table(self) 
+
         self.image_buttons.save_button.configure(state='normal', bootstyle='normal')
 
 
@@ -352,6 +359,9 @@ class App(ttk.Window):
         self.update_end_image()
         self.update_addl_images()
         self.update_handpays()
+    
+    def editing_play(self):
+        return self._current_index is not None
         
     def save(self):
         if self.image_buttons.save_button.state() == 'disabled':
@@ -359,16 +369,24 @@ class App(ttk.Window):
 
         if self._current_play is None:
             self.create_play()
+
+        if self.editing_play():
+            li = list(self.plays.items())
+            li[self._current_index] = (self._current_play.identifier, self._current_play)
+            self.plays = dict(li)
+            self.update_all_play_values()
         else:
             self.update_all_play_values()
+            if self._current_play.identifier in self.plays:
+                button = Messagebox.okcancel(f'You are not editing an exiting play and this will overwrite a play. Proceed?', f'Overwrite Warning')
+                if button != 'OK':
+                    return
+            self.plays[self._current_play.identifier] = self._current_play 
 
-        self.plays[self._current_play.identifier] = self._current_play 
-        self.session_table.update_table(self)
-
-        self.imgs = [d for d in self.imgs if ((d[0] not in self._current_play.addl_images) and (d[0] != self._current_play.start_image) and (d[0] != self._current_play.end_image))]
-        self.imgs = sorted(self.imgs, key=lambda item: item[2])
+        self.session_table.update_table()
 
         # clears all entry values
+        self._current_index = None
         self.entry_wigits.dt.var.set('')
         self.entry_wigits.end_dt.var.set('')
         self.entry_wigits.bet.var.set(0)
@@ -395,7 +413,6 @@ class App(ttk.Window):
         # gets the path to the data save
         save_path = join(dirname(dirname(__file__)), 'Data')
         file_path = join(save_path, 'slots_data.csv')
-        print(save_path)
 
         makedirs(save_path, exist_ok=True)
 
@@ -418,31 +435,60 @@ class App(ttk.Window):
             except Exception:
                 pass
 
-            # move all images and update play values with new location
-        for p in list(self.plays.values()):
-            if p.start_image and new_path:
-                p.start_image = move(p.start_image, new_path)
-            for i,a in enumerate(p.addl_images):
-                p.addl_images[i] = move(a, new_path)
-            if p.end_image and new_path:
-                p.end_image = move(p.end_image, new_path)
+        pics_to_remove = []
+        # move all images and update play values with new location
+        with open(file_path, 'a+', newline='') as csvfile:
+            writer = csv.writer(csvfile)
+            for p in list(self.plays.values()):
+                if p.start_image and new_path:
+                    pics_to_remove.append(p.start_image)
+                    p.start_image = move(p.start_image, new_path)
 
-            # Save csv
-            print(f"Writing to {file_path}\n")
-            with open(file_path, 'a+', newline='') as csvfile:
-                writer = csv.writer(csvfile)
-                for row in p.get_csv_rows():
-                    writer.writerow(row)
-                    #csvfile.writelines(str(p))
+                pics_to_remove.extend(p.addl_images)
+                for i,a in enumerate(p.addl_images):
+                    p.addl_images[i] = move(a, new_path)
+
+                if p.end_image and new_path:
+                    pics_to_remove.append(p.end_image)
+                    p.end_image = move(p.end_image, new_path)
+
+            for row in p.get_csv_rows():
+                writer.writerow(row)
             
+        self.imgs = [d for d in self.imgs if (d[0] not in pics_to_remove)]
+        self.imgs = sorted(self.imgs, key=lambda item: item[2])
+        self.display_first_image()
+
         self.plays.clear()
-        self.session_table.update_table(self)
+        self.session_table.update_table()
 
         self.image_buttons.set_image_adders('normal')
         
         self.image_buttons.save_button.configure(state='disabled')
         self.image_buttons.save_session_button.configure(state='disabled')
-    
+        self.session_date.set(self.default_session_date)
+
+    def image_is_in_current_play(self, img):
+        return ((img in self.play_imgs) or (img == self.entry_wigits.start_entry.var.get()) or (img == self.entry_wigits.end_entry.var.get()))
+
+    def display_first_image(self):
+        if len(self.imgs) == 0:
+            return
+        
+        self.pointer = 0
+        self.display_image()
+        
+        current_image_path = self.imgs[self.pointer][0]
+        if self.image_is_in_current_play(current_image_path):
+            self.image_buttons.set_image_adders('disabled')
+        else:
+            self.image_buttons.set_image_adders('normal')
+
+    def remove_play(self, key):
+        del self.plays[key]
+        if len(self.plays) == 0:
+            self.image_buttons.save_session_button.configure(state='disabled')
+
     def check_save_valid(self):
         casino = self.session_frame.casino.var.get()
         dt = self.entry_wigits.dt.var.get()
@@ -469,6 +515,13 @@ class App(ttk.Window):
                 for item in var:
                     writer.writerow([item])
         
+    def reset_play(self):
+        self._current_index = None
+        self.session_table.clear_selection()
+        if self._current_play is None:
+            return
+        self.create_play()
+
     def setup_keybinds(self):
         self.bind('<FocusIn>', lambda _: self.check_save_valid())
         self.bind('<FocusOut>', lambda _: self.check_save_valid())
@@ -480,10 +533,11 @@ class App(ttk.Window):
         self.bind('<Control-Key-1>', lambda _: self.image_buttons.start_button_command(self))
         self.bind('<Control-Key-2>', lambda _: self.image_buttons.add_button_command(self))
         self.bind('<Control-Key-3>', lambda _: self.image_buttons.end_button_command(self))
+        self.bind('<Escape>', lambda _: self.reset_play())
 
     def load_test_play(self):
         self.session_frame.casino.var.set("ilani")
-        self.session_date.set(datetime.datetime(2024,5,1).strftime('%Y-%m-%d'))
+        self.session_date.set(datetime.datetime(2024,5,1).strftime('%Y%m%d'))
         self.entry_wigits.dt.var.set(datetime.datetime(2024,5,1, 12, 3, 5).strftime('%Y-%m-%d %H:%M:%S'))
         self.entry_wigits.machine_cb.var.set("Lucky Wealth Cat")
         self.entry_wigits.cashin.var.set("100.00")

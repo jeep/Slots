@@ -21,9 +21,7 @@ def _no_shift_tab(_, parent):
 
 class EntryWigits(ttk.Frame):
     def __init__(self, parent, window):
-        # initializes the frame
         super().__init__(master=parent)
-        # creates a 'private' window variable
         self._window = window
         
         self._create_entries()
@@ -126,30 +124,27 @@ class EntryWigits(ttk.Frame):
         self.hp_table = ttk.Treeview(self, columns=('hp', 'tip'), show='headings')
         self.hp_table.heading('hp', text='Hand Pay')
         self.hp_table.heading('tip', text='Tip')
-        #self.hp_table.bind('<Delete>', self._hp_delete)
+        self.hp_table.bind('<Delete>', self._hp_delete)
         
     def update_table(self, parent):
-        # removes all elements of the table
         self.image_table.delete(*self.image_table.get_children())
-        # places all items in the play_imgs list onto the table
         for item in parent.play_imgs:
             self.image_table.insert(parent='', index=ttk.END, values=item)
     
     def update_hand_pay_table(self, parent):
         self.hp_table.delete(*self.hp_table.get_children())
-        
         for item in parent.hand_pay:
             self.hp_table.insert(parent='', index=ttk.END, values=(item.pay_amount, item.tip_amount))
     
-
-#    def _hp_delete(self, _):
-#        for item in self.hp_table.selection():
-#            values = self.hp_table.item(item)['values']
-#            self._window.hand_pay.remove(Handpay(float(values[0]), float(values[1]), None))
-#            self.hp_table.delete(item)
+    def _hp_delete(self, _):
+        for item in self.hp_table.selection():
+            self.hp_table.delete(item)
+        self._window.hand_pay.clear()
+        for item in self.hp_table.get_children():
+            values = self.hp_table.item(item)['values']
+            self._window.hand_pay.append(HandPay(Decimal(values[0]), Decimal(values[1])))
 
     def _place_entries(self):
-
         self.columnconfigure((0, 1,2), weight=1, uniform='b')
         row = 0
         self._header.grid(row=row, column=0, columnspan=3)
