@@ -1,6 +1,5 @@
-import os
 from os import makedirs
-from os.path import join, dirname, join
+from os.path import join, dirname, join, exists
 
 import ttkbootstrap as ttk
 from ttkbootstrap.dialogs import Querybox, Messagebox
@@ -115,7 +114,7 @@ class App(ttk.Window):
 
     @staticmethod
     def get_entry_values(dd_data: Dropdown_data):
-        if os.path.exists(dd_data.filename):
+        if exists(dd_data.filename):
             with open(dd_data.filename, "r") as csvfile:
                 values = list(csv.reader(csvfile))
                 values = [
