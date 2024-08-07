@@ -226,7 +226,7 @@ class App(ttk.Window):
         # opens the image at the current pointer
         with Image.open(self.imgs[self.pointer][0]) as image:
             image = image.reduce(self.scale)
-            image = image.rotate(self.rotation)
+            image = image.rotate(self.rotation, expand=1)
 
             global imagetk
             # turns the image into a image that tkinter can display
