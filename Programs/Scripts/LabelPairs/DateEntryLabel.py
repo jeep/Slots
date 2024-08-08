@@ -14,7 +14,7 @@ class DateEntryLabel(ttk.Frame):
         self.label.grid(row=0, column=0, sticky='w')
         
         self.date_entry = DateEntry(self, dateformat=dateformat)
-        self.date_entry.entry.configure(textvariable=self.var, state=state, )
+        self.date_entry.entry.configure(textvariable=self.var, state=state)
         self.date_entry.grid(row=0, column=1, sticky='e')
         
         self.callback = callback

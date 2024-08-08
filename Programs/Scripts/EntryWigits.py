@@ -60,7 +60,7 @@ class EntryWigits(ttk.Frame):
 
     def _create_date(self):
         self.dt = DateEntryLabel(self, 'Date')
-        self.dt.var.set(self._window.default_dt)
+        #self.dt.var.set(self._window.default_dt)
     
     def _create_play_type(self):
          self.play_type = ComboboxLabel(self, 'Play Type', self._window.play_types)
