@@ -299,9 +299,9 @@ class App(ttk.Window):
             self._current_play.denom = self.entry_wigits.denom_cb.var.get()
 
     def update_pnl(self):
-        self.entry_wigits.profit_loss.var.set(
-            f"{(Decimal(self.entry_wigits.cashout.get_var()) - Decimal(self.entry_wigits.cashin.get_var())):.2f}"
-        )
+        if self._current_play is None:
+            return
+        self.entry_wigits.profit_loss.var.set(self._current_play.pnl)
 
     def update_cashin(self, cashin=None):
         if self._current_play is None:
@@ -354,6 +354,7 @@ class App(ttk.Window):
         self._current_play.hand_pays.clear()
         for hp in self.hand_pay:
             self._current_play.add_hand_pay(hp)
+        self.update_pnl()
 
     def load_play(self, playid):
         self._loaded_play_id = playid
