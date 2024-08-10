@@ -59,7 +59,7 @@ class EntryWigits(ttk.Frame):
         self._window.create_play(machine)
 
     def _create_date(self):
-        self.dt = DateEntryLabel(self, 'Date')
+        self.dt = DateEntryLabel(self, 'Start Time', dateformat=r'%Y-%m-%d %H:%M:%S')
         #self.dt.var.set(self._window.default_dt)
     
     def _create_play_type(self):
