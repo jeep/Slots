@@ -164,7 +164,7 @@ class App(ttk.Window):
             return
 
         print("Loading ", datetime.datetime.now())
-        # multi threads geting the image data ( image path, image type, image date )
+        # ( image path, image type, image date )
         self.imgs = [d for d in multi_get_img_data(directory) if d is not None]
         print("Loaded ", datetime.datetime.now())
 
@@ -519,7 +519,7 @@ class App(ttk.Window):
             Messagebox.show_error(f'Error saving session at {playId}. Aborting. You will need to manually fix up a few things to continue.\n{e}', 'Error Saving')
             return
 
-        self.imgs = [d for d in self.imgs if (d[0] not in pics_to_remove)]
+        self.imgs = [ d for d in self.imgs if (d[0] not in pics_to_remove) ]
         self.imgs = sorted(self.imgs, key=lambda item: item[2])
         self.display_first_image()
 
