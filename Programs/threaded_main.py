@@ -513,8 +513,8 @@ class App(ttk.Window):
                         pics_to_remove.append(p.end_image)
                         p.end_image = move(p.end_image, new_path)
 
-                for row in p.get_csv_rows():
-                    writer.writerow(row)
+                    for row in p.get_csv_rows():
+                        writer.writerow(row)
         except Exception as e:
             Messagebox.show_error(f'Error saving session at {playId}. Aborting. You will need to manually fix up a few things to continue.\n{e}', 'Error Saving')
             raise e
