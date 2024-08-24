@@ -8,28 +8,32 @@ from datetime import datetime
 from threading import Thread
 
 def get_time(path):
-    with Image.open(path) as image:
-        try:
-            image_exif = image._getexif()
-            exif = { ExifTags.TAGS[k]: v for k, v in image_exif.items() if k in ExifTags.TAGS and type(v) is not bytes }
-            date_obj = datetime.strptime(exif['DateTimeOriginal'], r'%Y:%m:%d %H:%M:%S').strftime(r'%Y%m%d%H%M%S')
-            return date_obj
-        except (KeyError, AttributeError):
+    try:
+        with Image.open(path) as image:
             try:
-                image_exif = image.getexif()
-                date_obj = datetime.strptime(image_exif[306], r'%Y:%m:%d %H:%M:%S').strftime(r'%Y%m%d%H%M%S')
+                image_exif = image._getexif()
+                exif = { ExifTags.TAGS[k]: v for k, v in image_exif.items() if k in ExifTags.TAGS and type(v) is not bytes }
+                date_obj = datetime.strptime(exif['DateTimeOriginal'], r'%Y:%m:%d %H:%M:%S').strftime(r'%Y%m%d%H%M%S')
                 return date_obj
-            except KeyError:
-                date_obj = datetime.fromtimestamp(getctime(path)).strftime(r'%Y%m%d%H%M%S')
-                return date_obj
+            except (KeyError, AttributeError):
+                try:
+                    image_exif = image.getexif()
+                    date_obj = datetime.strptime(image_exif[306], r'%Y:%m:%d %H:%M:%S').strftime(r'%Y%m%d%H%M%S')
+                    return date_obj
+                except KeyError:
+                    date_obj = datetime.fromtimestamp(getctime(path)).strftime(r'%Y%m%d%H%M%S')
+                    return date_obj
+                except:
+                    print (f"Cannot get date for {path}")
+    except Exception as e:
+        print(f"Cannot open {path} because {e}")
 
 def get_img_data(file, directory):
     file_path = join(directory, file)
     file_type = file_path[file_path.find('.'):].upper()
     if (file_type == '.HEIC' or file_type == '.JPEG' or file_type == '.JPG' or file_type == '.PNG') and isfile(file_path):
-        return [file_path, file_type, get_time(file_path)]
-    else:
-        pass
+        if file_time:= (get_time(file_path)) is not None:
+            return [file_path, file_type, file_time]
 
 def multi_get_img_data(directory):
     files = listdir(directory)

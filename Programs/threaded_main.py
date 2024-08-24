@@ -1,40 +1,38 @@
-from os import makedirs
-from os.path import join, dirname, join, exists, basename
-
-import ttkbootstrap as ttk
-from ttkbootstrap.dialogs import Querybox, Messagebox
-from tkinter.filedialog import askdirectory
-
-from collections import namedtuple
-from shutil import move
-from PIL import Image, ImageTk
-from pillow_heif import register_heif_opener
-from decimal import Decimal
 import csv
 import datetime
+from collections import namedtuple
+from decimal import Decimal
+from os import makedirs
+from os.path import join, dirname, exists, basename
+from shutil import move
+from tkinter.filedialog import askdirectory
+import ttkbootstrap as ttk
+from ttkbootstrap.dialogs import Messagebox, Querybox
+from PIL import Image, ImageTk
+from pillow_heif import register_heif_opener
 
-from Scripts.get_imgs_data import multi_get_img_data
-from Scripts.ImageDisplay import ImageDisplay
-from Scripts.ImageButtons import ImageButtons
 from Scripts.EntryWigits import EntryWigits
-from Scripts.SessionTable import SessionTable
+from Scripts.get_imgs_data import multi_get_img_data
+from Scripts.ImageButtons import ImageButtons
+from Scripts.ImageDisplay import ImageDisplay
 from Scripts.SessionFrame import SessionFrame
+from Scripts.SessionTable import SessionTable
 from Slots.PlayFactory import PlayFactory
 
 register_heif_opener(decode_threads=8, thumbnails=False)
 
-Dropdown_data = namedtuple("Dropdown_data", ["filename", "defaults"])
+DropdownData = namedtuple("Dropdown_data", ["filename", "defaults"])
 externals = {
-    "play_type": Dropdown_data(
+    "play_type": DropdownData(
         "playtype_entry_values.csv",
         ["AP", "Gamble", "Misplay", "Non-play", "Science", "Tip"],
     ),
-    "casino": Dropdown_data("casino_entry_values.csv", ["ilani", "Spirit Mountain"]),
-    "denom": Dropdown_data(
+    "casino": DropdownData("casino_entry_values.csv", ["ilani", "Spirit Mountain"]),
+    "denom": DropdownData(
         "denom_entry_values.csv",
         ["1cent", "2cent", "5cent", "10cent", "25cent", "$1", "$2"],
     ),
-    "machine": Dropdown_data(
+    "machine": DropdownData(
         "machine_entry_values.csv",
         ["Frankenstein", "Lucky Wealth Cat", "Pinwheel Prizes", "Power Push"],
     ),
@@ -51,7 +49,7 @@ class App(ttk.Window):
         self.iconphoto(
             False, ttk.PhotoImage(file=r"Programs\Icon\slot_machine_icon.png")
         )
-
+        self._loaded_play_id = None
         self._current_index = None
         self.imgs = []
         self.play_imgs = []
@@ -113,7 +111,7 @@ class App(ttk.Window):
         self.denom_values = App.get_entry_values(externals["denom"])
 
     @staticmethod
-    def get_entry_values(dd_data: Dropdown_data):
+    def get_entry_values(dd_data: DropdownData):
         if exists(dd_data.filename):
             with open(dd_data.filename, "r") as csvfile:
                 values = list(csv.reader(csvfile))
@@ -164,7 +162,7 @@ class App(ttk.Window):
             return
 
         print("Loading ", datetime.datetime.now())
-        # ( image path, image type, image date )
+        # multi threads geting the image data ( image path, image type, image date )
         self.imgs = [d for d in multi_get_img_data(directory) if d is not None]
         print("Loaded ", datetime.datetime.now())
 
@@ -431,8 +429,8 @@ class App(ttk.Window):
             self.update_all_play_values()
             if self._current_play.identifier in self.plays:
                 button = Messagebox.okcancel(
-                    f"You are not editing an exiting play and this will overwrite a play. Proceed?",
-                    f"Overwrite Warning",
+                    "You are not editing an exiting play and this will overwrite a play. Proceed?",
+                    "Overwrite Warning",
                 )
                 if button != "OK":
                     return
@@ -497,8 +495,8 @@ class App(ttk.Window):
 
         pics_to_remove = []
         # move all images and update play values with new location
+        playId = ""
         try:
-            playId = ""
             with open(file_path, "a+", newline="") as csvfile:
                 writer = csv.writer(csvfile)
                 for p in list(self.plays.values()):
@@ -506,22 +504,22 @@ class App(ttk.Window):
                     if p.start_image and new_path:
                         pics_to_remove.append(p.start_image)
                         p.start_image = move(p.start_image, new_path)
-    
+
                     pics_to_remove.extend(p.addl_images)
                     for i, a in enumerate(p.addl_images):
                         p.addl_images[i] = move(a, new_path)
-    
+
                     if p.end_image and new_path:
                         pics_to_remove.append(p.end_image)
                         p.end_image = move(p.end_image, new_path)
-    
+
                 for row in p.get_csv_rows():
                     writer.writerow(row)
         except Exception as e:
             Messagebox.show_error(f'Error saving session at {playId}. Aborting. You will need to manually fix up a few things to continue.\n{e}', 'Error Saving')
-            return
+            raise e
 
-        self.imgs = [ d for d in self.imgs if (d[0] not in pics_to_remove) ]
+        self.imgs = [d for d in self.imgs if (d[0] not in pics_to_remove)]
         self.imgs = sorted(self.imgs, key=lambda item: item[2])
         self.display_first_image()
 
