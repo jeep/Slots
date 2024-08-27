@@ -1,5 +1,5 @@
 from os import makedirs
-from os.path import join, dirname, join, exists
+from os.path import join, dirname, join, exists, basename
 
 import ttkbootstrap as ttk
 from ttkbootstrap.dialogs import Querybox, Messagebox
@@ -237,6 +237,8 @@ class App(ttk.Window):
 
             # adds the image to the canvas
             self.image_display.canvas.create_image(x, y, image=imagetk)
+        self.image_buttons.file_name.set(f"Name: {basename(self.imgs[self.pointer][0])}")
+        self.image_buttons.file_date.set(f"Date: {datetime.datetime.strptime(self.imgs[self.pointer][2], "%Y%m%d%H%M%S")}")
 
     def update_session_date(self):
         if self._current_play is None:

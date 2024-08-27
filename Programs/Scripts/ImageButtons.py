@@ -15,6 +15,9 @@ class ImageButtons(ttk.Frame):
         self.rowconfigure((0, 1, 2), weight=1, uniform='a')
         self._window = window
         
+        self.file_name = ttk.StringVar(value="Name:")
+        self.file_date = ttk.StringVar(value="Date:")
+        
         self._create_buttons()
         self._place_buttons()
     
@@ -33,8 +36,11 @@ class ImageButtons(ttk.Frame):
         self.remove_button  = ttk.Button(self, text='Remove Image', command=lambda: self.remove_button_command(self._window))
         self.delete_button  = ttk.Button(self, text='Delete Image', command=lambda: self.delete_button_command(self._window), bootstyle='danger')
 
-
         self.save_session_button    = ttk.Button(self, text='Save Session', command=lambda: self._window.save_session(), bootstyle='success')
+        
+        self.file_name_label = ttk.Label(self, textvariable=self.file_name)
+        self.file_date_label = ttk.Label(self, textvariable=self.file_date)
+        
     
     def _place_buttons(self):
         pad_double = (4, 4)
@@ -58,6 +64,11 @@ class ImageButtons(ttk.Frame):
         self.remove_button.grid(column=1, row=row, sticky='nsew', padx=pad_double, pady=pad_front)
         self.delete_button.grid(column=2, row=row, sticky='nsew', padx=pad_double, pady=pad_front)
         self.save_session_button.grid(column=3, row=row, sticky='nsew', padx=pad_front, pady=pad_front)
+        
+        row = 3
+        self.file_name_label.grid(column=0, columnspan=2, row=row, sticky="nsew", padx=pad_back, pady=pad_front)
+        self.file_date_label.grid(column=2, columnspan=2, row=row, sticky="nsew", padx=pad_front, pady=pad_front)
+        
     
     def _open_hpwin(self, callback):
         HandPayWindow(callback=callback)
