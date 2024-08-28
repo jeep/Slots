@@ -12,7 +12,7 @@ from PIL import Image, ImageTk
 from pillow_heif import register_heif_opener
 
 from Scripts.EntryWigits import EntryWigits
-from Scripts.get_imgs_data import multi_get_img_data
+from Scripts.get_imgs_data import multi_get_img_data, get_time
 from Scripts.ImageButtons import ImageButtons
 from Scripts.ImageDisplay import ImageDisplay
 from Scripts.SessionFrame import SessionFrame
@@ -169,7 +169,7 @@ class App(ttk.Window):
         if len(self.imgs) == 0:
             return
 
-        self.imgs = sorted(self.imgs, key=lambda item: item[2])
+        self.imgs = sorted(self.imgs, key=lambda item: get_time(item[0]))
         self.display_image()
         self.image_buttons.set_image_adders("normal")
         self.image_buttons.delete_button.configure(state="warning")
@@ -236,7 +236,7 @@ class App(ttk.Window):
             # adds the image to the canvas
             self.image_display.canvas.create_image(x, y, image=imagetk)
         self.image_buttons.file_name.set(f"Name: {basename(self.imgs[self.pointer][0])}")
-        self.image_buttons.file_date.set(f"Date: {datetime.datetime.strptime(self.imgs[self.pointer][2], "%Y%m%d%H%M%S")}")
+        self.image_buttons.file_date.set(f"Date: {datetime.datetime.strptime(get_time(self.imgs[self.pointer][0]), "%Y%m%d%H%M%S")}")
 
     def update_session_date(self):
         if self._current_play is None:
