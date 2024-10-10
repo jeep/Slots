@@ -32,7 +32,7 @@ def get_img_data(file, directory):
     file_path = join(directory, file)
     file_type = file_path[file_path.find('.'):].upper()
     if (file_type == '.HEIC' or file_type == '.JPEG' or file_type == '.JPG' or file_type == '.PNG') and isfile(file_path):
-        if file_time:= (get_time(file_path)) is not None:
+        if (file_time:= get_time(file_path)) is not None:
             return [file_path, file_type, file_time]
 
 def multi_get_img_data(directory):

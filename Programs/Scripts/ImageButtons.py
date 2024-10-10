@@ -104,42 +104,42 @@ class ImageButtons(ttk.Frame):
         # does nothing if there are no images
         if len(parent.imgs) == 0:
             return
-        
+
         parent.pointer = max((parent.pointer-1), 0)
         parent.display_image()
-        
+
         # gets the path of the current image
         current_image_path = parent.imgs[parent.pointer][0]
-        
+
         if parent.image_is_in_current_play(current_image_path):
             self.set_image_adders('disabled')
         else:
             self.set_image_adders('normal')
-    
+
     def next_button_command(self, parent):
         if len(parent.imgs) == 0:
             return
-        
+
         parent.pointer = min((parent.pointer+1), (len(parent.imgs)-1))
         parent.display_image()
-        
+
         current_image_path = parent.imgs[parent.pointer][0]
-        
+
         if parent.image_is_in_current_play(current_image_path):
             self.set_image_adders('disabled')
         else:
             self.set_image_adders('normal')
-    
+
     def return_button_command(self, parent):
         parent.display_first_image()
-    
+
     def start_button_command(self, parent):
         if len(parent.imgs) == 0:
             return
-        
+
         # sets the start entry wigit to the path of the current image
         parent.entry_wigits.start_entry.var.set(parent.imgs[parent.pointer][0])
-        
+
         image_dt = parent.imgs[parent.pointer][2]
         image_y = image_dt[:4]
         image_m = image_dt[4:6]
@@ -152,20 +152,20 @@ class ImageButtons(ttk.Frame):
 
         if not parent.session_date.get() or parent.session_date.get() == parent.default_session_date:
             parent.session_date.set(parent.imgs[parent.pointer][2][:8])
-        
+
         self.set_image_adders('disabled')
-    
+
     def add_button_command(self, parent):
         if len(parent.imgs) == 0:
             return
-        
+
         # adds the path to the play images list
-        parent.play_imgs.append(parent.imgs[parent.pointer][0].replace('\\', '\\\\'))
-        
+        parent.play_imgs.append(parent.imgs[parent.pointer][0])
+
         parent.entry_wigits.update_table(parent)
-        
+
         self.set_image_adders('disabled')
-    
+
     def end_button_command(self, parent):
         if len(parent.imgs) == 0:
             return

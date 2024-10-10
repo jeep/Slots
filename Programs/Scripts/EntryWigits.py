@@ -119,18 +119,20 @@ class EntryWigits(ttk.Frame):
     def _create_image_table(self):
         self.image_table = ttk.Treeview(self, columns='imgs', show='headings')
         self.image_table.heading('imgs', text='Images')
-    
+
     def _create_hp_table(self):
         self.hp_table = ttk.Treeview(self, columns=('hp', 'tip'), show='headings')
         self.hp_table.heading('hp', text='Hand Pay')
         self.hp_table.heading('tip', text='Tip')
         self.hp_table.bind('<Delete>', self._hp_delete)
-        
+
     def update_table(self, parent):
         self.image_table.delete(*self.image_table.get_children())
+        #self.image_table.insert(parent='', index=ttk.END, values=parent.play_imgs)
+        #return
         for item in parent.play_imgs:
-            self.image_table.insert(parent='', index=ttk.END, values=item)
-    
+            self.image_table.insert(parent='', index=ttk.END, values=f"{{{item}}}")
+
     def update_hand_pay_table(self, parent):
         self.hp_table.delete(*self.hp_table.get_children())
         for item in parent.hand_pay:
