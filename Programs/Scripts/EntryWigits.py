@@ -1,3 +1,4 @@
+from decimal import Decimal
 import ttkbootstrap as ttk
 
 from Scripts.LabelPairs.ComboboxLabel import ComboboxLabel
@@ -7,7 +8,6 @@ from Scripts.LabelPairs.LabelLabel import LabelLabel
 from Scripts.LabelPairs.LargeEntryLabel import LargeEntryLabel
 
 from Slots.Play import HandPay
-from decimal import Decimal
 
 def _no_tab(_, parent):
     # focuses on the next wigit
@@ -23,10 +23,10 @@ class EntryWigits(ttk.Frame):
     def __init__(self, parent, window):
         super().__init__(master=parent)
         self._window = window
-        
+
         self._create_entries()
         self._place_entries()
-    
+
     def _create_entries(self):
         self._create_header()
         self._create_machine()
@@ -45,10 +45,10 @@ class EntryWigits(ttk.Frame):
         self._create_end_entry()
         self._create_image_table()
         self._create_hp_table()
-    
+
     def _create_header(self):
         self._header = ttk.Label(self, text="Play Information", anchor='center')
-    
+
     def _create_machine(self):
         self.machine_cb = ComboboxLabel(self, '', self._window.machine_values)
         self.machine_cb.combobox.set("Select Machine")
@@ -60,11 +60,11 @@ class EntryWigits(ttk.Frame):
     def _create_date(self):
         self.dt = EntryLabel(self, 'Date')
         self.dt.var.set(self._window.default_dt)
-    
+
     def _create_play_type(self):
-         self.play_type = ComboboxLabel(self, 'Play Type', self._window.play_types)
-         self.play_type.var.set("AP")
-         self.play_type.bind("<FocusOut>", self._window.update_play_type)
+        self.play_type = ComboboxLabel(self, 'Play Type', self._window.play_types)
+        self.play_type.var.set("AP")
+        self.play_type.bind("<FocusOut>", self._window.update_play_type)
 
     def _create_denom(self):
         self.denom_cb = ComboboxLabel(self, '', self._window.denom_values)
@@ -74,7 +74,7 @@ class EntryWigits(ttk.Frame):
     def _create_bet(self):
         self.bet = MoneyEntryLabel(self, 'Bet')
         self.bet.bind("<FocusOut>", self._window.update_bet)
-    
+
     def _create_cashin(self):
         self.cashin = MoneyEntryLabel(self, 'Cash In')
         self.cashin.bind("<FocusOut>", self._window.update_cashin)
@@ -109,13 +109,13 @@ class EntryWigits(ttk.Frame):
         self.note = LargeEntryLabel(self, 'Note')
         self.note.text.bind('<Tab>', lambda _: _no_tab(_, self._window))
         self.note.text.bind('<Shift-Tab>', lambda _: _no_shift_tab(_, self._window))
-    
+
     def _create_start_entry(self):
         self.start_entry = EntryLabel(self, 'Start Image', self._window.start_img, state='readonly')
-    
+
     def _create_end_entry(self):
         self.end_entry = EntryLabel(self, 'End Image', self._window.end_img, state='readonly')
-    
+
     def _create_image_table(self):
         self.image_table = ttk.Treeview(self, columns='imgs', show='headings')
         self.image_table.heading('imgs', text='Images')
@@ -138,7 +138,7 @@ class EntryWigits(ttk.Frame):
         for item in parent.hand_pay:
             self.hp_table.insert(parent='', index=ttk.END, values=(item.pay_amount, item.tip_amount))
         parent.update_handpays()
-    
+
     def _hp_delete(self, _):
         for item in self.hp_table.selection():
             self.hp_table.delete(item)
