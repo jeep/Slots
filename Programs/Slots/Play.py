@@ -139,7 +139,7 @@ class Play:
             if hp.tax > 0:
                 tax =  format_currency(hp.tax, 'USD', locale='en_US')
                 images = hp.addl_images if hp.addl_images else ""
-                outstr += f"\n{self.identifier},{self.casino},{start_date},{self.machine.get_name()},{tax},,Tax Consequence,{self.denom},{format_currency(hp.pay_amount, 'USD', locale="en_US")},,-{tax},{tax},{self.machine.get_family()},{hp.image},,{images}"
+                outstr += f"\n{self.identifier},{self.casino},{start_date},{self.machine.get_name()},{tax},,Tax Consequence,{self.denom},{format_currency(hp.pay_amount, 'USD', locale='en_US')},,-{tax},{tax},{self.machine.get_family()},{hp.image},,{images}"
             if hp.tip_amount > 0:
                 outstr += f"\n{self.identifier},{self.casino},{start_date},{self.machine.get_name()},{format_currency(hp.tip_amount, 'USD', locale='en_US')},,Tip,,,{format_currency(0.00, 'USD', locale='en_US')},{format_currency(-1*hp.tip_amount, 'USD', locale='en_US')},,{self.machine.get_family()},,,"
         return outstr

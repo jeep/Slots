@@ -12,7 +12,7 @@ class RichLittlePiggiesPlay(StateHelperPlay):
 
     def get_red_str(self):
         if self.state_data["Red"]:
-             return f"; Red: {self.state_data["Red"]}"
+             return f"; Red: {self.state_data['Red']}"
         return ""     
 
     @property
@@ -45,7 +45,7 @@ class RichLittlePiggiesHogWildPlay(RichLittlePiggiesPlay):
 
     def get_red_str(self):
         if self.state_data["Red(#wilds)"]:
-            return f"; {self.state_data["Red(#wilds)"]} wilds"
+            return f"; {self.state_data['Red(#wilds)']} wilds"
         return ""
 
 @dataclass(repr=False, eq=False)
