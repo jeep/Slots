@@ -41,6 +41,7 @@ externals = {
 
 class App(ttk.Window):
     """Starting point"""
+
     def __init__(self):
         super().__init__()
 
@@ -104,6 +105,9 @@ class App(ttk.Window):
         self.image_buttons.remove_button.configure(state="disabled")
         self.image_buttons.delete_button.configure(state="disabled")
         self.image_buttons.set_image_navigation("disabled")
+
+    def get_current_play(self):
+        return self._current_play
 
     def get_dropdown_data(self):
         """load dropdown data from external sources"""
@@ -226,7 +230,6 @@ class App(ttk.Window):
         self.rotation = self.rotation + 90 if self.rotation + 90 <= 360 else 0
         self.display_image()
 
-
     def display_image(self):
         """Display the image"""
         if len(self.imgs) == 0:
@@ -239,7 +242,7 @@ class App(ttk.Window):
             image = image.rotate(self.rotation, expand=1)
 
             global imagetk
-            # turns the image into a image that tkinter can display
+            # turns the image into an image that tkinter can display
             imagetk = ImageTk.PhotoImage(image)
 
             # gets the image dimensions and divides them by 2
@@ -249,15 +252,16 @@ class App(ttk.Window):
             # adds the image to the canvas
             self.image_display.canvas.create_image(x, y, image=imagetk)
         self.image_buttons.file_name.set(f"Name: {basename(self.imgs[self.pointer][0])}")
-        self.image_buttons.file_date.set(f"Date: {datetime.datetime.strptime(self.imgs[self.pointer][2], '%Y%m%d%H%M%S')}")
+        self.image_buttons.file_date.set(
+            f"Date: {datetime.datetime.strptime(self.imgs[self.pointer][2], '%Y%m%d%H%M%S')}")
 
     def update_session_date(self):
         """Update the session date"""
         if self._current_play is None:
             return
         if (
-            self.session_date.get() != ""
-            and self.session_date.get() != self.default_session_date
+                self.session_date.get() != ""
+                and self.session_date.get() != self.default_session_date
         ):
             fmt = "%Y%m%d"
             self._current_play.session_date = datetime.datetime.strptime(
@@ -274,8 +278,8 @@ class App(ttk.Window):
     def update_start_datetime(self):
         """"Update the start datetime for the play"""
         if (
-            self.entry_wigits.dt.var.get() != self.default_dt
-            and self.entry_wigits.dt.var.get() != ""
+                self.entry_wigits.dt.var.get() != self.default_dt
+                and self.entry_wigits.dt.var.get() != ""
         ):
             fmt = "%Y-%m-%d %H:%M:%S"
             if len(self.entry_wigits.dt.var.get()) == 10:
@@ -289,8 +293,8 @@ class App(ttk.Window):
         if self._current_play is None:
             return
         if (
-            self.entry_wigits.end_dt.var.get() != ""
-            and self.entry_wigits.end_dt.var.get() != "1"
+                self.entry_wigits.end_dt.var.get() != ""
+                and self.entry_wigits.end_dt.var.get() != "1"
         ):
             fmt = "%Y%m%d%H%M%S"
             self._current_play.end_time = datetime.datetime.strptime(
@@ -551,7 +555,9 @@ class App(ttk.Window):
                     for row in p.get_csv_rows():
                         writer.writerow(row)
         except Exception as e:
-            Messagebox.show_error(f'Error saving session at {play_id}. Aborting. You will need to manually fix up a few things to continue.\n{e}', 'Error Saving')
+            Messagebox.show_error(
+                f'Error saving session at {play_id}. Aborting. You will need to manually fix up a few things to continue.\n{e}',
+                'Error Saving')
             raise e
 
         self.imgs = [d for d in self.imgs if d[0] not in pics_to_remove]
@@ -605,11 +611,11 @@ class App(ttk.Window):
         cashout = self.entry_wigits.cashout.var.get()
 
         if (
-            casino == ""
-            or dt == self.default_dt
-            or dt == ""
-            or machine == "Select Machine"
-            or play_type == ""
+                casino == ""
+                or dt == self.default_dt
+                or dt == ""
+                or machine == "Select Machine"
+                or play_type == ""
         ):
             self.image_buttons.save_button.configure(state="disabled")
         elif bet == "0" or cashin == "0" or cashout == "0":
@@ -620,7 +626,7 @@ class App(ttk.Window):
             self.image_buttons.save_button.configure(state="normal", bootstyle="normal")
 
     def save_externals(self):
-        """Save the csv files for entry drop downs"""
+        """Save the csv files for entry drop-downs"""
         external_csvs = {
             "casino_entry_values.csv": self.casino_values,
             "machine_entry_values.csv": self.machine_values,

@@ -9,15 +9,18 @@ from Scripts.LabelPairs.LargeEntryLabel import LargeEntryLabel
 
 from Slots.Play import HandPay
 
+
 def _no_tab(_, parent):
     # focuses on the next wigit
     parent.focus_get().tk_focusNext().focus()
     return 'break'
 
+
 def _no_shift_tab(_, parent):
     # focuses on the previous wigit
     parent.focus_get().tk_focusPrev().focus()
     return 'break'
+
 
 class EntryWigits(ttk.Frame):
     def __init__(self, parent, window):
@@ -96,10 +99,10 @@ class EntryWigits(ttk.Frame):
         self.initial_state.text.bind('<FocusOut>', self._update_state)
 
     def _update_state(self, _):
-        if self._window._current_play:
-            self._window._current_play.state = self.initial_state.text.get(1.0, 'end')
-            self._window.ttk_state.set(self._window._current_play.state)
-        else: 
+        if self._window.get_current_play():
+            self._window.get_current_play().state = self.initial_state.text.get(1.0, 'end')
+            self._window.ttk_state.set(self._window.get_current_play().state)
+        else:
             self._window.ttk_state.set(self.initial_state.text.get(1.0, 'end'))
 
     def _create_state_val(self):
@@ -128,8 +131,8 @@ class EntryWigits(ttk.Frame):
 
     def update_table(self, parent):
         self.image_table.delete(*self.image_table.get_children())
-        #self.image_table.insert(parent='', index=ttk.END, values=parent.play_imgs)
-        #return
+        # self.image_table.insert(parent='', index=ttk.END, values=parent.play_imgs)
+        # return
         for item in parent.play_imgs:
             self.image_table.insert(parent='', index=ttk.END, values=f"{{{item}}}")
 
@@ -148,7 +151,7 @@ class EntryWigits(ttk.Frame):
             self._window.hand_pay.append(HandPay(Decimal(values[0]), Decimal(values[1])))
 
     def _place_entries(self):
-        self.columnconfigure((0, 1,2), weight=1, uniform='b')
+        self.columnconfigure((0, 1, 2), weight=1, uniform='b')
         row = 0
         self._header.grid(row=row, column=0, columnspan=3)
 
@@ -158,9 +161,9 @@ class EntryWigits(ttk.Frame):
         self.end_dt.grid(row=row, column=2, sticky='we', padx=5, pady=5)
 
         row = 2
-        self.bet.grid(row=row, column=0, sticky='we',  padx=5, pady=5)
+        self.bet.grid(row=row, column=0, sticky='we', padx=5, pady=5)
         self.play_type.grid(row=row, column=1, sticky='we', padx=5, pady=5)
-        self.denom_cb.grid(row=row, column=2, sticky='we' ,padx=5, pady=5)
+        self.denom_cb.grid(row=row, column=2, sticky='we', padx=5, pady=5)
 
         row = 3
         self.cashin.grid(row=row, column=0, sticky='we', padx=5, pady=5)
@@ -177,7 +180,7 @@ class EntryWigits(ttk.Frame):
         self.note.grid(row=row, column=0, columnspan=3, sticky='we', padx=5, pady=5)
 
         row = 7
-        self.start_entry.grid(row=row, column=0,  sticky='we', padx=5, pady=5)
+        self.start_entry.grid(row=row, column=0, sticky='we', padx=5, pady=5)
         self.image_table.grid(row=row, column=1, columnspan=2, rowspan=2, sticky='we', padx=5, pady=5)
 
         row = 8
