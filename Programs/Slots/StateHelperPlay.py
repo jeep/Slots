@@ -11,7 +11,7 @@ class StateHelperPlay(Play):
 
     def get_entry_fields(self) -> list:
         rv = []
-        for k in self.get_state_helper().keys():
+        for k in self.state_data.keys():
             cb = self.make_setter(k)
             rv.append(EntryField(label=k, callback=cb))
         return rv

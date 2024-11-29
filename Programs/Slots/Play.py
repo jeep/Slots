@@ -42,9 +42,9 @@ class Play:
     denom: str = None
     state: str = ""
     note: str = None
-    start_image: pathlib.path = None
-    addl_images: list[pathlib.path] = field(default_factory=list)
-    end_image: pathlib.path = None
+    start_image: pathlib.Path = None
+    addl_images: list[pathlib.Path] = field(default_factory=list)
+    end_image: pathlib.Path = None
     cash_out: Decimal = Decimal(0.0)
     hand_pays: list[HandPay] = field(default_factory=list)
 
@@ -58,7 +58,9 @@ class Play:
 
     @property
     def initial_cash_in(self) -> Decimal:
-        return self._cash_in[0]
+        if self._cash_in:
+            return self._cash_in[0]
+        return Decimal(0.00)
 
     @property
     def cash_in(self) -> Decimal:

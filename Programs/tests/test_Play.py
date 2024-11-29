@@ -108,9 +108,9 @@ class TestPlay:
         img2 = "d:\\this\\is\\a\\path\\image2.png"
         img3 = "d:\\this\\is\\a\\path\\image3.png"
         play.add_image(img1)
-        assert play._addl_images == [img1]
+        assert play.addl_images == [img1]
         play.add_image(img2)
-        assert play._addl_images == [img1, img2]
+        assert play.addl_images == [img1, img2]
         play.add_image(img3)
         assert play.addl_images == [img1, img2, img3]
 
@@ -174,7 +174,7 @@ class TestPlay:
         hp = HandPay(Decimal(2000.00), Decimal(40.00), img4, [img5])
         play.add_hand_pay(hp)
 
-        expected = r"""Test_Machine-10.60-2024-01-02-03:04:05,ilani,01/02/2024,Test Machine,$100.00,$10.60,AP,1cent,"This; is (a): state",=1201+2000+1234.56,$1,134.56,"This; is (a): note.",Test Machine,d:\this\is\a\path\simage.png,d:\this\is\a\path\eimage.png,['d:\\this\\is\\a\\path\\image1.png', 'd:\\this\\is\\a\\path\\image2.png', 'd:\\this\\is\\a\\path\\image3.png']
+        expected = r"""Test_Machine-10.60-2024-01-02-03:04:05,ilani,01/02/2024,Test Machine,$100.00,$10.60,AP,1cent,"This; is (a): state",=1201+2000+1234.56,$4,335.56,"This; is (a): note.",Test Machine,d:\this\is\a\path\simage.png,d:\this\is\a\path\eimage.png,['d:\\this\\is\\a\\path\\image1.png', 'd:\\this\\is\\a\\path\\image2.png', 'd:\\this\\is\\a\\path\\image3.png']
 Test_Machine-10.60-2024-01-02-03:04:05,ilani,01/02/2024,Test Machine,$324.27,,Tax Consequence,1cent,$1,201.00,,-$324.27,$324.27,Test Machine,d:\this\is\a\path\image4.png,,
 Test_Machine-10.60-2024-01-02-03:04:05,ilani,01/02/2024,Test Machine,$20.00,,Tip,,,$0.00,-$20.00,,Test Machine,,,
 Test_Machine-10.60-2024-01-02-03:04:05,ilani,01/02/2024,Test Machine,$540.00,,Tax Consequence,1cent,$2,000.00,,-$540.00,$540.00,Test Machine,d:\this\is\a\path\image4.png,,['d:\\this\\is\\a\\path\\image5.png']

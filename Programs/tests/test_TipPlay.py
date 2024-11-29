@@ -12,7 +12,7 @@ machine_for_test = Machine("Test Machine")
 class TestTipPlay:
     @pytest.fixture
     def play(self):
-        return TipPlay(casino="ilani", start_time=datetime.datetime(2024, 1, 2), cash_in=Decimal(10.00))
+        return TipPlay(casino="ilani", start_time=datetime.datetime(2024, 1, 2), _cash_in=[Decimal(10.00)])
 
     def test_initial_cash_in(self, play):
         assert play.initial_cash_in == Decimal(10.00)
