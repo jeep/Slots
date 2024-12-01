@@ -8,6 +8,7 @@ from .Play import Play
 @dataclass(repr=False, eq=False)
 class StateHelperPlay(Play):
     _state: str = field(init=False)
+    state_data: dict = None
 
     def get_entry_fields(self) -> list:
         rv = []

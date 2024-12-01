@@ -255,18 +255,31 @@ class App(ttk.Window):
         self.image_buttons.file_date.set(
             f"Date: {datetime.datetime.strptime(self.imgs[self.pointer][2], '%Y%m%d%H%M%S')}")
 
+    def play_end_date_is_valid(self):
+        return self.entry_wigits.play_end_datetime_is_valid()
+
+    def session_date_is_valid(self):
+        return self.session_date.get() != "" and self.session_date.get() != self.default_session_date
+
+    def get_session_date(self) -> datetime.datetime:
+        """Get the session data from the entry field"""
+        fmt = "%Y-%m-%d"
+        if not self.session_date_is_valid():
+            return datetime.datetime.strptime(datetime.MINYEAR, fmt)
+        return datetime.datetime.strptime(self.session_date.get(), fmt)
+
+    def set_session_date(self, session_date):
+        if session_date == self.default_session_date:
+            self.session_date.set(session_date)
+            return
+        self.session_date.set(session_date.strftime("%Y-%m-%d"))
+
     def update_session_date(self):
         """Update the session date"""
         if self._current_play is None:
             return
-        if (
-                self.session_date.get() != ""
-                and self.session_date.get() != self.default_session_date
-        ):
-            fmt = "%Y%m%d"
-            self._current_play.session_date = datetime.datetime.strptime(
-                self.session_date.get(), fmt
-            )
+        if self.session_date_is_valid():
+            self._current_play.session_date = self.get_session_date()
 
     def update_casino(self, _=None):
         """Update casino for the play. Second param is casino"""
@@ -277,29 +290,11 @@ class App(ttk.Window):
 
     def update_start_datetime(self):
         """"Update the start datetime for the play"""
-        if (
-                self.entry_wigits.dt.var.get() != self.default_dt
-                and self.entry_wigits.dt.var.get() != ""
-        ):
-            fmt = "%Y-%m-%d %H:%M:%S"
-            if len(self.entry_wigits.dt.var.get()) == 10:
-                fmt = "%Y-%m-%d"
-            self._current_play.start_time = datetime.datetime.strptime(
-                self.entry_wigits.dt.var.get(), fmt
-            )
+        self._current_play.start_time = self.entry_wigits.get_play_start_datetime()
 
     def update_end_datetime(self):
         """"Update the end datetime for the play"""
-        if self._current_play is None:
-            return
-        if (
-                self.entry_wigits.end_dt.var.get() != ""
-                and self.entry_wigits.end_dt.var.get() != "1"
-        ):
-            fmt = "%Y%m%d%H%M%S"
-            self._current_play.end_time = datetime.datetime.strptime(
-                self.entry_wigits.end_dt.var.get(), fmt
-            )
+        self._current_play.end_time = self.entry_wigits.get_play_end_datetime()
 
     def update_bet(self, _=None):
         """Update the bet for the play, second param is bet"""
@@ -395,10 +390,10 @@ class App(ttk.Window):
         self._current_index = list(self.plays.keys()).index(playid)
         self._current_play = self.plays[playid]
         self.entry_wigits.machine_cb.var.set(self._current_play.machine.get_name())
-        self.session_date.set(self._current_play.session_date.strftime("%Y-%m-%d"))
+        self.set_session_date(self._current_play.session_date)
         self.session_frame.casino.var.set(self._current_play.casino)
-        self.entry_wigits.dt.var.set(self._current_play.start_time)
-        self.entry_wigits.end_dt.var.set(self._current_play.end_time)
+        self.entry_wigits.set_play_start_datetime(self._current_play.start_time)
+        self.entry_wigits.set_play_end_datetime(self._current_play.end_time)
         self.entry_wigits.bet.var.set(self._current_play.bet)
         self.entry_wigits.denom_cb.var.set(self._current_play.denom)
         self.entry_wigits.play_type.var.set(self._current_play.play_type)
@@ -478,8 +473,8 @@ class App(ttk.Window):
 
         # clears all entry values
         self._current_index = None
-        self.entry_wigits.dt.var.set("")
-        self.entry_wigits.end_dt.var.set("")
+        self.entry_wigits.clear_play_start_datetime()
+        self.entry_wigits.clear_play_end_datetime()
         self.entry_wigits.bet.var.set(0)
         self.entry_wigits.cashin.var.set(self._current_play.cash_out)
         self.entry_wigits.cashout.var.set(0)
@@ -524,7 +519,7 @@ class App(ttk.Window):
         if list(self.plays.values())[0].start_image:
             new_path = join(
                 dirname(dirname(list(self.plays.values())[0].start_image)),
-                f"Sorted/{self.session_date.get()}",
+                f"Sorted/{self.get_session_date()}",
             )
 
             try:
@@ -556,7 +551,7 @@ class App(ttk.Window):
                         writer.writerow(row)
         except Exception as e:
             Messagebox.show_error(
-                f'Error saving session at {play_id}. Aborting. You will need to manually fix up a few things to continue.\n{e}',
+                f'Error saving session at {play_id}. Aborting. You will need to manually fix things to continue.\n{e}',
                 'Error Saving')
             raise e
 
@@ -571,7 +566,7 @@ class App(ttk.Window):
 
         self.image_buttons.save_button.configure(state="disabled")
         self.image_buttons.save_session_button.configure(state="disabled")
-        self.session_date.set(self.default_session_date)
+        self.set_session_date(self.default_session_date)
 
     def image_is_in_current_play(self, img):
         """determine if the image is in the current play"""
@@ -602,7 +597,7 @@ class App(ttk.Window):
     def check_save_valid(self):
         """Determine if we have everything needed to save the play"""
         casino = self.session_frame.casino.var.get()
-        dt = self.entry_wigits.dt.var.get()
+        dt_valid = self.entry_wigits.play_start_datetime_is_valid()
         machine = self.entry_wigits.machine_cb.var.get()
         play_type = self.entry_wigits.play_type.var.get()
 
@@ -612,8 +607,7 @@ class App(ttk.Window):
 
         if (
                 casino == ""
-                or dt == self.default_dt
-                or dt == ""
+                or not dt_valid
                 or machine == "Select Machine"
                 or play_type == ""
         ):
@@ -671,9 +665,9 @@ class App(ttk.Window):
     def load_test_play(self):
         """for testing"""
         self.session_frame.casino.var.set("ilani")
-        self.session_date.set(datetime.datetime(2024, 5, 1).strftime("%Y%m%d"))
-        self.entry_wigits.dt.var.set(
-            datetime.datetime(2024, 5, 1, 12, 3, 5).strftime("%Y-%m-%d %H:%M:%S")
+        self.set_session_date(datetime.datetime(2024, 5, 1))
+        self.entry_wigits.set_play_start_datetime(
+            datetime.datetime(2024, 5, 1, 12, 3, 5)
         )
         self.entry_wigits.machine_cb.var.set("Lucky Wealth Cat")
         self.entry_wigits.cashin.var.set("100.00")

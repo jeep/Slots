@@ -17,7 +17,7 @@ class TestLuckyWealthCat(TestPlay):
         assert play.machine.get_name() == "Lucky Wealth Cat"
         assert play.machine.get_family() == "Lucky Buddha/Lucky Wealth Cat"
 
-    def test_state_None_not_printed(self, play):
+    def test_state_none_not_printed(self, play):
         play.state_data["7xCat"] = 1
         play.state_data["6xFish"] = 2
         play.state_data["5xTree"] = 4

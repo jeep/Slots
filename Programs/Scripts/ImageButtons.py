@@ -1,3 +1,5 @@
+import datetime
+
 import ttkbootstrap as ttk
 from ttkbootstrap.dialogs import Messagebox
 
@@ -146,17 +148,18 @@ class ImageButtons(ttk.Frame):
         parent.entry_wigits.start_entry.var.set(parent.imgs[parent.pointer][0])
 
         image_dt = parent.imgs[parent.pointer][2]
-        image_y = image_dt[:4]
-        image_m = image_dt[4:6]
-        image_d = image_dt[6:8]
-        image_h = image_dt[8:10]
-        image_M = image_dt[10:12]
-        image_s = image_dt[12:14]
-        image_dt = f'{image_y}-{image_m}-{image_d} {image_h}:{image_M}:{image_s}'
-        parent.entry_wigits.dt.var.set(image_dt)
+        image_y = int(image_dt[:4])
+        image_m = int(image_dt[4:6])
+        image_d = int(image_dt[6:8])
+        image_h = int(image_dt[8:10])
+        image_M = int(image_dt[10:12])
+        image_s = int(image_dt[12:14])
+        image_dt = datetime.datetime(image_y, image_m, image_d, image_h, image_M, image_s)
+        parent.entry_wigits.set_play_start_datetime(image_dt)
 
-        if not parent.session_date.get() or parent.session_date.get() == parent.default_session_date:
-            parent.session_date.set(parent.imgs[parent.pointer][2][:8])
+        if not parent.session_date_is_valid():
+            dt = datetime.datetime(image_y, image_m, image_d)
+            parent.set_session_date(dt)
 
         self.set_image_adders('disabled')
 
@@ -176,7 +179,18 @@ class ImageButtons(ttk.Frame):
             return
 
         parent.entry_wigits.end_entry.var.set(parent.imgs[parent.pointer][0])
-        parent.entry_wigits.end_dt.var.set(parent.imgs[parent.pointer][2])
+
+        image_dt = parent.imgs[parent.pointer][2]
+        image_y = int(image_dt[:4])
+        image_m = int(image_dt[4:6])
+        image_d = int(image_dt[6:8])
+        image_h = int(image_dt[8:10])
+        image_M = int(image_dt[10:12])
+        image_s = int(image_dt[12:14])
+        image_dt = datetime.datetime(image_y, image_m, image_d, image_h, image_M, image_s)
+
+        parent.entry_wigits.set_play_end_datetime(image_dt)
+
         self.set_image_adders('disabled')
 
     def remove_button_command(self, parent):
@@ -187,10 +201,10 @@ class ImageButtons(ttk.Frame):
 
         if parent.entry_wigits.start_entry.var.get() == path:
             parent.entry_wigits.start_entry.var.set('')
-            parent.entry_wigits.dt.var.set('')
+            parent.entry_wigit.clear_play_start_datetime()
         elif parent.entry_wigits.end_entry.var.get() == path:
             parent.entry_wigits.end_entry.var.set('')
-            parent.entry_wigits.end_dt.var.set('')
+            parent.entry_wigits.clear_play_end_datetime()
         elif path in parent.play_imgs:
             parent.play_imgs.remove(path)
             parent.entry_wigits.update_table(parent)

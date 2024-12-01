@@ -1,3 +1,5 @@
+import datetime
+
 from decimal import Decimal
 import ttkbootstrap as ttk
 
@@ -64,6 +66,24 @@ class EntryWigits(ttk.Frame):
         self.dt = EntryLabel(self, 'Date')
         self.dt.var.set(self._window.default_dt)
 
+    def play_start_datetime_is_valid(self):
+        return self.dt.var.get() != "" and self.dt.var.get() != self._window.default_dt
+
+    def get_play_start_datetime(self) -> str:
+        fmt = "%Y-%m-%d %H:%M:%S"
+        if not self.play_start_datetime_is_valid():
+            return '1900-01-01 01:01:01'
+        if len(self.dt.var.get()) == 10:
+            fmt = "%Y-%m-%d"
+        return datetime.datetime.strptime(self.dt.var.get(), fmt)
+
+    def set_play_start_datetime(self, start_datetime):
+        fmt = "%Y-%m-%d %H:%M:%S"
+        self.dt.var.set(start_datetime.strftime(fmt))
+
+    def clear_play_start_datetime(self):
+        self.dt.var.set("")
+
     def _create_play_type(self):
         self.play_type = ComboboxLabel(self, 'Play Type', self._window.play_types)
         self.play_type.var.set("AP")
@@ -92,6 +112,23 @@ class EntryWigits(ttk.Frame):
     def _create_end_datetime(self):
         self.end_dt = LabelLabel(self, 'End time', "")
 
+    def play_end_datetime_is_valid(self):
+        return self.end_dt.var.get() != "" and self.end_dt.var.get() != 1
+
+    def get_play_end_datetime(self) -> str:
+        fmt = "%Y-%m-%d %H:%M:%S"
+        if not self.play_end_datetime_is_valid():
+            return '1900-01-01 01:01:01'
+        if len(self.end_dt.var.get()) == 10:
+            fmt = "%Y-%m-%d"
+        return datetime.datetime.strptime(self.end_dt.var.get(), fmt)
+
+    def set_play_end_datetime(self, end_datetime):
+        fmt = "%Y-%m-%d %H:%M:%S"
+        self.end_dt.var.set(end_datetime.strftime(fmt))
+
+    def clear_play_end_datetime(self):
+        self.end_dt.var.set("")
     def _create_initial_state(self):
         self.initial_state = LargeEntryLabel(self, 'Initial State')
         self.initial_state.text.bind('<Tab>', lambda _: _no_tab(_, self._window))
