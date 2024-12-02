@@ -265,8 +265,8 @@ class App(ttk.Window):
         """Get the session data from the entry field"""
         fmt = "%Y-%m-%d"
         if not self.session_date_is_valid():
-            return datetime.datetime.strptime(datetime.MINYEAR, fmt)
-        return datetime.datetime.strptime(self.session_date.get(), fmt)
+            return datetime.datetime.strptime(datetime.MINYEAR, fmt).date()
+        return datetime.datetime.strptime(self.session_date.get(), fmt).date()
 
     def set_session_date(self, session_date):
         if session_date == self.default_session_date:
@@ -493,6 +493,7 @@ class App(ttk.Window):
         # resets the save button to disabled
         self.image_buttons.save_button.configure(state="disabled")
         self.image_buttons.save_session_button.configure(state="enabled")
+
         self.create_play()
 
     def save_session(self):
@@ -517,6 +518,7 @@ class App(ttk.Window):
 
         new_path = ""
         if list(self.plays.values())[0].start_image:
+            print(self.get_session_date())
             new_path = join(
                 dirname(dirname(list(self.plays.values())[0].start_image)),
                 f"Sorted/{self.get_session_date()}",
