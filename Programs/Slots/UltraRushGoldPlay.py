@@ -14,7 +14,7 @@ class UltraRushGoldPlay(StateHelperPlay):
 
     @property
     def state(self) -> str:
-        rv = {k: int(v) for k, v in self.state_data.items() if v and v != ""}
+        rv = {k: v for k, v in self.state_data.items() if v and v != ""}
         if not len(rv):
             return self._state
 

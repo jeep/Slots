@@ -124,11 +124,15 @@ class EntryWigits(ttk.Frame):
         return datetime.datetime.strptime(self.end_dt.var.get(), fmt)
 
     def set_play_end_datetime(self, end_datetime):
+        if end_datetime == "" or end_datetime == 1:
+            return
+
         fmt = "%Y-%m-%d %H:%M:%S"
         self.end_dt.var.set(end_datetime.strftime(fmt))
 
     def clear_play_end_datetime(self):
         self.end_dt.var.set("")
+
     def _create_initial_state(self):
         self.initial_state = LargeEntryLabel(self, 'Initial State')
         self.initial_state.text.bind('<Tab>', lambda _: _no_tab(_, self._window))

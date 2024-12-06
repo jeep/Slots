@@ -518,7 +518,6 @@ class App(ttk.Window):
 
         new_path = ""
         if list(self.plays.values())[0].start_image:
-            print(self.get_session_date())
             new_path = join(
                 dirname(dirname(list(self.plays.values())[0].start_image)),
                 f"Sorted/{self.get_session_date()}",
