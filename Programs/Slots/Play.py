@@ -20,12 +20,13 @@ class HandPay:
     image: str = None
     addl_images: list[str] = field(default_factory=list)
     taxable: bool = True
+    taxrate: Decimal = d(0.27)
 
     @property
     def tax(self):
         tax = "0.00"
         if self.taxable:
-            tax = d(d(0.27) * self.pay_amount)
+            tax = d(self.taxrate * self.pay_amount)
         return tax
 
 

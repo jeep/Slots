@@ -19,23 +19,41 @@ class ImageButtons(ttk.Frame):
 
         self.file_name = ttk.StringVar(value="Name:")
         self.file_date = ttk.StringVar(value="Date:")
+        self.picture_count = ttk.StringVar(value="End")
 
         self._create_buttons()
         self._place_buttons()
 
+
     def _create_buttons(self):
-        self.prev_button = ttk.Button(self, text='Prev', command=lambda: self.prev_button_command(self._window))
-        self.next_button = ttk.Button(self, text='Next', command=lambda: self.next_button_command(self._window))
+        self.prev_button = ttk.Button(self, text='Prev', 
+                                      command=lambda: self.prev_button_command(self._window))
+        self.next_button = ttk.Button(self, text='Next', 
+                                      command=lambda: self.next_button_command(self._window))
         self.return_button = ttk.Button(self, text='Return to Start',
                                         command=lambda: self.return_button_command(self._window))
+
+        self.goto_start = ttk.Label(self, text='1')
+        self.goto_start.bind("<Button-1>", self.start_click)
+        self.goto_prev = ttk.Label(self, text='prev')
+        self.goto_prev.bind("<Button-1>", self.prev_click)
+        self.goto_next = ttk.Label(self, text='next')
+        self.goto_next.bind("<Button-1>", self.next_click)
+        self.goto_end = ttk.Label(self, textvariable=self.picture_count)
+        self.goto_end.bind("<Button-1>", self.end_click)
+
         self.state_button = ttk.Button(self, text="Open State Helper",
                                        command=lambda: self._open_state_helperwin(self._window))
 
-        self.start_button = ttk.Button(self, text='Set Start', command=lambda: self.start_button_command(self._window))
-        self.add_button = ttk.Button(self, text='Add Image', command=lambda: self.add_button_command(self._window))
-        self.end_button = ttk.Button(self, text='Set End', command=lambda: self.end_button_command(self._window))
-        self.hp_button = ttk.Button(self, text="Add HandPay", command=lambda: self._open_hpwin(
-            lambda hpd: self._get_hpwin_data(self._window, hpd)))
+        self.start_button = ttk.Button(self, text='Set Start',
+                                       command=lambda: self.start_button_command(self._window))
+        self.add_button = ttk.Button(self, text='Add Image',
+                                     command=lambda: self.add_button_command(self._window))
+        self.end_button = ttk.Button(self, text='Set End',
+                                     command=lambda: self.end_button_command(self._window))
+        self.hp_button = ttk.Button(self, text="Add HandPay",
+                                    command=lambda: self._open_hpwin(
+                                        lambda hpd: self._get_hpwin_data(self._window, hpd)))
 
         self.save_button = ttk.Button(self, text='Save Play', command=lambda: self._window.save(), bootstyle='success')
         self.remove_button = ttk.Button(self, text='Remove Image',
@@ -75,6 +93,12 @@ class ImageButtons(ttk.Frame):
         row = 3
         self.file_name_label.grid(column=0, columnspan=2, row=row, sticky="nsew", padx=pad_back, pady=pad_front)
         self.file_date_label.grid(column=2, columnspan=2, row=row, sticky="nsew", padx=pad_front, pady=pad_front)
+
+        row = 4
+        self.goto_start.grid(column=0, row=row, sticky='nsew', padx=pad_double, pady=pad_back)
+        self.goto_prev.grid(column=1, row=row, sticky='nsew', padx=pad_back, pady=pad_back)
+        self.goto_next.grid(column=2, row=row, sticky='nsew', padx=pad_double, pady=pad_back)
+        self.goto_end.grid(column=3, row=row, sticky='nsew', padx=pad_double, pady=pad_back)
 
     def _open_hpwin(self, callback):
         HandPayWindow(callback=callback)
@@ -137,8 +161,43 @@ class ImageButtons(ttk.Frame):
         else:
             self.set_image_adders('normal')
 
-    def return_button_command(self, parent):
-        parent.display_first_image()
+    def return_button_command(self, parent): 
+        if len(parent.imgs) == 0:
+            return
+
+        parent.pointer = 0
+        parent.display_image()
+
+        current_image_path = parent.imgs[parent.pointer][0]
+
+        if parent.image_is_in_current_play(current_image_path):
+            self.set_image_adders('disabled')
+        else: 
+            self.set_image_adders('normal')
+
+    def start_click(self, event):
+        self.return_button_command(self._window)
+
+    def prev_click(self, event):
+        self.prev_button_command(self._window)
+
+    def next_click(self, event):
+        self.next_button_command(self._window)
+
+    def end_click(self, event): 
+        parent=self._window
+        if len(parent.imgs) == 0: 
+            return
+
+        parent.pointer = len(parent.imgs) - 1
+        parent.display_image()
+
+        current_image_path = parent.imgs[parent.pointer][0]
+
+        if parent.image_is_in_current_play(current_image_path):
+            self.set_image_adders('disabled')
+        else: 
+            self.set_image_adders('normal')
 
     def start_button_command(self, parent):
         if len(parent.imgs) == 0:

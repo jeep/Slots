@@ -1,11 +1,9 @@
-from os import listdir
-from os.path import isfile, join, getctime
-
-from PIL import Image, ExifTags
-
 from datetime import datetime
-
+from os import listdir
+from os.path import getmtime, isfile, join
 from threading import Thread
+
+from PIL import ExifTags, Image
 
 
 def get_time(path):
@@ -14,7 +12,7 @@ def get_time(path):
             try:
                 image_exif = image.getexif()
                 exif = {ExifTags.TAGS[k]: v for k, v in image_exif.items() if
-                        k in ExifTags.TAGS and type(v) is not bytes}
+                        k in ExifTags.TAGS and not isinstance(v, bytes)}
                 date_obj = datetime.strptime(exif['DateTimeOriginal'], r'%Y:%m:%d %H:%M:%S').strftime(r'%Y%m%d%H%M%S')
                 return date_obj
             except (KeyError, AttributeError):
@@ -23,7 +21,7 @@ def get_time(path):
                     date_obj = datetime.strptime(image_exif[306], r'%Y:%m:%d %H:%M:%S').strftime(r'%Y%m%d%H%M%S')
                     return date_obj
                 except KeyError:
-                    date_obj = datetime.fromtimestamp(getctime(path)).strftime(r'%Y%m%d%H%M%S')
+                    date_obj = datetime.fromtimestamp(getmtime(path)).strftime(r'%Y%m%d%H%M%S')
                     return date_obj
                 except Exception:
                     print(f"Cannot get date for {path}")
@@ -34,8 +32,7 @@ def get_time(path):
 def get_img_data(file, directory):
     file_path = join(directory, file)
     file_type = file_path[file_path.find('.'):].upper()
-    if (file_type == '.HEIC' or file_type == '.JPEG' or file_type == '.JPG' or file_type == '.PNG') and isfile(
-            file_path):
+    if (file_type in ('.HEIC', '.JPEG', '.JPG', '.PNG')) and isfile( file_path):
         if (file_time := get_time(file_path)) is not None:
             return [file_path, file_type, file_time]
 

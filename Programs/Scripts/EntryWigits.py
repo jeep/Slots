@@ -68,9 +68,11 @@ class EntryWigits(ttk.Frame):
         #self.dt.var.set(self._window.default_dt)
 
     def play_start_datetime_is_valid(self):
+        "Checks if start datetime is valid"
         return self.dt.var.get() != "" and self.dt.var.get() != self._window.default_dt
 
-    def get_play_start_datetime(self) -> str:
+    def get_play_start_datetime(self) -> datetime.datetime:
+        """Gets the start date in the proper format"""
         fmt = "%Y-%m-%d %H:%M:%S"
         if not self.play_start_datetime_is_valid():
             return '1900-01-01 01:01:01'
@@ -116,7 +118,7 @@ class EntryWigits(ttk.Frame):
     def play_end_datetime_is_valid(self):
         return self.end_dt.var.get() != "" and self.end_dt.var.get() != 1
 
-    def get_play_end_datetime(self) -> str:
+    def get_play_end_datetime(self) -> datetime.datetime:
         fmt = "%Y-%m-%d %H:%M:%S"
         if not self.play_end_datetime_is_valid():
             return '1900-01-01 01:01:01'

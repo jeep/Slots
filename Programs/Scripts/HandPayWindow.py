@@ -8,6 +8,7 @@ from decimal import Decimal
 
 
 class HandPayWindow(tk.Toplevel):
+    """Opens a window to gather handpay information"""
     def __init__(self, *args, callback=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.callback = callback
@@ -39,9 +40,13 @@ class HandPayWindow(tk.Toplevel):
         self.focus()
 
     def button_okay_pressed(self):
-        hp = HandPay(Decimal(self.handpay.var.get()), Decimal(self.tip.var.get()), taxable=self.taxable.get())
+        """Okay was pressed, return the handpay"""
+        hp = HandPay(Decimal(self.handpay.var.get()),
+                     Decimal(self.tip.var.get()),
+                     taxable=self.taxable.get())
         self.callback(hp)
         self.destroy()
 
     def button_cancel_pressed(self):
+        """Cancel"""
         self.destroy()

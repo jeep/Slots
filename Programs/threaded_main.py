@@ -107,6 +107,7 @@ class App(ttk.Window):
         self.image_buttons.set_image_navigation("disabled")
 
     def get_current_play(self):
+        """Gets the current play"""
         return self._current_play
 
     def get_dropdown_data(self):
@@ -251,14 +252,17 @@ class App(ttk.Window):
 
             # adds the image to the canvas
             self.image_display.canvas.create_image(x, y, image=imagetk)
-        self.image_buttons.file_name.set(f"Name: {basename(self.imgs[self.pointer][0])}")
+        self.image_buttons.picture_count.set(len(self.imgs))
+        self.image_buttons.file_name.set(f"Name: {basename(self.imgs[self.pointer][0])} ({self.pointer+1}/{len(self.imgs)})")
         self.image_buttons.file_date.set(
             f"Date: {datetime.datetime.strptime(self.imgs[self.pointer][2], '%Y%m%d%H%M%S')}")
 
     def play_end_date_is_valid(self):
+        """Returns true if end date is a valid end date"""
         return self.entry_wigits.play_end_datetime_is_valid()
 
     def session_date_is_valid(self):
+        """Returns true if the session date is a valid date"""
         return self.session_date.get() != "" and self.session_date.get() != self.default_session_date
 
     def get_session_date(self) -> datetime.datetime:
@@ -269,6 +273,7 @@ class App(ttk.Window):
         return datetime.datetime.strptime(self.session_date.get(), fmt).date()
 
     def set_session_date(self, session_date):
+        """Sets the settion date with the correct format"""
         if session_date == self.default_session_date:
             self.session_date.set(session_date)
             return
@@ -382,6 +387,7 @@ class App(ttk.Window):
         self._current_play.hand_pays.clear()
         for hp in self.hand_pay:
             self._current_play.add_hand_pay(hp)
+        #self._current_play.hand_pays = self.hand_pay.copy()
         self.update_pnl()
 
     def load_play(self, playid):
@@ -408,7 +414,9 @@ class App(ttk.Window):
         self.play_imgs = self._current_play.addl_images
         self.entry_wigits.update_table(self)
 
-        self.hand_pay = self._current_play.hand_pays
+        for hp in self._current_play.hand_pays:
+            self.hand_pay.append(hp)    
+        #self.hand_pay = self._current_play.hand_pays.copy()
         self.entry_wigits.update_hand_pay_table(self)
 
         self.image_buttons.save_button.configure(state="normal", bootstyle="normal")
