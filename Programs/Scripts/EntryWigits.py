@@ -174,6 +174,7 @@ class EntryWigits(ttk.Frame):
         self.hp_table.bind('<Delete>', self._hp_delete)
 
     def update_table(self, parent):
+        """update the table of images"""
         self.image_table.delete(*self.image_table.get_children())
         # self.image_table.insert(parent='', index=ttk.END, values=parent.play_imgs)
         # return
@@ -181,9 +182,11 @@ class EntryWigits(ttk.Frame):
             self.image_table.insert(parent='', index=ttk.END, values=f"{{{item}}}")
 
     def update_hand_pay_table(self, parent):
+        """Update the handpay display table"""
         self.hp_table.delete(*self.hp_table.get_children())
         for item in parent.hand_pay:
-            self.hp_table.insert(parent='', index=ttk.END, values=(item.pay_amount, item.tip_amount))
+            self.hp_table.insert(parent='', index=ttk.END,
+                                 values=(item.pay_amount, item.tip_amount))
         parent.update_handpays()
 
     def _hp_delete(self, _):

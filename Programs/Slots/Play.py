@@ -116,6 +116,7 @@ class Play:
         return None
 
     def get_state_helper(self):
+        """pretty sure this is unused"""
         return None
 
     def get_csv_rows(self):

@@ -10,6 +10,7 @@ from .Play import Play
 
 
 class PlayFactory:
+    """Class to create plays based on machine"""
     play_for_machine = {
         "Frankenstein": FrankensteinPlay,
         "Frankenstein (Bingo)": FrankensteinPlay,

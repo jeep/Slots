@@ -10,6 +10,7 @@ from Scripts.StateEntryHelperWindow import StateEntryHelperWindow
 
 
 class ImageButtons(ttk.Frame):
+    """Frame for the buttons above the image"""
     def __init__(self, parent, window):
         super().__init__(master=parent)
 
@@ -55,13 +56,13 @@ class ImageButtons(ttk.Frame):
                                     command=lambda: self._open_hpwin(
                                         lambda hpd: self._get_hpwin_data(self._window, hpd)))
 
-        self.save_button = ttk.Button(self, text='Save Play', command=lambda: self._window.save(), bootstyle='success')
+        self.save_button = ttk.Button(self, text='Save Play', command=self._window.save, bootstyle='success')
         self.remove_button = ttk.Button(self, text='Remove Image',
                                         command=lambda: self.remove_button_command(self._window))
         self.delete_button = ttk.Button(self, text='Delete Image',
                                         command=lambda: self.delete_button_command(self._window), bootstyle='danger')
 
-        self.save_session_button = ttk.Button(self, text='Save Session', command=lambda: self._window.save_session(),
+        self.save_session_button = ttk.Button(self, text='Save Session', command=self._window.save_session,
                                               bootstyle='success')
 
         self.file_name_label = ttk.Label(self, textvariable=self.file_name)
@@ -115,23 +116,27 @@ class ImageButtons(ttk.Frame):
         parent.entry_wigits.update_hand_pay_table(parent)
 
     def set_image_navigation(self, state):
+        """set the image navigation buttons appropriately"""
         self.prev_button.configure(state=state)
         self.next_button.configure(state=state)
         self.return_button.configure(state=state)
 
     def opposite_state(self, state):
+        """return the opposite state from what is passed in."""
         if state == 'disabled':
             return 'normal'
         if state == 'normal':
             return 'disabled'
 
     def set_image_adders(self, state):
+        """Set the state of the image add/remove buttons"""
         self.add_button.configure(state=state)
         self.start_button.configure(state=state)
         self.end_button.configure(state=state)
         self.remove_button.configure(state=self.opposite_state(state))
 
     def prev_button_command(self, parent):
+        """Previous image"""
         # does nothing if there are no images
         if len(parent.imgs) == 0:
             return
@@ -148,6 +153,7 @@ class ImageButtons(ttk.Frame):
             self.set_image_adders('normal')
 
     def next_button_command(self, parent):
+        """next image"""
         if len(parent.imgs) == 0:
             return
 
@@ -162,6 +168,7 @@ class ImageButtons(ttk.Frame):
             self.set_image_adders('normal')
 
     def return_button_command(self, parent): 
+        """go to first image"""
         if len(parent.imgs) == 0:
             return
 
@@ -175,18 +182,22 @@ class ImageButtons(ttk.Frame):
         else: 
             self.set_image_adders('normal')
 
-    def start_click(self, event):
+    def start_click(self, _):
+        """event to run when start is clicked"""
         self.return_button_command(self._window)
 
-    def prev_click(self, event):
+    def prev_click(self, _):
+        """event to run when prev is clicked"""
         self.prev_button_command(self._window)
 
-    def next_click(self, event):
+    def next_click(self, _):
+        """event to run when next is clicked"""
         self.next_button_command(self._window)
 
-    def end_click(self, event): 
+    def end_click(self, _): 
+        """event to run when end is clicked"""
         parent=self._window
-        if len(parent.imgs) == 0: 
+        if len(parent.imgs) == 0:
             return
 
         parent.pointer = len(parent.imgs) - 1
@@ -196,10 +207,11 @@ class ImageButtons(ttk.Frame):
 
         if parent.image_is_in_current_play(current_image_path):
             self.set_image_adders('disabled')
-        else: 
+        else:
             self.set_image_adders('normal')
 
     def start_button_command(self, parent):
+        """Set image as start image and update time"""
         if len(parent.imgs) == 0:
             return
 
@@ -223,6 +235,7 @@ class ImageButtons(ttk.Frame):
         self.set_image_adders('disabled')
 
     def add_button_command(self, parent):
+        """add image to the play"""
         if len(parent.imgs) == 0:
             return
 
@@ -234,6 +247,7 @@ class ImageButtons(ttk.Frame):
         self.set_image_adders('disabled')
 
     def end_button_command(self, parent):
+        """add image to the end of the play and update duration"""
         if len(parent.imgs) == 0:
             return
 
@@ -253,6 +267,7 @@ class ImageButtons(ttk.Frame):
         self.set_image_adders('disabled')
 
     def remove_button_command(self, parent):
+        """Remove the image from the play"""
         if len(parent.imgs) == 0:
             return
 
@@ -271,14 +286,16 @@ class ImageButtons(ttk.Frame):
         self.set_image_adders('normal')
 
     def delete_button_command(self, parent):
+        """Delete the current image"""
         if len(parent.imgs) == 0:
             return
 
         path = parent.imgs[parent.pointer][0]
 
-        confirmation = Messagebox.show_question(f'Are you sure you want to delete this image:\n{path}',
-                                                'Image Deletion Confirmation',
-                                                buttons=['No:secondary', 'Yes:warning'])
+        confirmation = Messagebox.show_question(
+            f'Are you sure you want to delete this image:\n{path}',
+            'Image Deletion Confirmation', 
+            buttons=['No:secondary', 'Yes:warning'])
 
         if confirmation != 'Yes':
             return

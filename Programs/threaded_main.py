@@ -1,4 +1,5 @@
 import csv
+import copy
 import datetime
 from collections import namedtuple
 from decimal import Decimal
@@ -73,9 +74,9 @@ class App(ttk.Window):
         self.end_img = ttk.StringVar()
         self.ttk_state = ttk.StringVar()
 
-        self.columnconfigure(0, uniform="a", weight=1)
-        self.columnconfigure(1, uniform="a", weight=2)
-        self.columnconfigure(2, uniform="a", weight=2)
+        self.columnconfigure(0, uniform="a", weight=1) # session log
+        self.columnconfigure(1, uniform="a", weight=2) # data entry
+        self.columnconfigure(2, uniform="a", weight=2) #image and buttons
 
         self.session_table = SessionTable(self)
         self.session_table.grid(row=0, column=0, sticky="nsew")
@@ -105,6 +106,7 @@ class App(ttk.Window):
         self.image_buttons.remove_button.configure(state="disabled")
         self.image_buttons.delete_button.configure(state="disabled")
         self.image_buttons.set_image_navigation("disabled")
+        self.image_buttons.state_button.configure(state="disabled")
 
     def get_current_play(self):
         """Gets the current play"""
@@ -414,8 +416,9 @@ class App(ttk.Window):
         self.play_imgs = self._current_play.addl_images
         self.entry_wigits.update_table(self)
 
+        self.hand_pay.clear()
         for hp in self._current_play.hand_pays:
-            self.hand_pay.append(hp)    
+            self.hand_pay.append(hp)
         #self.hand_pay = self._current_play.hand_pays.copy()
         self.entry_wigits.update_hand_pay_table(self)
 
@@ -427,6 +430,11 @@ class App(ttk.Window):
             machine_name = self.entry_wigits.machine_cb.var.get()
         self._current_play = PlayFactory.get_play(machine_name)
         self.update_all_play_values()
+        if self._current_play.get_entry_fields() is None:
+            self.image_buttons.state_button.configure(state="disabled")
+        else:
+            self.image_buttons.state_button.configure(state="normal")
+
 
     def update_all_play_values(self):
         """update a play to consume values from entry fields"""
@@ -475,7 +483,8 @@ class App(ttk.Window):
                 )
                 if button != "OK":
                     return
-            self.plays[self._current_play.identifier] = self._current_play
+            # this shouldn't be needed, but somehow I am clearing the hand pays
+            self.plays[self._current_play.identifier] = copy.deepcopy(self._current_play)
 
         self.session_table.update_table()
 
