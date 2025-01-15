@@ -459,6 +459,7 @@ class App(ttk.Window):
         """determine a current play is being editted or is a new play"""
         return self._current_index is not None
 
+
     def save(self):
         """Save the play"""
         if self.image_buttons.save_button.state() == "disabled":
@@ -488,6 +489,9 @@ class App(ttk.Window):
             self.plays[self._current_play.identifier] = copy.deepcopy(self._current_play)
 
         self.session_table.update_table()
+
+        if self.image_is_in_current_play(self.imgs[self.pointer][0]):
+            self.image_buttons.next_button_command(self)
 
         # clears all entry values
         self._current_index = None

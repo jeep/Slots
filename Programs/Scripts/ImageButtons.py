@@ -27,9 +27,9 @@ class ImageButtons(ttk.Frame):
 
 
     def _create_buttons(self):
-        self.prev_button = ttk.Button(self, text='Prev', 
+        self.prev_button = ttk.Button(self, text='Prev',
                                       command=lambda: self.prev_button_command(self._window))
-        self.next_button = ttk.Button(self, text='Next', 
+        self.next_button = ttk.Button(self, text='Next',
                                       command=lambda: self.next_button_command(self._window))
         self.return_button = ttk.Button(self, text='Return to Start',
                                         command=lambda: self.return_button_command(self._window))
@@ -161,7 +161,6 @@ class ImageButtons(ttk.Frame):
         parent.display_image()
 
         current_image_path = parent.imgs[parent.pointer][0]
-
         if parent.image_is_in_current_play(current_image_path):
             self.set_image_adders('disabled')
         else:
