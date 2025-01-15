@@ -182,6 +182,7 @@ class App(ttk.Window):
         if len(self.imgs) == 0:
             return
 
+        self.pointer = 0
         self.imgs = sorted(self.imgs, key=lambda item: item[2])
         self.display_image()
         self.image_buttons.set_image_adders("normal")
