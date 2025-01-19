@@ -49,9 +49,7 @@ class App(ttk.Window):
         self.title("Slot Data Entry")
         self.minsize(450, 705)
         self.geometry("1450x1000")
-        self.iconphoto(
-            False, ttk.PhotoImage(file=r"Programs\Icon\slot_machine_icon.png")
-        )
+        self.iconphoto(False, ttk.PhotoImage(file=r"Programs\Icon\slot_machine_icon.png"))
         self._loaded_play_id = None
         self._current_index = None
         self.imgs = []
@@ -234,6 +232,18 @@ class App(ttk.Window):
         self.rotation = self.rotation + 90 if self.rotation + 90 <= 360 else 0
         self.display_image()
 
+    # priority should be: used, avoid, normal
+    def get_image_name_color(self, img_name):
+        """Determine the color to display the image name as"""
+        image_name_color = {"normal": "black", "used": "orange", "avoid": "red"}
+        for p in self.plays.values():
+            if img_name in p.addl_images or img_name==p.start_image or img_name ==p.end_image:
+                return image_name_color["used"]
+        if "IMG_E" in basename(img_name):
+            return image_name_color["avoid"]
+        return image_name_color["normal"]
+
+
     def display_image(self):
         """Display the image"""
         if len(self.imgs) == 0:
@@ -256,7 +266,11 @@ class App(ttk.Window):
             # adds the image to the canvas
             self.image_display.canvas.create_image(x, y, image=imagetk)
         self.image_buttons.picture_count.set(len(self.imgs))
-        self.image_buttons.file_name.set(f"Name: {basename(self.imgs[self.pointer][0])} ({self.pointer+1}/{len(self.imgs)})")
+        self.image_buttons.file_name.set(
+            f"Name: {basename(self.imgs[self.pointer][0])} ({self.pointer+1}/{len(self.imgs)})"
+            )
+        name_color= self.get_image_name_color(self.imgs[self.pointer][0])
+        self.image_buttons.file_name_label.config(foreground=name_color)
         self.image_buttons.file_date.set(
             f"Date: {datetime.datetime.strptime(self.imgs[self.pointer][2], '%Y%m%d%H%M%S')}")
 
@@ -266,7 +280,8 @@ class App(ttk.Window):
 
     def session_date_is_valid(self):
         """Returns true if the session date is a valid date"""
-        return self.session_date.get() != "" and self.session_date.get() != self.default_session_date
+        return self.session_date.get() != "" and \
+            self.session_date.get() != self.default_session_date
 
     def get_session_date(self) -> datetime.datetime:
         """Get the session data from the entry field"""
@@ -490,7 +505,7 @@ class App(ttk.Window):
 
         self.session_table.update_table()
 
-        if self.image_is_in_current_play(self.imgs[self.pointer][0]):
+        while self.image_is_in_current_play(self.imgs[self.pointer][0]):
             self.image_buttons.next_button_command(self)
 
         # clears all entry values
@@ -635,7 +650,7 @@ class App(ttk.Window):
                 or play_type == ""
         ):
             self.image_buttons.save_button.configure(state="disabled")
-        elif bet == "0" or cashin == "0" or cashout == "0":
+        elif bet == "0" or cashin == "0" or cashout == "0" or not self.play_end_date_is_valid():
             self.image_buttons.save_button.configure(
                 state="normal", bootstyle="warning"
             )
@@ -665,6 +680,17 @@ class App(ttk.Window):
             return
         self.create_play()
 
+    def c1(self, event):
+        """commands to run for ctrl-1"""
+        self.image_buttons.start_button_command(self)
+        self.entry_wigits.bet.entry.focus_set()
+
+
+    def c3(self, event):
+        """commands to run for ctrl-3"""
+        self.image_buttons.end_button_command(self)
+        self.entry_wigits.cashout.entry.focus_set()
+
     def setup_keybinds(self):
         """set up keyboard shortcuts"""
         self.bind("<FocusIn>", lambda _: self.check_save_valid())
@@ -674,15 +700,11 @@ class App(ttk.Window):
         self.bind("<Prior>", lambda _: self.image_buttons.prev_button_command(self))
         self.bind("<Next>", lambda _: self.image_buttons.next_button_command(self))
         self.bind("<Home>", lambda _: self.image_buttons.return_button_command(self))
-        self.bind(
-            "<Control-Key-1>", lambda _: self.image_buttons.start_button_command(self)
-        )
+        self.bind( "<Control-Key-1>", self.c1)
         self.bind(
             "<Control-Key-2>", lambda _: self.image_buttons.add_button_command(self)
         )
-        self.bind(
-            "<Control-Key-3>", lambda _: self.image_buttons.end_button_command(self)
-        )
+        self.bind("<Control-Key-3>", self.c3)
         self.bind("<Escape>", lambda _: self.reset_play())
 
     def load_test_play(self):
