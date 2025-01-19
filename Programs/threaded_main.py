@@ -5,12 +5,14 @@ from collections import namedtuple
 from decimal import Decimal
 from os import makedirs
 from os.path import join, dirname, exists, basename
+from enum import Enum
 from shutil import move
 from tkinter.filedialog import askdirectory
 import ttkbootstrap as ttk
 from ttkbootstrap.dialogs import Messagebox, Querybox
 from PIL import Image, ImageTk
 from pillow_heif import register_heif_opener
+from tkinter.constants import DISABLED, NORMAL
 
 from Scripts.EntryWigits import EntryWigits
 from Scripts.get_imgs_data import multi_get_img_data
@@ -98,13 +100,13 @@ class App(ttk.Window):
 
         self.setup_keybinds()
 
-        self.image_buttons.save_button.configure(state="disabled")
-        self.image_buttons.save_session_button.configure(state="disabled")
+        self.image_buttons.save_button.configure(state=DISABLED)
+        self.image_buttons.save_session_button.configure(state=DISABLED)
         self.image_buttons.set_image_adders("disabled")
-        self.image_buttons.remove_button.configure(state="disabled")
-        self.image_buttons.delete_button.configure(state="disabled")
+        self.image_buttons.remove_button.configure(state=DISABLED)
+        self.image_buttons.delete_button.configure(state=DISABLED)
         self.image_buttons.set_image_navigation("disabled")
-        self.image_buttons.state_button.configure(state="disabled")
+        self.image_buttons.state_button.configure(state=DISABLED)
 
     def get_current_play(self):
         """Gets the current play"""
@@ -447,7 +449,7 @@ class App(ttk.Window):
         self._current_play = PlayFactory.get_play(machine_name)
         self.update_all_play_values()
         if self._current_play.get_entry_fields() is None:
-            self.image_buttons.state_button.configure(state="disabled")
+            self.image_buttons.state_button.configure(state=DISABLED)
         else:
             self.image_buttons.state_button.configure(state="normal")
 
@@ -477,8 +479,17 @@ class App(ttk.Window):
 
     def save(self):
         """Save the play"""
-        if self.image_buttons.save_button.state() == "disabled":
+        readiness_state = self.get_save_readiness()
+        if readiness_state == self.SaveReadiness.FORBIDDEN:
             return
+
+        if readiness_state == self.SaveReadiness.WARN:
+            confirmed = Messagebox.okcancel(
+                "There is potentially some missing data, are you sure?"
+                "Incomplete save warning",
+            )
+            if confirmed != "OK":
+                return
 
         if self._current_play is None:
             self.create_play()
@@ -632,8 +643,15 @@ class App(ttk.Window):
         if len(self.plays) == 0:
             self.image_buttons.save_session_button.configure(state="disabled")
 
-    def check_save_valid(self):
-        """Determine if we have everything needed to save the play"""
+
+    class SaveReadiness(Enum):
+        """States allowed for Saving"""
+        FORBIDDEN = 0
+        WARN = 1
+        READY = 2
+
+    def get_save_readiness(self):
+        """Are we ready to save?"""
         casino = self.session_frame.casino.var.get()
         dt_valid = self.entry_wigits.play_start_datetime_is_valid()
         machine = self.entry_wigits.machine_cb.var.get()
@@ -643,19 +661,22 @@ class App(ttk.Window):
         cashin = self.entry_wigits.cashin.var.get()
         cashout = self.entry_wigits.cashout.var.get()
 
-        if (
-                casino == ""
-                or not dt_valid
-                or machine == "Select Machine"
-                or play_type == ""
-        ):
+        if (casino == "" or not dt_valid or machine == "Select Machine" or play_type == ""):
+            return self.SaveReadiness.FORBIDDEN
+        if bet == "0" or cashin == "0" or cashout == "0" or not self.play_end_date_is_valid():
+            return self.SaveReadiness.WARN
+        return self.SaveReadiness.READY
+
+    def set_save_button_state(self):
+        """Determine if we have everything needed to save the play"""
+        val = self.get_save_readiness()
+        if val == self.SaveReadiness.FORBIDDEN:
             self.image_buttons.save_button.configure(state="disabled")
-        elif bet == "0" or cashin == "0" or cashout == "0" or not self.play_end_date_is_valid():
-            self.image_buttons.save_button.configure(
-                state="normal", bootstyle="warning"
-            )
+        elif val == self.SaveReadiness.WARN:
+            self.image_buttons.save_button.configure( state="normal", bootstyle="warning")
         else:
             self.image_buttons.save_button.configure(state="normal", bootstyle="normal")
+
 
     def save_externals(self):
         """Save the csv files for entry drop-downs"""
@@ -693,8 +714,8 @@ class App(ttk.Window):
 
     def setup_keybinds(self):
         """set up keyboard shortcuts"""
-        self.bind("<FocusIn>", lambda _: self.check_save_valid())
-        self.bind("<FocusOut>", lambda _: self.check_save_valid())
+        self.bind("<FocusIn>", lambda _: self.set_save_button_state())
+        self.bind("<FocusOut>", lambda _: self.set_save_button_state())
 
         self.bind("<Control-s>", lambda _: self.save())
         self.bind("<Prior>", lambda _: self.image_buttons.prev_button_command(self))
