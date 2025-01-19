@@ -11,6 +11,7 @@ class SessionTable(ttk.Treeview):
         self.column('key', minwidth=0, width=300, stretch=False)
         self.bind('<Delete>', self.delete_play)
         self.bind('<Double-Button-1>', self.load_play)
+        self.bind('<Return>', self.load_play)
 
     def update_table(self):
         self.delete(*self.get_children())
