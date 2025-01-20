@@ -1,11 +1,14 @@
+from .CatsWildSerengeti import CatsWildSerengetiPlay
 from .DoubleDragonPlay import DoubleDragonPlay
 from .FrankensteinPlay import FrankensteinPlay
 from .LuckyWealthCatPlay import LuckyWealthCatPlay
 from .LuckyBuddhaPlay import LuckyBuddhaPlay
 from .PowerPushPlay import PowerPushPlay
 from .PinwheelPrizesPlay import PinwheelPrizesPlay
+from .RegalLinkPlay import RegalLinkPlay
 from .RichLittlePiggiesPlay import RichLittlePiggiesPlay, RichLittlePiggiesHogWildPlay, RichLittlePiggiesMealTicketPlay
 from .UltraRushGoldPlay import UltraRushGoldPlay
+from .WolfRunEclipse import WolfRunEclipsePlay
 from .Machine import Machine
 from .Play import Play
 
@@ -13,6 +16,7 @@ from .Play import Play
 class PlayFactory:
     """Class to create plays based on machine"""
     play_for_machine = {
+        "Cats Wild Serengeti": CatsWildSerengetiPlay,
         "Double Dragon Jin Long Jin Bao": DoubleDragonPlay,
         "Frankenstein": FrankensteinPlay,
         "Frankenstein (Bingo)": FrankensteinPlay,
@@ -24,6 +28,7 @@ class PlayFactory:
         "Pinwheel Prizes (Bingo)": PinwheelPrizesPlay,
         "Power Push": PowerPushPlay,
         "Power Push (Bingo)": PowerPushPlay,
+        "Regal Link": RegalLinkPlay,
         "Rich Little Piggies": RichLittlePiggiesPlay,
         "Rich Little Piggies (Bingo)": RichLittlePiggiesPlay,
         "Rich Little Piggies Hog Wild": RichLittlePiggiesHogWildPlay,
@@ -31,7 +36,8 @@ class PlayFactory:
         "Rich Little Piggies Meal Ticket": RichLittlePiggiesMealTicketPlay,
         "Rich Little Piggies Meal Ticket (Bingo)": RichLittlePiggiesMealTicketPlay,
         "Ultra Rush Gold": UltraRushGoldPlay,
-        "Ultra Rush Gold (Bingo)": UltraRushGoldPlay}
+        "Ultra Rush Gold (Bingo)": UltraRushGoldPlay,
+        "Wolf Run Eclipse": WolfRunEclipsePlay }
 
     @staticmethod
     def get_play(machine_name: str) -> Play:
