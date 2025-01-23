@@ -241,8 +241,20 @@ class ImageButtons(ttk.Frame):
         if len(parent.imgs) == 0:
             return
 
+        # we shouldn't reach up to the parent, we should tell it do 
+        # do the thing
+        img = parent.imgs[parent.pointer][0]
+        if parent.image_is_in_current_play(img):
+            confirmation = Messagebox.show_question(
+                f'Are you sure? This image is in the current play already:',
+                'Image Addition Confirmation', 
+                buttons=['No:secondary', 'Yes:warning'])
+
+            if confirmation != 'Yes':
+                return
+
         # adds the path to the play images list
-        parent.play_imgs.append(parent.imgs[parent.pointer][0])
+        parent.play_imgs.append(img)
 
         parent.entry_wigits.update_table(parent)
 
