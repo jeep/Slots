@@ -245,7 +245,6 @@ class App(ttk.Window):
             return image_name_color["avoid"]
         return image_name_color["normal"]
 
-
     def display_image(self):
         """Display the image"""
         if len(self.imgs) == 0:
@@ -450,8 +449,10 @@ class App(ttk.Window):
         self.update_all_play_values()
         if self._current_play.get_entry_fields() is None:
             self.image_buttons.state_button.configure(state=DISABLED)
+            self.entry_wigits.initial_state.label.configure(foreground="black")
         else:
             self.image_buttons.state_button.configure(state="normal")
+            self.entry_wigits.initial_state.label.configure(foreground="blue")
 
 
     def update_all_play_values(self):
@@ -475,7 +476,6 @@ class App(ttk.Window):
     def editing_play(self):
         """determine a current play is being editted or is a new play"""
         return self._current_index is not None
-
 
     def save(self):
         """Save the play"""
@@ -643,7 +643,6 @@ class App(ttk.Window):
         if len(self.plays) == 0:
             self.image_buttons.save_session_button.configure(state="disabled")
 
-
     class SaveReadiness(Enum):
         """States allowed for Saving"""
         FORBIDDEN = 0
@@ -677,7 +676,6 @@ class App(ttk.Window):
         else:
             self.image_buttons.save_button.configure(state="normal", bootstyle="normal")
 
-
     def save_externals(self):
         """Save the csv files for entry drop-downs"""
         external_csvs = {
@@ -705,7 +703,6 @@ class App(ttk.Window):
         """commands to run for ctrl-1"""
         self.image_buttons.start_button_command(self)
         self.entry_wigits.bet.entry.focus_set()
-
 
     def c3(self, event):
         """commands to run for ctrl-3"""

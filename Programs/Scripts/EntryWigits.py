@@ -9,6 +9,7 @@ from Scripts.LabelPairs.MoneyEntryLabel import MoneyEntryLabel
 from Scripts.LabelPairs.LabelLabel import LabelLabel
 from Scripts.LabelPairs.LargeEntryLabel import LargeEntryLabel
 from Scripts.LabelPairs.DateEntryLabel import DateEntryLabel
+from Scripts.StateEntryHelperWindow import StateEntryHelperWindow
 
 from Slots.Play import HandPay
 
@@ -136,8 +137,20 @@ class EntryWigits(ttk.Frame):
     def clear_play_end_datetime(self):
         self.end_dt.var.set("")
 
+    def _open_state_helperwin(self, _):
+        """second param is 'parent'"""
+        #Shouldn't need to reach in this deep
+        if 'disabled' in self._window.image_buttons.state_button.config('state'):
+            return
+        if self._window.get_current_play() is not None:
+            StateEntryHelperWindow(play=self._window.get_current_play())
+        else:
+            print("No helper available")
+
     def _create_initial_state(self):
         self.initial_state = LargeEntryLabel(self, 'Initial State')
+        self.initial_state.label.bind('<Button-1>', lambda _: self._open_state_helperwin(self._window))
+        self.initial_state.label.bind('<Return>', lambda _: self._open_state_helperwin(self._window))
         self.initial_state.text.bind('<Tab>', lambda _: _no_tab(_, self._window))
         self.initial_state.text.bind('<Shift-Tab>', lambda _: _no_shift_tab(_, self._window))
         self.initial_state.text.bind('<FocusOut>', self._update_state)

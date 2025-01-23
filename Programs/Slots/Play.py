@@ -6,6 +6,7 @@ from decimal import Decimal
 from babel.numbers import format_currency
 
 from .Machine import Machine
+from .Bonus import Bonus
 
 
 def d(in_str):
@@ -43,6 +44,7 @@ class Play:
     denom: str = None
     state: str = ""
     note: str = None
+    bonuses: list[Bonus] = field(default_factory=list)
     start_image: pathlib.Path = None
     addl_images: list[pathlib.Path] = field(default_factory=list)
     end_image: pathlib.Path = None
@@ -120,6 +122,11 @@ class Play:
         return None
 
     def get_csv_rows(self):
+        """Get the output in CSV format"""
+        note = f"{self.note}"
+        if len(self.bonuses) > 0:
+            note += f"; {str(self.bonuses)}"
+
         # JEEP: This doesn't belong in this class
         start_date = self.start_time.strftime(r"%m/%d/%Y")
         images = [str(pathlib.PureWindowsPath(f)) for f in self.addl_images]
@@ -127,7 +134,7 @@ class Play:
         rows = [(self.session_date.strftime(r"%m/%d/%Y"), self.casino, self.start_time, self.machine.get_name(),
                  format_currency(self.cash_in, 'USD', locale='en_US'), format_currency(self.bet, 'USD', locale='en_US'),
                  self.play_type, self.denom, self.state, self.cash_out_str(),
-                 format_currency(self.pnl, 'USD', locale='en_US'), self.note, self.machine.get_family(),
+                 format_currency(self.pnl, 'USD', locale='en_US'), note, self.machine.get_family(),
                  self.start_image, self.end_image, images, self.end_time)]
         for hp in self.hand_pays:
             if hp.tax > 0:
@@ -151,8 +158,11 @@ class Play:
         else:
             start_date = "??"
         images = [str(pathlib.PureWindowsPath(f)) for f in self.addl_images]
+        note = f"{self.note}"
+        if len(self.bonuses) > 0:
+            note += f"; {str(self.bonuses)}"
 
-        output_string = f"{self.identifier},{self.casino},{start_date},{self.machine.get_name()},{format_currency(self.cash_in, 'USD', locale='en_US')},{format_currency(self.bet, 'USD', locale='en_US')},{self.play_type},{self.denom},\"{self.state}\",{self.cash_out_str()},{format_currency(self.pnl, 'USD', locale='en_US')},\"{self.note}\",{self.machine.get_family()},{self.start_image},{self.end_image},{images}"
+        output_string = f"{self.identifier},{self.casino},{start_date},{self.machine.get_name()},{format_currency(self.cash_in, 'USD', locale='en_US')},{format_currency(self.bet, 'USD', locale='en_US')},{self.play_type},{self.denom},\"{self.state}\",{self.cash_out_str()},{format_currency(self.pnl, 'USD', locale='en_US')},\"{note}\",{self.machine.get_family()},{self.start_image},{self.end_image},{images}"
         for hp in self.hand_pays:
             if hp.tax > 0:
                 tax = format_currency(hp.tax, 'USD', locale='en_US')
