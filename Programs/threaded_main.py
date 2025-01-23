@@ -502,6 +502,8 @@ class App(ttk.Window):
             )
             self.plays = dict(li)
             self.update_all_play_values()
+            # this shouldn't be needed, but somehow I am clearing the hand pays
+            self.plays[self._current_play.identifier] = copy.deepcopy(self._current_play)
         else:
             self.update_all_play_values()
             if self._current_play.identifier in self.plays:
