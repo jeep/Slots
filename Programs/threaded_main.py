@@ -3,7 +3,7 @@ import copy
 import datetime
 from collections import namedtuple
 from decimal import Decimal
-from os import makedirs
+from os import makedirs, remove
 from os.path import join, dirname, exists, basename
 from enum import Enum
 from shutil import move
@@ -266,14 +266,40 @@ class App(ttk.Window):
 
             # adds the image to the canvas
             self.image_display.canvas.create_image(x, y, image=imagetk)
-        self.image_buttons.picture_count.set(len(self.imgs))
-        self.image_buttons.file_name.set(
-            f"Name: {basename(self.imgs[self.pointer][0])} ({self.pointer+1}/{len(self.imgs)})"
-            )
-        name_color= self.get_image_name_color(self.imgs[self.pointer][0])
-        self.image_buttons.file_name_label.config(foreground=name_color)
-        self.image_buttons.file_date.set(
-            f"Date: {datetime.datetime.strptime(self.imgs[self.pointer][2], '%Y%m%d%H%M%S')}")
+
+        file_name = basename(self.imgs[self.pointer][0])
+        index = self.pointer+1
+        color= self.get_image_name_color(self.imgs[self.pointer][0])
+        file_date= datetime.datetime.strptime(self.imgs[self.pointer][2], '%Y%m%d%H%M%S')
+        self.image_buttons.update_pagination_info(file_name=file_name, file_date=file_date, image_index=index,
+                                                  image_count=len(self.imgs), color=color)
+
+        current_image_path = self.imgs[self.pointer][0]
+        if self.image_is_in_current_play(current_image_path):
+            self.image_buttons.set_image_adders("disabled")
+        else:
+            self.image_buttons.set_image_adders("normal")
+
+    def display_first_image(self, event=None):
+        """display the first image"""
+        self.pointer = 0
+        self.display_image()
+
+    def display_next_image(self, event=None):
+        """next image"""
+        self.pointer = min((self.pointer + 1), (len(self.imgs) - 1))
+        self.display_image()
+
+    def display_prev_image(self, event=None):
+        """Previous image"""
+        # does nothing if there are no images
+        self.pointer = max((self.pointer - 1), 0)
+        self.display_image()
+
+    def display_last_image(self, event=None):
+        """display the last image"""
+        self.pointer = len(self.imgs) - 1
+        self.display_image()
 
     def play_end_date_is_valid(self):
         """Returns true if end date is a valid end date"""
@@ -624,8 +650,8 @@ class App(ttk.Window):
             (img == self.entry_wigits.start_entry.var.get()) or \
             (img == self.entry_wigits.end_entry.var.get())
 
-
     def get_image_dt(self):
+        """Get the date/time of the current image"""
         image_dt = self.imgs[self.pointer][2]
         image_y = int(image_dt[:4])
         image_m = int(image_dt[4:6])
@@ -636,9 +662,8 @@ class App(ttk.Window):
         image_dt = datetime.datetime(image_y, image_m, image_d, image_h, image_M, image_s)
         return image_dt
 
-
-    def set_current_image_as_start(self, event=None):
-        """Set image as start image and update time"""
+    def set_current_image_as_start(self, _=None):
+        """Set image as start image and update time. Event needed for binding this to a shortcut."""
         if len(self.imgs) == 0:
             return
 
@@ -655,8 +680,8 @@ class App(ttk.Window):
         self.image_buttons.set_image_adders('disabled')
         self.entry_wigits.bet.entry.focus_set()
 
-    def add_current_image_to_play(self, event=None):
-        """add image to the play"""
+    def add_current_image_to_play(self, _=None):
+        """add image to the play. Event needed for binding this to a shortcut."""
         if len(self.imgs) == 0:
             return
 
@@ -677,8 +702,8 @@ class App(ttk.Window):
         self.entry_wigits.update_table(self)
         self.image_buttons.set_image_adders('disabled')
 
-    def set_current_image_as_end(self, event=None):
-        """add image to the end of the play and update duration"""
+    def set_current_image_as_end(self, _=None):
+        """add image to the end of the play and update duration. Event needed for binding this to a shortcut."""
         if len(self.imgs) == 0:
             return
 
@@ -691,65 +716,66 @@ class App(ttk.Window):
         self.image_buttons.set_image_adders('disabled')
         self.entry_wigits.cashout.entry.focus_set()
 
-    def display_first_image(self, event=None):
-        """display the first image"""
+    def remove_current_image_from_play(self, _=None):
+        """Remove the image from the play. Event needed for binding this to a shortcut."""
         if len(self.imgs) == 0:
             return
 
-        self.pointer = 0
-        self.display_image()
+        path = self.imgs[self.pointer][0]
+        if not self.image_is_in_current_play(path):
+            return
 
-        current_image_path = self.imgs[self.pointer][0]
-        if self.image_is_in_current_play(current_image_path):
-            self.image_buttons.set_image_adders("disabled")
-        else:
-            self.image_buttons.set_image_adders("normal")
+        if self.entry_wigits.start_entry.var.get() == path:
+            self.entry_wigits.start_entry.var.set('')
+        elif self.entry_wigits.end_entry.var.get() == path:
+            self.entry_wigits.end_entry.var.set('')
+        elif path in self.play_imgs:
+            self.play_imgs.remove(path)
+            self.entry_wigits.update_table(self)
 
-    def display_next_image(self, event=None):
-        """next image"""
+        self.image_buttons.set_image_adders('normal')
+
+    def delete_current_image(self, _=None):
+        """Delete the current image. Event needed for binding this to a shortcut."""
         if len(self.imgs) == 0:
             return
 
-        self.pointer = min((self.pointer + 1), (len(self.imgs) - 1))
-        self.display_image()
+        path = self.imgs[self.pointer][0]
 
-        current_image_path = self.imgs[self.pointer][0]
-        if self.image_is_in_current_play(current_image_path):
-            self.image_buttons.set_image_adders('disabled')
-        else:
-            self.image_buttons.set_image_adders('normal')
+        confirmation = Messagebox.show_question(
+            f'Are you sure you want to delete this image:\n{path}',
+            'Image Deletion Confirmation', 
+            buttons=['No:secondary', 'Yes:warning'])
 
-    def display_prev_image(self, event=None):
-        """Previous image"""
-        # does nothing if there are no images
-        if len(self.imgs) == 0:
+        if confirmation != 'Yes':
             return
 
-        self.pointer = max((self.pointer - 1), 0)
+        self.remove_current_image_from_play()
+        remove(path)
+
+        self.imgs.pop(self.pointer)
+        if len(self.imgs) <= self.pointer:
+            self.pointer = max((self.pointer - 1), 0)
+
         self.display_image()
 
-        # gets the path of the current image
-        current_image_path = self.imgs[self.pointer][0]
-
-        if self.image_is_in_current_play(current_image_path):
-            self.image_buttons.set_image_adders('disabled')
-        else:
-            self.image_buttons.set_image_adders('normal')
-
-    def display_last_image(self, event=None):
-        """display the last image"""
-        if len(self.imgs) == 0:
-            return
-
-        self.pointer = len(self.imgs) - 1
+    def jump_to_image(self, filename):
+        """Jump to the named image"""
+        for i in range(0, len(self.imgs)):
+            if self.imgs[i][0] == filename:
+                self.pointer = i
+#        self.pointer = self.imgs.index(self.entry_wigits.start_entry.var.get())
         self.display_image()
 
-        current_image_path = self.imgs[self.pointer][0]
+    def jump_to_start_image(self, _=None):
+        """Jump to the image set as start for the current play"""
+        filename = self.entry_wigits.start_entry.var.get()
+        self.jump_to_image(filename)
 
-        if self.image_is_in_current_play(current_image_path):
-            self.image_buttons.set_image_adders('disabled')
-        else:
-            self.image_buttons.set_image_adders('normal')
+    def jump_to_end_image(self, _=None):
+        """Jump to the image set as end for the current play"""
+        filename = self.entry_wigits.end_entry.var.get()
+        self.jump_to_image(filename)
 
     def remove_play(self, key):
         """delete a play"""

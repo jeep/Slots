@@ -25,6 +25,12 @@ class ImageButtons(ttk.Frame):
         self._create_buttons()
         self._place_buttons()
 
+    def update_pagination_info(self, file_name, file_date, image_index, image_count, color='black'):
+        """Updates the pagination text"""
+        self.picture_count.set(image_count)
+        self.file_date.set(f"Date: {file_date}")
+        self.file_name.set(f"{file_name} ({image_index}/{image_count})")
+        self.file_date_label.config(foreground=color)
 
     def _create_buttons(self):
         self.prev_button = ttk.Button(self, text='Prev', command=self._window.display_prev_image)
@@ -56,9 +62,9 @@ class ImageButtons(ttk.Frame):
 
         self.save_button = ttk.Button(self, text='Save Play', command=self._window.save, bootstyle='success')
         self.remove_button = ttk.Button(self, text='Remove Image',
-                                        command=lambda: self.remove_button_command(self._window))
+                                        command=self._window.remove_current_image_from_play)
         self.delete_button = ttk.Button(self, text='Delete Image',
-                                        command=lambda: self.delete_button_command(self._window), bootstyle='danger')
+                                        command=self._window.delete_current_image, bootstyle='danger')
 
         self.save_session_button = ttk.Button(self, text='Save Session', command=self._window.save_session,
                                               bootstyle='success')
@@ -122,7 +128,7 @@ class ImageButtons(ttk.Frame):
         self.next_button.configure(state=state)
         self.return_button.configure(state=state)
 
-    def opposite_state(self, state):
+    def invert(self, state):
         """return the opposite state from what is passed in."""
         if state == 'disabled':
             return 'normal'
@@ -135,53 +141,4 @@ class ImageButtons(ttk.Frame):
         self.add_button.configure(state=state)
         self.start_button.configure(state=state)
         self.end_button.configure(state=state)
-        self.remove_button.configure(state=self.opposite_state(state))
-
-    def remove_button_command(self, parent):
-        """Remove the image from the play"""
-        if len(parent.imgs) == 0:
-            return
-
-        path = parent.imgs[parent.pointer][0]
-
-        if parent.entry_wigits.start_entry.var.get() == path:
-            parent.entry_wigits.start_entry.var.set('')
-            #parent.entry_wigits.clear_play_start_datetime()
-        elif parent.entry_wigits.end_entry.var.get() == path:
-            parent.entry_wigits.end_entry.var.set('')
-            #parent.entry_wigits.clear_play_end_datetime()
-        elif path in parent.play_imgs:
-            parent.play_imgs.remove(path)
-            parent.entry_wigits.update_table(parent)
-
-        self.set_image_adders('normal')
-
-    def delete_button_command(self, parent):
-        """Delete the current image"""
-        if len(parent.imgs) == 0:
-            return
-
-        path = parent.imgs[parent.pointer][0]
-
-        confirmation = Messagebox.show_question(
-            f'Are you sure you want to delete this image:\n{path}',
-            'Image Deletion Confirmation', 
-            buttons=['No:secondary', 'Yes:warning'])
-
-        if confirmation != 'Yes':
-            return
-
-        remove(path)
-
-        parent.imgs.pop(parent.pointer)
-        parent.pointer = max((parent.pointer - 1), 0)
-        parent.display_image()
-
-        if parent.entry_wigits.start_entry.var.get() == path:
-            parent.entry_wigits.start_entry.var.set('')
-            parent.entry_wigits.date.var.set('')
-        elif parent.entry_wigits.end_entry.var.get() == path:
-            parent.entry_wigits.end_entry.var.set('')
-        elif path in parent.play_imgs:
-            parent.play_imgs.remove(path)
-            parent.entry_wigits.update_table(parent)
+        self.remove_button.configure(state=self.invert(state))

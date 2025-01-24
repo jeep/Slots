@@ -172,13 +172,19 @@ class EntryWigits(ttk.Frame):
 
     def _create_start_entry(self):
         self.start_entry = EntryLabel(self, 'Start Image', self._window.start_img, state='readonly')
+        self.start_entry.label.bind('<Button-1>', self._window.jump_to_start_image)
 
     def _create_end_entry(self):
         self.end_entry = EntryLabel(self, 'End Image', self._window.end_img, state='readonly')
+        self.end_entry.label.bind('<Button-1>', self._window.jump_to_end_image)
+
+    def _jump_to_selection(self, _):
+        self._window.jump_to_image(self.image_table.item(self.image_table.selection(), 'values')[0])
 
     def _create_image_table(self):
         self.image_table = ttk.Treeview(self, columns='imgs', show='headings')
         self.image_table.heading('imgs', text='Images')
+        self.image_table.bind('<Double-Button-1>', self._jump_to_selection)
 
     def _create_hp_table(self):
         self.hp_table = ttk.Treeview(self, columns=('hp', 'tip'), show='headings')
