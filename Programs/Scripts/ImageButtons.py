@@ -47,11 +47,11 @@ class ImageButtons(ttk.Frame):
                                        command=lambda: self._open_state_helperwin(self._window))
 
         self.start_button = ttk.Button(self, text='Set Start',
-                                       command=lambda: self.start_button_command(self._window))
+                                       command=self._window.set_current_image_as_start)
         self.add_button = ttk.Button(self, text='Add Image',
-                                     command=lambda: self.add_button_command(self._window))
+                                     command=self._window.add_current_image_to_play)
         self.end_button = ttk.Button(self, text='Set End',
-                                     command=lambda: self.end_button_command(self._window))
+                                     command=self._window.set_current_image_as_end)
         self.hp_button = ttk.Button(self, text="Add HandPay",
                                     command=lambda: self._open_hpwin(
                                         lambda hpd: self._get_hpwin_data(self._window, hpd)))
@@ -130,6 +130,7 @@ class ImageButtons(ttk.Frame):
             return 'normal'
         if state == 'normal':
             return 'disabled'
+        return None
 
     def set_image_adders(self, state):
         """Set the state of the image add/remove buttons"""
@@ -169,7 +170,7 @@ class ImageButtons(ttk.Frame):
         else:
             self.set_image_adders('normal')
 
-    def return_button_command(self, parent): 
+    def return_button_command(self, parent):
         """go to first image"""
         if len(parent.imgs) == 0:
             return
@@ -196,7 +197,7 @@ class ImageButtons(ttk.Frame):
         """event to run when next is clicked"""
         self.next_button_command(self._window)
 
-    def end_click(self, _): 
+    def end_click(self, _):
         """event to run when end is clicked"""
         parent=self._window
         if len(parent.imgs) == 0:
@@ -211,74 +212,6 @@ class ImageButtons(ttk.Frame):
             self.set_image_adders('disabled')
         else:
             self.set_image_adders('normal')
-
-    def start_button_command(self, parent):
-        """Set image as start image and update time"""
-        if len(parent.imgs) == 0:
-            return
-
-        # sets the start entry wigit to the path of the current image
-        parent.entry_wigits.start_entry.var.set(parent.imgs[parent.pointer][0])
-
-        image_dt = parent.imgs[parent.pointer][2]
-        image_y = int(image_dt[:4])
-        image_m = int(image_dt[4:6])
-        image_d = int(image_dt[6:8])
-        image_h = int(image_dt[8:10])
-        image_M = int(image_dt[10:12])
-        image_s = int(image_dt[12:14])
-        image_dt = datetime.datetime(image_y, image_m, image_d, image_h, image_M, image_s)
-        parent.entry_wigits.set_play_start_datetime(image_dt)
-
-        if not parent.session_date_is_valid():
-            dt = datetime.datetime(image_y, image_m, image_d)
-            parent.set_session_date(dt)
-
-        self.set_image_adders('disabled')
-
-    def add_button_command(self, parent):
-        """add image to the play"""
-        if len(parent.imgs) == 0:
-            return
-
-        # we shouldn't reach up to the parent, we should tell it do 
-        # do the thing
-        img = parent.imgs[parent.pointer][0]
-        if parent.image_is_in_current_play(img):
-            confirmation = Messagebox.show_question(
-                f'Are you sure? This image is in the current play already:',
-                'Image Addition Confirmation', 
-                buttons=['No:secondary', 'Yes:warning'])
-
-            if confirmation != 'Yes':
-                return
-
-        # adds the path to the play images list
-        parent.play_imgs.append(img)
-
-        parent.entry_wigits.update_table(parent)
-
-        self.set_image_adders('disabled')
-
-    def end_button_command(self, parent):
-        """add image to the end of the play and update duration"""
-        if len(parent.imgs) == 0:
-            return
-
-        parent.entry_wigits.end_entry.var.set(parent.imgs[parent.pointer][0])
-
-        image_dt = parent.imgs[parent.pointer][2]
-        image_y = int(image_dt[:4])
-        image_m = int(image_dt[4:6])
-        image_d = int(image_dt[6:8])
-        image_h = int(image_dt[8:10])
-        image_M = int(image_dt[10:12])
-        image_s = int(image_dt[12:14])
-        image_dt = datetime.datetime(image_y, image_m, image_d, image_h, image_M, image_s)
-
-        parent.entry_wigits.set_play_end_datetime(image_dt)
-
-        self.set_image_adders('disabled')
 
     def remove_button_command(self, parent):
         """Remove the image from the play"""

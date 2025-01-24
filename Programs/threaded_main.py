@@ -454,7 +454,6 @@ class App(ttk.Window):
             self.image_buttons.state_button.configure(state="normal")
             self.entry_wigits.initial_state.label.configure(foreground="blue")
 
-
     def update_all_play_values(self):
         """update a play to consume values from entry fields"""
         self.update_session_date()
@@ -625,6 +624,73 @@ class App(ttk.Window):
             (img == self.entry_wigits.start_entry.var.get()) or \
             (img == self.entry_wigits.end_entry.var.get())
 
+
+    def get_image_dt(self):
+        image_dt = self.imgs[self.pointer][2]
+        image_y = int(image_dt[:4])
+        image_m = int(image_dt[4:6])
+        image_d = int(image_dt[6:8])
+        image_h = int(image_dt[8:10])
+        image_M = int(image_dt[10:12])
+        image_s = int(image_dt[12:14])
+        image_dt = datetime.datetime(image_y, image_m, image_d, image_h, image_M, image_s)
+        return image_dt
+
+
+    def set_current_image_as_start(self, event=None):
+        """Set image as start image and update time"""
+        if len(self.imgs) == 0:
+            return
+
+        # sets the start entry wigit to the path of the current image
+        self.entry_wigits.start_entry.var.set(self.imgs[self.pointer][0])
+
+        image_dt = self.get_image_dt()
+        self.entry_wigits.set_play_start_datetime(image_dt)
+
+        if not self.session_date_is_valid():
+            dt = datetime.date(image_dt.year, image_dt.month, image_dt.day) 
+            self.set_session_date(dt)
+
+        self.image_buttons.set_image_adders('disabled')
+        self.entry_wigits.bet.entry.focus_set()
+
+    def add_current_image_to_play(self, event=None):
+        """add image to the play"""
+        if len(self.imgs) == 0:
+            return
+
+        # we shouldn't reach up to the parent, we should tell it do 
+        # do the thing
+        img = self.imgs[self.pointer][0]
+        if self.image_is_in_current_play(img):
+            confirmation = Messagebox.show_question(
+                f'Are you sure? This image is in the current play already:',
+                'Image Addition Confirmation', 
+                buttons=['No:secondary', 'Yes:warning'])
+
+            if confirmation != 'Yes':
+                return
+
+        # adds the path to the play images list
+        self.play_imgs.append(img)
+        self.entry_wigits.update_table(self)
+        self.image_buttons.set_image_adders('disabled')
+
+    def set_current_image_as_end(self, event=None):
+        """add image to the end of the play and update duration"""
+        if len(self.imgs) == 0:
+            return
+
+        self.entry_wigits.end_entry.var.set(self.imgs[self.pointer][0])
+
+        image_dt = self.get_image_dt()
+
+        self.entry_wigits.set_play_end_datetime(image_dt)
+
+        self.image_buttons.set_image_adders('disabled')
+        self.entry_wigits.cashout.entry.focus_set()
+
     def display_first_image(self):
         """display the first image"""
         if len(self.imgs) == 0:
@@ -701,16 +767,6 @@ class App(ttk.Window):
             return
         self.create_play()
 
-    def c1(self, event):
-        """commands to run for ctrl-1"""
-        self.image_buttons.start_button_command(self)
-        self.entry_wigits.bet.entry.focus_set()
-
-    def c3(self, event):
-        """commands to run for ctrl-3"""
-        self.image_buttons.end_button_command(self)
-        self.entry_wigits.cashout.entry.focus_set()
-
     def setup_keybinds(self):
         """set up keyboard shortcuts"""
         self.bind("<FocusIn>", lambda _: self.set_save_button_state())
@@ -720,11 +776,9 @@ class App(ttk.Window):
         self.bind("<Prior>", lambda _: self.image_buttons.prev_button_command(self))
         self.bind("<Next>", lambda _: self.image_buttons.next_button_command(self))
         self.bind("<Home>", lambda _: self.image_buttons.return_button_command(self))
-        self.bind( "<Control-Key-1>", self.c1)
-        self.bind(
-            "<Control-Key-2>", lambda _: self.image_buttons.add_button_command(self)
-        )
-        self.bind("<Control-Key-3>", self.c3)
+        self.bind( "<Control-Key-1>", self.set_current_image_as_start)
+        self.bind( "<Control-Key-2>", self.add_current_image_to_play)
+        self.bind("<Control-Key-3>", self.set_current_image_as_end)
         self.bind("<Escape>", lambda _: self.reset_play())
 
     def load_test_play(self):
