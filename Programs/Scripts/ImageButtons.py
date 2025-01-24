@@ -27,21 +27,19 @@ class ImageButtons(ttk.Frame):
 
 
     def _create_buttons(self):
-        self.prev_button = ttk.Button(self, text='Prev',
-                                      command=lambda: self.prev_button_command(self._window))
-        self.next_button = ttk.Button(self, text='Next',
-                                      command=lambda: self.next_button_command(self._window))
+        self.prev_button = ttk.Button(self, text='Prev', command=self._window.display_prev_image)
+        self.next_button = ttk.Button(self, text='Next', command=self._window.display_next_image)
         self.return_button = ttk.Button(self, text='Return to Start',
-                                        command=lambda: self.return_button_command(self._window))
+                                        command=self._window.display_first_image)
 
         self.goto_start = ttk.Label(self, text='1')
-        self.goto_start.bind("<Button-1>", self.start_click)
+        self.goto_start.bind("<Button-1>", self._window.display_first_image)
         self.goto_prev = ttk.Label(self, text='prev')
-        self.goto_prev.bind("<Button-1>", self.prev_click)
+        self.goto_prev.bind("<Button-1>", self._window.display_prev_image)
         self.goto_next = ttk.Label(self, text='next')
-        self.goto_next.bind("<Button-1>", self.next_click)
+        self.goto_next.bind("<Button-1>", self._window.display_next_image)
         self.goto_end = ttk.Label(self, textvariable=self.picture_count)
-        self.goto_end.bind("<Button-1>", self.end_click)
+        self.goto_end.bind("<Button-1>", self._window.display_last_image)
 
         self.state_button = ttk.Button(self, text="Open State Helper",
                                        command=lambda: self._open_state_helperwin(self._window))
@@ -138,80 +136,6 @@ class ImageButtons(ttk.Frame):
         self.start_button.configure(state=state)
         self.end_button.configure(state=state)
         self.remove_button.configure(state=self.opposite_state(state))
-
-    def prev_button_command(self, parent):
-        """Previous image"""
-        # does nothing if there are no images
-        if len(parent.imgs) == 0:
-            return
-
-        parent.pointer = max((parent.pointer - 1), 0)
-        parent.display_image()
-
-        # gets the path of the current image
-        current_image_path = parent.imgs[parent.pointer][0]
-
-        if parent.image_is_in_current_play(current_image_path):
-            self.set_image_adders('disabled')
-        else:
-            self.set_image_adders('normal')
-
-    def next_button_command(self, parent):
-        """next image"""
-        if len(parent.imgs) == 0:
-            return
-
-        parent.pointer = min((parent.pointer + 1), (len(parent.imgs) - 1))
-        parent.display_image()
-
-        current_image_path = parent.imgs[parent.pointer][0]
-        if parent.image_is_in_current_play(current_image_path):
-            self.set_image_adders('disabled')
-        else:
-            self.set_image_adders('normal')
-
-    def return_button_command(self, parent):
-        """go to first image"""
-        if len(parent.imgs) == 0:
-            return
-
-        parent.pointer = 0
-        parent.display_image()
-
-        current_image_path = parent.imgs[parent.pointer][0]
-
-        if parent.image_is_in_current_play(current_image_path):
-            self.set_image_adders('disabled')
-        else: 
-            self.set_image_adders('normal')
-
-    def start_click(self, _):
-        """event to run when start is clicked"""
-        self.return_button_command(self._window)
-
-    def prev_click(self, _):
-        """event to run when prev is clicked"""
-        self.prev_button_command(self._window)
-
-    def next_click(self, _):
-        """event to run when next is clicked"""
-        self.next_button_command(self._window)
-
-    def end_click(self, _):
-        """event to run when end is clicked"""
-        parent=self._window
-        if len(parent.imgs) == 0:
-            return
-
-        parent.pointer = len(parent.imgs) - 1
-        parent.display_image()
-
-        current_image_path = parent.imgs[parent.pointer][0]
-
-        if parent.image_is_in_current_play(current_image_path):
-            self.set_image_adders('disabled')
-        else:
-            self.set_image_adders('normal')
 
     def remove_button_command(self, parent):
         """Remove the image from the play"""

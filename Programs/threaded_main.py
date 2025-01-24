@@ -518,7 +518,7 @@ class App(ttk.Window):
         self.session_table.update_table()
 
         while self.image_is_in_current_play(self.imgs[self.pointer][0]):
-            self.image_buttons.next_button_command(self)
+            self.display_next_image()
 
         # clears all entry values
         self._current_index = None
@@ -691,7 +691,7 @@ class App(ttk.Window):
         self.image_buttons.set_image_adders('disabled')
         self.entry_wigits.cashout.entry.focus_set()
 
-    def display_first_image(self):
+    def display_first_image(self, event=None):
         """display the first image"""
         if len(self.imgs) == 0:
             return
@@ -704,6 +704,52 @@ class App(ttk.Window):
             self.image_buttons.set_image_adders("disabled")
         else:
             self.image_buttons.set_image_adders("normal")
+
+    def display_next_image(self, event=None):
+        """next image"""
+        if len(self.imgs) == 0:
+            return
+
+        self.pointer = min((self.pointer + 1), (len(self.imgs) - 1))
+        self.display_image()
+
+        current_image_path = self.imgs[self.pointer][0]
+        if self.image_is_in_current_play(current_image_path):
+            self.image_buttons.set_image_adders('disabled')
+        else:
+            self.image_buttons.set_image_adders('normal')
+
+    def display_prev_image(self, event=None):
+        """Previous image"""
+        # does nothing if there are no images
+        if len(self.imgs) == 0:
+            return
+
+        self.pointer = max((self.pointer - 1), 0)
+        self.display_image()
+
+        # gets the path of the current image
+        current_image_path = self.imgs[self.pointer][0]
+
+        if self.image_is_in_current_play(current_image_path):
+            self.image_buttons.set_image_adders('disabled')
+        else:
+            self.image_buttons.set_image_adders('normal')
+
+    def display_last_image(self, event=None):
+        """display the last image"""
+        if len(self.imgs) == 0:
+            return
+
+        self.pointer = len(self.imgs) - 1
+        self.display_image()
+
+        current_image_path = self.imgs[self.pointer][0]
+
+        if self.image_is_in_current_play(current_image_path):
+            self.image_buttons.set_image_adders('disabled')
+        else:
+            self.image_buttons.set_image_adders('normal')
 
     def remove_play(self, key):
         """delete a play"""
@@ -773,11 +819,12 @@ class App(ttk.Window):
         self.bind("<FocusOut>", lambda _: self.set_save_button_state())
 
         self.bind("<Control-s>", lambda _: self.save())
-        self.bind("<Prior>", lambda _: self.image_buttons.prev_button_command(self))
-        self.bind("<Next>", lambda _: self.image_buttons.next_button_command(self))
-        self.bind("<Home>", lambda _: self.image_buttons.return_button_command(self))
-        self.bind( "<Control-Key-1>", self.set_current_image_as_start)
-        self.bind( "<Control-Key-2>", self.add_current_image_to_play)
+        self.bind("<Prior>", self.display_prev_image)
+        self.bind("<Next>", self.display_next_image)
+        self.bind("<Home>", self.display_first_image)
+        self.bind("<End>", self.display_last_image)
+        self.bind("<Control-Key-1>", self.set_current_image_as_start)
+        self.bind("<Control-Key-2>", self.add_current_image_to_play)
         self.bind("<Control-Key-3>", self.set_current_image_as_end)
         self.bind("<Escape>", lambda _: self.reset_play())
 
