@@ -21,6 +21,7 @@ from Scripts.ImageDisplay import ImageDisplay
 from Scripts.SessionFrame import SessionFrame
 from Scripts.SessionTable import SessionTable
 from Slots.PlayFactory import PlayFactory
+from Scripts.HandPayWindow import HandPayWindow
 
 register_heif_opener(decode_threads=8, thumbnails=False)
 
@@ -778,6 +779,13 @@ class App(ttk.Window):
         """Jump to the image set as end for the current play"""
         filename = self.entry_wigits.end_entry.var.get()
         self.jump_to_image(filename)
+
+    def open_handpay_entry_win(self, callback):
+        HandPayWindow(callback=callback)
+
+    def add_handpay(self, hp):
+        self.hand_pay.append(hp)
+        self.entry_wigits.update_hand_pay_table(self)
 
     def remove_play(self, key):
         """delete a play"""

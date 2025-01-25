@@ -179,6 +179,8 @@ class EntryWigits(ttk.Frame):
         self.end_entry.label.bind('<Button-1>', self._window.jump_to_end_image)
 
     def _jump_to_selection(self, _):
+        if not self.image_table.selection():
+            return
         self._window.jump_to_image(self.image_table.item(self.image_table.selection(), 'values')[0])
 
     def _create_image_table(self):

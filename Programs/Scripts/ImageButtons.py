@@ -5,7 +5,6 @@ from ttkbootstrap.dialogs import Messagebox
 
 from os import remove
 
-from Scripts.HandPayWindow import HandPayWindow
 from Scripts.StateEntryHelperWindow import StateEntryHelperWindow
 
 
@@ -57,8 +56,8 @@ class ImageButtons(ttk.Frame):
         self.end_button = ttk.Button(self, text='Set End',
                                      command=self._window.set_current_image_as_end)
         self.hp_button = ttk.Button(self, text="Add HandPay",
-                                    command=lambda: self._open_hpwin(
-                                        lambda hpd: self._get_hpwin_data(self._window, hpd)))
+                                    command=lambda: self._window.open_handpay_entry_win(
+                                        self._window.add_handpay))
 
         self.save_button = ttk.Button(self, text='Save Play', command=self._window.save, bootstyle='success')
         self.remove_button = ttk.Button(self, text='Remove Image',
@@ -108,19 +107,12 @@ class ImageButtons(ttk.Frame):
         self.goto_next.grid(column=2, row=row, sticky='nsew', padx=pad_double, pady=pad_back)
         self.goto_end.grid(column=3, row=row, sticky='nsew', padx=pad_double, pady=pad_back)
 
-    def _open_hpwin(self, callback):
-        HandPayWindow(callback=callback)
-
     def _open_state_helperwin(self, _):
         """second param is 'parent'"""
         if self._window.get_current_play() is not None:
             StateEntryHelperWindow(play=self._window.get_current_play())
         else:
             print("No helper available")
-
-    def _get_hpwin_data(self, parent, hp):
-        parent.hand_pay.append(hp)
-        parent.entry_wigits.update_hand_pay_table(parent)
 
     def set_image_navigation(self, state):
         """set the image navigation buttons appropriately"""
