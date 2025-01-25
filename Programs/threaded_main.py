@@ -782,6 +782,7 @@ class App(ttk.Window):
         self.jump_to_image(filename)
 
     def open_handpay_entry_win(self, callback):
+        """Open handpay window"""
         HandPayWindow(callback=callback)
 
     def add_handpay(self, hp):
@@ -870,6 +871,7 @@ class App(ttk.Window):
         self.bind("<Control-Key-1>", self.set_current_image_as_start)
         self.bind("<Control-Key-2>", self.add_current_image_to_play)
         self.bind("<Control-Key-3>", self.set_current_image_as_end)
+        self.bind("<Control-Key-h>", lambda _: self.open_handpay_entry_win(self.add_handpay))
         self.bind("<Escape>", lambda _: self.reset_play())
 
     def load_test_play(self):
