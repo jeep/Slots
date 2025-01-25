@@ -872,6 +872,7 @@ class App(ttk.Window):
         self.bind("<Control-Key-2>", self.add_current_image_to_play)
         self.bind("<Control-Key-3>", self.set_current_image_as_end)
         self.bind("<Control-Key-h>", lambda _: self.open_handpay_entry_win(self.add_handpay))
+        self.bind("<Control-Key-o>", self.open_state_helper_win)
         self.bind("<Escape>", lambda _: self.reset_play())
 
     def load_test_play(self):
