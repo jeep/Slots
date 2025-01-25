@@ -1,11 +1,4 @@
-import datetime
-
 import ttkbootstrap as ttk
-from ttkbootstrap.dialogs import Messagebox
-
-from os import remove
-
-
 
 class ImageButtons(ttk.Frame):
     """Frame for the buttons above the image"""
@@ -28,7 +21,7 @@ class ImageButtons(ttk.Frame):
         self.picture_count.set(image_count)
         self.file_date.set(f"Date: {file_date}")
         self.file_name.set(f"{file_name} ({image_index}/{image_count})")
-        self.file_date_label.config(foreground=color)
+        self.file_name_label.config(foreground=color)
 
     def _create_buttons(self):
         self.prev_button = ttk.Button(self, text='Prev', command=self._window.display_prev_image)
