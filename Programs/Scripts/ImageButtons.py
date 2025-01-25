@@ -5,7 +5,6 @@ from ttkbootstrap.dialogs import Messagebox
 
 from os import remove
 
-from Scripts.StateEntryHelperWindow import StateEntryHelperWindow
 
 
 class ImageButtons(ttk.Frame):
@@ -47,7 +46,7 @@ class ImageButtons(ttk.Frame):
         self.goto_end.bind("<Button-1>", self._window.display_last_image)
 
         self.state_button = ttk.Button(self, text="Open State Helper",
-                                       command=lambda: self._open_state_helperwin(self._window))
+                                       command=self._window.open_state_helper_win)
 
         self.start_button = ttk.Button(self, text='Set Start',
                                        command=self._window.set_current_image_as_start)
@@ -106,13 +105,6 @@ class ImageButtons(ttk.Frame):
         self.goto_prev.grid(column=1, row=row, sticky='nsew', padx=pad_back, pady=pad_back)
         self.goto_next.grid(column=2, row=row, sticky='nsew', padx=pad_double, pady=pad_back)
         self.goto_end.grid(column=3, row=row, sticky='nsew', padx=pad_double, pady=pad_back)
-
-    def _open_state_helperwin(self, _):
-        """second param is 'parent'"""
-        if self._window.get_current_play() is not None:
-            StateEntryHelperWindow(play=self._window.get_current_play())
-        else:
-            print("No helper available")
 
     def set_image_navigation(self, state):
         """set the image navigation buttons appropriately"""

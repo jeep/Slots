@@ -22,6 +22,7 @@ from Scripts.SessionFrame import SessionFrame
 from Scripts.SessionTable import SessionTable
 from Slots.PlayFactory import PlayFactory
 from Scripts.HandPayWindow import HandPayWindow
+from Scripts.StateEntryHelperWindow import StateEntryHelperWindow
 
 register_heif_opener(decode_threads=8, thumbnails=False)
 
@@ -786,6 +787,13 @@ class App(ttk.Window):
     def add_handpay(self, hp):
         self.hand_pay.append(hp)
         self.entry_wigits.update_hand_pay_table(self)
+
+    def open_state_helper_win(self, _=None):
+        """Open the state helper. Second param is even to allow binding"""
+        if self.get_current_play() is not None:
+            StateEntryHelperWindow(play=self.get_current_play())
+        else:
+            print("No helper available")
 
     def remove_play(self, key):
         """delete a play"""
