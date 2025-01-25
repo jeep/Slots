@@ -577,6 +577,14 @@ class App(ttk.Window):
 
     def save_session(self):
         """Save the session"""
+        if self._current_play.start_image or self._current_play.end_image or len(self._current_play.addl_images) or self.entry_wigits.start_entry.var.get() or self.entry_wigits.end_entry.var.get() or self.entry_wigits.image_table.image_names:
+            confirmation = Messagebox.show_question(
+                'Are you sure? There is an incomplete play'
+                'Save Session Confirmation', 
+                buttons=['No:secondary', 'Yes:warning'])
+            if confirmation != 'Yes':
+                return
+
         # gets the path to the data save
         save_path = join(dirname(dirname(__file__)), "Data")
         file_path = join(save_path, "slots_data.csv")
