@@ -51,13 +51,16 @@ class ImageButtons(ttk.Frame):
                                     command=lambda: self._window.open_handpay_entry_win(
                                         self._window.add_handpay))
 
-        self.save_button = ttk.Button(self, text='Save Play', command=self._window.save, bootstyle='success')
+        self.save_button = ttk.Button(self, text='Save Play', command=self._window.save,
+                                      bootstyle='success')
         self.remove_button = ttk.Button(self, text='Remove Image',
                                         command=self._window.remove_current_image_from_play)
         self.delete_button = ttk.Button(self, text='Delete Image',
-                                        command=self._window.delete_current_image, bootstyle='danger')
+                                        command=self._window.delete_current_image,
+                                        bootstyle='danger')
 
-        self.save_session_button = ttk.Button(self, text='Save Session', command=self._window.save_session,
+        self.save_session_button = ttk.Button(self, text='Save Session', 
+                                              command=self._window.save_session,
                                               bootstyle='success')
 
         self.file_name_label = ttk.Label(self, textvariable=self.file_name)
