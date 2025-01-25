@@ -3,7 +3,7 @@ import copy
 import datetime
 from collections import namedtuple
 from decimal import Decimal
-from os import makedirs, remove
+from os import makedirs, remove, startfile
 from os.path import join, dirname, exists, basename
 from enum import Enum
 from shutil import move
@@ -267,15 +267,16 @@ class App(ttk.Window):
             # adds the image to the canvas
             self.image_display.canvas.create_image(x, y, image=imagetk)
 
-        file_name = basename(self.imgs[self.pointer][0])
+        current_image_w_path = self.imgs[self.pointer][0]
+        file_name = basename(current_image_w_path)
         index = self.pointer+1
-        color= self.get_image_name_color(self.imgs[self.pointer][0])
+        color= self.get_image_name_color(current_image_w_path)
         file_date= datetime.datetime.strptime(self.imgs[self.pointer][2], '%Y%m%d%H%M%S')
         self.image_buttons.update_pagination_info(file_name=file_name, file_date=file_date, image_index=index,
                                                   image_count=len(self.imgs), color=color)
 
-        current_image_path = self.imgs[self.pointer][0]
-        if self.image_is_in_current_play(current_image_path):
+        self.image_display.canvas.bind("<Double-Button-1>", lambda _: startfile(current_image_w_path) )
+        if self.image_is_in_current_play(current_image_w_path):
             self.image_buttons.set_image_adders("disabled")
         else:
             self.image_buttons.set_image_adders("normal")
@@ -568,6 +569,7 @@ class App(ttk.Window):
         # resets the save button to disabled
         self.image_buttons.save_button.configure(state="disabled")
         self.image_buttons.save_session_button.configure(state="enabled")
+        self.entry_wigits.machine_cb.combobox.focus_set()
 
         self.create_play()
 
@@ -761,9 +763,9 @@ class App(ttk.Window):
 
     def jump_to_image(self, filename):
         """Jump to the named image"""
-        for i in range(0, len(self.imgs)):
-            if self.imgs[i][0] == filename:
-                self.pointer = i
+        for index, img in enumerate(self.imgs):
+            if img[0] == filename:
+                self.pointer = index
 #        self.pointer = self.imgs.index(self.entry_wigits.start_entry.var.get())
         self.display_image()
 
