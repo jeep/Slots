@@ -58,6 +58,8 @@ class EntryWigits(ttk.Frame):
 
     def _create_machine(self):
         self.machine_cb = ComboboxLabel(self, '', self._window.machine_values)
+        longest = max(self._window.machine_values, key=len)
+        self.machine_cb.combobox.configure(width=len(longest))
         self.machine_cb.combobox.set("Select Machine")
         self.machine_cb.combobox.bind("<<ComboboxSelected>>", lambda _: self._create_play(self.machine_cb.var.get()))
 
@@ -224,35 +226,37 @@ class EntryWigits(ttk.Frame):
         self._header.grid(row=row, column=0, columnspan=3)
 
         row = 1
-        self.machine_cb.grid(row=row, column=0, sticky='we', padx=5, pady=5)
-        self.dt.grid(row=row, column=1, columnspan=2, sticky='we', padx=5, pady=5)
-        self.end_dt.grid(row=row, column=2, sticky='we', padx=5, pady=5)
+        self.machine_cb.grid(row=row, column=0, columnspan=2, sticky='w', padx=5, pady=5)
 
-        row = 2
-        self.bet.grid(row=row, column=0, sticky='we', padx=5, pady=5)
-        self.play_type.grid(row=row, column=1, sticky='we', padx=5, pady=5)
-        self.denom_cb.grid(row=row, column=2, sticky='we', padx=5, pady=5)
+        row=2
+        self.dt.grid(row=row, column=0, columnspan=2, sticky='we', padx=5, pady=5)
+        self.end_dt.grid(row=row, column=1, sticky='we', padx=5, pady=5)
 
         row = 3
+        self.bet.grid(row=row, column=0, sticky='we', padx=5, pady=5)
+        self.denom_cb.grid(row=row, column=1, sticky='we', padx=5, pady=5)
+        self.play_type.grid(row=row, column=2, sticky='we', padx=5, pady=5)
+
+        row = 4
         self.cashin.grid(row=row, column=0, sticky='we', padx=5, pady=5)
         self.cashout.grid(row=row, column=1, sticky='we', padx=5, pady=5)
         self.profit_loss.grid(row=row, column=2, sticky='we', columnspan=2)
 
-        row = 4
+        row = 5
         self.initial_state.grid(row=row, column=0, columnspan=3, sticky='we', padx=5, pady=5)
 
-        row = 5
+        row = 6
         self.state_val.grid(row=row, column=0, columnspan=3, sticky='we', padx=5, pady=5)
 
-        row = 6
+        row = 7
         self.note.grid(row=row, column=0, columnspan=3, sticky='we', padx=5, pady=5)
 
-        row = 7
+        row = 8
         self.start_entry.grid(row=row, column=0, sticky='we', padx=5, pady=5)
         self.image_table.grid(row=row, column=1, columnspan=2, rowspan=2, sticky='we', padx=5, pady=5)
 
-        row = 8
+        row = 9
         self.end_entry.grid(row=row, column=0, sticky='we', padx=5, pady=5)
 
-        row = 9
+        row = 10
         self.hp_table.grid(row=row, column=0, columnspan=3, sticky='we', padx=5, pady=5)

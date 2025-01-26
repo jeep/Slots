@@ -469,6 +469,7 @@ class App(ttk.Window):
         self.entry_wigits.update_hand_pay_table(self)
 
         self.image_buttons.save_button.configure(state="normal", bootstyle="normal")
+        self.jump_to_start_image()
 
     def create_play(self, machine_name=None):
         """create a new play"""
@@ -577,9 +578,13 @@ class App(ttk.Window):
 
     def save_session(self):
         """Save the session"""
-        if self._current_play.start_image or self._current_play.end_image or len(self._current_play.addl_images) or self.entry_wigits.start_entry.var.get() or self.entry_wigits.end_entry.var.get() or self.entry_wigits.image_table.image_names:
+
+        # If there are images in the image table, this will miss those, but seems fine
+        if self._current_play.start_image or self._current_play.end_image or \
+            len(self._current_play.addl_images) or self.entry_wigits.start_entry.var.get() or \
+            self.entry_wigits.end_entry.var.get():
             confirmation = Messagebox.show_question(
-                'Are you sure? There is an incomplete play'
+                'Are you sure? There is an incomplete play',
                 'Save Session Confirmation', 
                 buttons=['No:secondary', 'Yes:warning'])
             if confirmation != 'Yes':
