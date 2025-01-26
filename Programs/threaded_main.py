@@ -547,7 +547,7 @@ class App(ttk.Window):
 
         self.session_table.update_table()
 
-        while self.image_is_in_current_play(self.imgs[self.pointer][0]):
+        while self.image_is_in_current_play(self.imgs[self.pointer][0] and self.pointer < len(self.imgs)-1):
             self.display_next_image()
 
         # clears all entry values
