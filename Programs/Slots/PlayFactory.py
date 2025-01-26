@@ -3,6 +3,7 @@ from .DoubleDragonPlay import DoubleDragonPlay
 from .FrankensteinPlay import FrankensteinPlay
 from .LuckyWealthCatPlay import LuckyWealthCatPlay
 from .LuckyBuddhaPlay import LuckyBuddhaPlay
+from .LuckyPickPlay import LuckyPickPlay
 from .PowerPushPlay import PowerPushPlay
 from .PinwheelPrizesPlay import PinwheelPrizesPlay
 from .RegalLinkPlay import RegalLinkPlay
@@ -24,6 +25,7 @@ class PlayFactory:
         "Lucky Wealth Cat (Bingo)": LuckyWealthCatPlay,
         "Lucky Buddha": LuckyBuddhaPlay,
         "Lucky Buddha (Bingo)": LuckyBuddhaPlay,
+        "Lucky Pick": LuckyPickPlay,
         "Pinwheel Prizes": PinwheelPrizesPlay,
         "Pinwheel Prizes (Bingo)": PinwheelPrizesPlay,
         "Power Push": PowerPushPlay,
