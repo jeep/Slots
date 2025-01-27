@@ -163,6 +163,24 @@ class App(ttk.Window):
 
         menu.add_cascade(label="File", menu=file_menu)
 
+        edit_menu = ttk.Menu(menu, tearoff=False)
+        edit_menu.add_command(label="Open newest play", command=self.load_final_play)
+        edit_menu.add_command(label="Force Clear Images", command=self.force_clear)
+
+        menu.add_cascade(label="Edit", menu=edit_menu)
+
+    def load_final_play(self):
+        """Load the last play in the session"""
+        id= list(self.plays.keys())[-1]
+        self.load_play(id)
+
+    def force_clear(self):
+        self.imgs.clear()
+        self.play_imgs.clear()
+        self.start_img.set("")
+        self.end_img.set("")
+        self.entry_wigits.update_table(self)
+
     def open_test_folder(self):
         """For testing"""
         folder = join(dirname(dirname(__file__)), "Data", "test_pics")
@@ -684,6 +702,14 @@ class App(ttk.Window):
         if len(self.imgs) == 0:
             return
 
+        if self.entry_wigits.start_entry.var.get() is not None and self.entry_wigits.start_entry.var.get() != "":
+            confirmed = Messagebox.okcancel(
+                "There is a start image already. Overwrite?",
+                "Overwrite data warning",
+            )
+            if confirmed != "OK":
+                return
+
         # sets the start entry wigit to the path of the current image
         self.entry_wigits.start_entry.var.set(self.imgs[self.pointer][0])
 
@@ -724,6 +750,13 @@ class App(ttk.Window):
         if len(self.imgs) == 0:
             return
 
+        if self.entry_wigits.end_entry.var.get() is not None and self.entry_wigits.end_entry.var.get() != "":
+            confirmed = Messagebox.okcancel(
+                "There is an end image already. Overwrite?",
+                "Overwrite data warning",
+            )
+            if confirmed != "OK":
+                return
         self.entry_wigits.end_entry.var.set(self.imgs[self.pointer][0])
 
         image_dt = self.get_image_dt()
@@ -880,7 +913,7 @@ class App(ttk.Window):
         self.bind("<Prior>", self.display_prev_image)
         self.bind("<Next>", self.display_next_image)
         self.bind("<Home>", self.display_first_image)
-        self.bind("<End>", self.display_last_image)
+        #self.bind("<End>", self.display_last_image)
         self.bind("<Control-Key-1>", self.set_current_image_as_start)
         self.bind("<Control-Key-2>", self.add_current_image_to_play)
         self.bind("<Control-Key-3>", self.set_current_image_as_end)
