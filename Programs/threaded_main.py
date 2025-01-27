@@ -4,7 +4,7 @@ import datetime
 from collections import namedtuple
 from decimal import Decimal
 from os import makedirs, remove, startfile
-from os.path import join, dirname, exists, basename
+from os.path import join, dirname, exists, basename,splitext
 from enum import Enum
 from shutil import move
 from tkinter.filedialog import askdirectory
@@ -121,11 +121,23 @@ class App(ttk.Window):
         self.machine_values = App.get_entry_values(externals["machine"])
         self.denom_values = App.get_entry_values(externals["denom"])
 
+    def update_machine_dd(self, _=None):
+        """update the machines based on casino"""
+        self.machine_values = App.get_entry_values(externals["machine"], self.session_frame.casino.selection_get())
+
     @staticmethod
-    def get_entry_values(dd_data: DropdownData):
+    def get_entry_values(dd_data: DropdownData, casino=None):
         """Read an external file to get values to use"""
-        if exists(dd_data.filename):
-            with open(dd_data.filename, "r") as csvfile:
+        fn =  dd_data.filename
+        if casino is not None:
+            (base, ext) = splitext(fn)
+            casino = casino.replace(" ", "_")
+            casino_fn = f"{base}-{casino}{ext}"
+            if exists(casino_fn):
+                fn = casino_fn
+
+        if exists(fn):
+            with open(fn, "r") as csvfile:
                 values = list(csv.reader(csvfile))
                 values = [
                     val.strip()
