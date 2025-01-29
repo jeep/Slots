@@ -1,28 +1,28 @@
-import csv
 import copy
+import csv
 import datetime
 from collections import namedtuple
 from decimal import Decimal
+from enum import Flag, auto
 from os import makedirs, remove, startfile
-from os.path import join, dirname, exists, basename,splitext
-from enum import Enum, Flag, auto
+from os.path import basename, dirname, exists, join, splitext
 from shutil import move
+from tkinter.constants import DISABLED, NORMAL
 from tkinter.filedialog import askdirectory
+
 import ttkbootstrap as ttk
-from ttkbootstrap.dialogs import Messagebox, Querybox
 from PIL import Image, ImageTk
 from pillow_heif import register_heif_opener
-from tkinter.constants import DISABLED, NORMAL
-
 from Scripts.EntryWigits import EntryWigits
 from Scripts.get_imgs_data import multi_get_img_data
+from Scripts.HandPayWindow import HandPayWindow
 from Scripts.ImageButtons import ImageButtons
 from Scripts.ImageDisplay import ImageDisplay
 from Scripts.SessionFrame import SessionFrame
 from Scripts.SessionTable import SessionTable
-from Slots.PlayFactory import PlayFactory
-from Scripts.HandPayWindow import HandPayWindow
 from Scripts.StateEntryHelperWindow import StateEntryHelperWindow
+from Slots.PlayFactory import PlayFactory
+from ttkbootstrap.dialogs import Messagebox, Querybox
 
 register_heif_opener(decode_threads=8, thumbnails=False)
 
@@ -43,10 +43,8 @@ externals = {
     ),
 }
 
-
 class App(ttk.Window):
     """Starting point"""
-
     def __init__(self):
         super().__init__()
 
@@ -141,7 +139,6 @@ class App(ttk.Window):
         self.machine_values.extend(App.get_entry_values(dd))
         self.entry_wigits.machine_cb.combobox['values']=self.machine_values
 
-
     @staticmethod
     def get_entry_values(dd_data: DropdownData):
         """Read an external file to get values to use"""
@@ -172,11 +169,6 @@ class App(ttk.Window):
         file_menu = ttk.Menu(menu, tearoff=False)
         file_menu.add_command(label="Open Folder", command=self.open_folder)
         file_menu.add_separator()
-        file_menu.add_command(label="Add Casino", command=self.add_casino)
-        file_menu.add_command(label="Add Machine", command=self.add_machine)
-        file_menu.add_command(label="Add Denom", command=self.add_denom)
-        file_menu.add_command(label="Add PlayType", command=self.add_playtype)
-        file_menu.add_separator()
         file_menu.add_command(label="Set Image Scale Divisor", command=self.set_scale)
         file_menu.add_command(label="Rotate Image", command=self.rotate_image)
         file_menu.add_separator()
@@ -186,10 +178,21 @@ class App(ttk.Window):
         menu.add_cascade(label="File", menu=file_menu)
 
         edit_menu = ttk.Menu(menu, tearoff=False)
+        edit_menu.add_command(label="Add Casino", command=self.add_casino)
+        edit_menu.add_command(label="Add Machine", command=self.add_machine)
+        edit_menu.add_command(label="Add Denom", command=self.add_denom)
+        edit_menu.add_command(label="Add PlayType", command=self.add_playtype)
+        edit_menu.add_separator()
         edit_menu.add_command(label="Open newest play", command=self.load_final_play)
         edit_menu.add_command(label="Force Clear Images", command=self.force_clear)
-
         menu.add_cascade(label="Edit", menu=edit_menu)
+
+        nav_menu = ttk.Menu(menu, tearoff=False)
+        nav_menu.add_command(label="Goto first img [Home]", command=self.display_first_image)
+        nav_menu.add_command(label="Prev img [PgUp]", command=self.display_prev_image)
+        nav_menu.add_command(label="Next img [PgDn]", command=self.display_next_image)
+        nav_menu.add_command(label="Goto last img", command=self.display_last_image)
+        menu.add_cascade(label="Navigate", menu=nav_menu)
 
     def load_final_play(self):
         """Load the last play in the session"""
@@ -529,7 +532,7 @@ class App(ttk.Window):
             self.image_buttons.state_button.configure(state=DISABLED)
             self.entry_wigits.initial_state.label.configure(foreground="black")
         else:
-            self.image_buttons.state_button.configure(state="normal")
+            self.image_buttons.state_button.configure(state=NORMAL)
             self.entry_wigits.initial_state.label.configure(foreground="blue")
 
     def update_all_play_values(self):
