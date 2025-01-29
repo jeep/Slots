@@ -61,6 +61,8 @@ class App(ttk.Window):
         self.hand_pay = []
         self.plays = {}
         self._current_play = None
+        self.machine_values = None
+        self.machine_file = None
         self.start_datetime = datetime.MINYEAR
 
         self.get_dropdown_data()
@@ -118,17 +120,14 @@ class App(ttk.Window):
         """load dropdown data from external sources"""
         self.play_types = App.get_entry_values(externals["play_type"])
         self.casino_values = App.get_entry_values(externals["casino"])
+        self.machine_file = externals["machine"].filename
         self.machine_values = App.get_entry_values(externals["machine"])
         self.denom_values = App.get_entry_values(externals["denom"])
 
     def update_machine_dd(self, _=None):
         """update the machines based on casino"""
-        self.machine_values = App.get_entry_values(externals["machine"], self.session_frame.casino.selection_get())
-
-    @staticmethod
-    def get_entry_values(dd_data: DropdownData, casino=None):
-        """Read an external file to get values to use"""
-        fn =  dd_data.filename
+        casino = self.session_frame.casino.selection_get()
+        fn = externals["machine"].filename
         if casino is not None:
             (base, ext) = splitext(fn)
             casino = casino.replace(" ", "_")
@@ -136,6 +135,17 @@ class App(ttk.Window):
             if exists(casino_fn):
                 fn = casino_fn
 
+        self.machine_file = fn
+        dd = DropdownData(fn, externals["machine"].defaults)
+        self.machine_values.clear()
+        self.machine_values.extend(App.get_entry_values(dd))
+        self.entry_wigits.machine_cb.combobox['values']=self.machine_values
+
+
+    @staticmethod
+    def get_entry_values(dd_data: DropdownData):
+        """Read an external file to get values to use"""
+        fn =  dd_data.filename
         if exists(fn):
             with open(fn, "r") as csvfile:
                 values = list(csv.reader(csvfile))
@@ -897,7 +907,7 @@ class App(ttk.Window):
         """Save the csv files for entry drop-downs"""
         external_csvs = {
             "casino_entry_values.csv": self.casino_values,
-            "machine_entry_values.csv": self.machine_values,
+            self.machine_file: self.machine_values,
             "denom_entry_values.csv": self.denom_values,
             "playtype_entry_values.csv": self.play_types,
         }

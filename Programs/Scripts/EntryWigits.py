@@ -93,7 +93,7 @@ class EntryWigits(ttk.Frame):
     def _create_play_type(self):
         self.play_type = ComboboxLabel(self, 'Play Type', self._window.play_types)
         self.play_type.var.set("AP")
-        self.play_type.bind("<FocusOut>", self._window.update_play_type)
+        self.play_type.bind("<<ComboboxSelected>>", self._window.update_play_type)
 
     def _create_denom(self):
         self.denom_cb = ComboboxLabel(self, 'Denom', self._window.denom_values)
