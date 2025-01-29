@@ -36,21 +36,29 @@ class EntryWigits(ttk.Frame):
 
     def _create_entries(self):
         self._create_header()
+
         self._create_machine()
+
         self._create_date()
         self._create_end_datetime()
+
         self._create_bet()
-        self._create_play_type()
         self._create_denom()
+        self._create_play_type()
+
         self._create_cashin()
         self._create_cashout()
         self._create_profit_loss()
+
         self._create_initial_state()
         self._create_state_val()
+
         self._create_note()
+
         self._create_start_entry()
         self._create_end_entry()
         self._create_image_table()
+
         self._create_hp_table()
 
     def _create_header(self):
