@@ -5,7 +5,7 @@ from collections import namedtuple
 from decimal import Decimal
 from os import makedirs, remove, startfile
 from os.path import join, dirname, exists, basename,splitext
-from enum import Enum
+from enum import Enum, Flag, auto
 from shutil import move
 from tkinter.filedialog import askdirectory
 import ttkbootstrap as ttk
@@ -276,13 +276,22 @@ class App(ttk.Window):
         self.rotation = self.rotation + 90 if self.rotation + 90 <= 360 else 0
         self.display_image()
 
+
+    def image_in_another_play(self, img_name):
+        """Determine if the image is in any play"""
+        for p in self.plays.values():
+            if self.editing_play() and p.identifier == self._current_play.identifier:
+                continue
+            if img_name in p.addl_images or img_name==p.start_image or img_name ==p.end_image:
+                return True
+        return False
+
     # priority should be: used, avoid, normal
     def get_image_name_color(self, img_name):
         """Determine the color to display the image name as"""
         image_name_color = {"normal": "black", "used": "orange", "avoid": "red"}
-        for p in self.plays.values():
-            if img_name in p.addl_images or img_name==p.start_image or img_name ==p.end_image:
-                return image_name_color["used"]
+        if self.image_in_another_play(img_name):
+            return image_name_color["used"]
         if "IMG_E" in basename(img_name):
             return image_name_color["avoid"]
         return image_name_color["normal"]
@@ -549,13 +558,21 @@ class App(ttk.Window):
     def save(self):
         """Save the play"""
         readiness_state = self.get_save_readiness()
-        if readiness_state == self.SaveReadiness.FORBIDDEN:
+        if self.SaveError.FORBIDDEN in readiness_state:
             return
 
-        if readiness_state == self.SaveReadiness.WARN:
+        if self.SaveError.DATAWARNING in readiness_state:
             confirmed = Messagebox.okcancel(
-                "There is potentially some missing data, are you sure?"
+                "There is potentially some missing data, are you sure?",
                 "Incomplete save warning",
+            )
+            if confirmed != "OK":
+                return
+
+        if self.SaveError.IMGWARNING in readiness_state:
+            confirmed = Messagebox.okcancel(
+                "At least one image in this play is in another play. Are you sure?",
+                "Duplicate image warning",
             )
             if confirmed != "OK":
                 return
@@ -719,6 +736,26 @@ class App(ttk.Window):
         image_dt = datetime.datetime(image_y, image_m, image_d, image_h, image_M, image_s)
         return image_dt
 
+    def should_add(self, img):
+        """Check if this image is already used, if so confirm that is should be reused"""
+        if self.image_is_in_current_play(img):
+            confirmation = Messagebox.show_question(
+                'Are you sure? This image is in the current play already',
+                'Image Addition Confirmation', 
+                buttons=['No:secondary', 'Yes:warning'])
+
+            if confirmation != 'Yes':
+                return False
+
+        if self.image_in_another_play(img):
+            confirmation = Messagebox.show_question(
+                'Are you sure? This image is in a different play already',
+                'Image Addition Confirmation', 
+                buttons=['No:secondary', 'Yes:warning'])
+
+            return confirmation == 'Yes'
+        return True
+
     def set_current_image_as_start(self, _=None):
         """Set image as start image and update time. Event needed for binding this to a shortcut."""
         if len(self.imgs) == 0:
@@ -731,6 +768,10 @@ class App(ttk.Window):
             )
             if confirmed != "OK":
                 return
+
+        img = self.imgs[self.pointer][0]
+        if not self.should_add(img):
+            return
 
         # sets the start entry wigit to the path of the current image
         self.entry_wigits.start_entry.var.set(self.imgs[self.pointer][0])
@@ -750,17 +791,9 @@ class App(ttk.Window):
         if len(self.imgs) == 0:
             return
 
-        # we shouldn't reach up to the parent, we should tell it do 
-        # do the thing
         img = self.imgs[self.pointer][0]
-        if self.image_is_in_current_play(img):
-            confirmation = Messagebox.show_question(
-                f'Are you sure? This image is in the current play already:',
-                'Image Addition Confirmation', 
-                buttons=['No:secondary', 'Yes:warning'])
-
-            if confirmation != 'Yes':
-                return
+        if not self.should_add(img):
+            return
 
         # adds the path to the play images list
         self.play_imgs.append(img)
@@ -779,7 +812,12 @@ class App(ttk.Window):
             )
             if confirmed != "OK":
                 return
-        self.entry_wigits.end_entry.var.set(self.imgs[self.pointer][0])
+
+        img = self.imgs[self.pointer][0]
+        if not self.should_add(img):
+            return
+
+        self.entry_wigits.end_entry.var.set(img)
 
         image_dt = self.get_image_dt()
 
@@ -870,11 +908,11 @@ class App(ttk.Window):
         if len(self.plays) == 0:
             self.image_buttons.save_session_button.configure(state="disabled")
 
-    class SaveReadiness(Enum):
+    class SaveError(Flag):
         """States allowed for Saving"""
-        FORBIDDEN = 0
-        WARN = 1
-        READY = 2
+        FORBIDDEN = auto()
+        DATAWARNING = auto()
+        IMGWARNING = auto()
 
     def get_save_readiness(self):
         """Are we ready to save?"""
@@ -887,18 +925,27 @@ class App(ttk.Window):
         cashin = self.entry_wigits.cashin.var.get()
         cashout = self.entry_wigits.cashout.var.get()
 
+        rv = App.SaveError(0)
         if (casino == "" or not dt_valid or machine == "Select Machine" or play_type == ""):
-            return self.SaveReadiness.FORBIDDEN
+            return App.SaveError.FORBIDDEN
         if bet == "0" or cashin == "0" or cashout == "0" or not self.play_end_date_is_valid():
-            return self.SaveReadiness.WARN
-        return self.SaveReadiness.READY
+            rv |= App.SaveError.DATAWARNING
+        if self._current_play is not None:
+            if self.image_in_another_play(self._current_play.start_image) or \
+               self.image_in_another_play(self._current_play.end_image):
+                rv |= App.SaveError.IMGWARNING
+            for i in self._current_play.addl_images:
+                if self.image_in_another_play(i):
+                    rv |= App.SaveError.IMGWARNING
+                    break
+        return rv
 
     def set_save_button_state(self):
         """Determine if we have everything needed to save the play"""
         val = self.get_save_readiness()
-        if val == self.SaveReadiness.FORBIDDEN:
+        if val == self.SaveError.FORBIDDEN:
             self.image_buttons.save_button.configure(state="disabled")
-        elif val == self.SaveReadiness.WARN:
+        elif val:
             self.image_buttons.save_button.configure( state="normal", bootstyle="warning")
         else:
             self.image_buttons.save_button.configure(state="normal", bootstyle="normal")
