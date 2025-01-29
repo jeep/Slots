@@ -197,7 +197,6 @@ class App(ttk.Window):
         self.load_play(id)
 
     def force_clear(self):
-        self.imgs.clear()
         self.play_imgs.clear()
         self.start_img.set("")
         self.end_img.set("")
