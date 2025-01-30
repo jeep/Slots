@@ -14,8 +14,6 @@ class SlotImage:
     image_type: str
     time: str
 
-
-
 def get_time(path):
     try:
         with Image.open(path) as image:
@@ -23,15 +21,15 @@ def get_time(path):
                 image_exif = image.getexif()
                 exif = {ExifTags.TAGS[k]: v for k, v in image_exif.items() if
                         k in ExifTags.TAGS and not isinstance(v, bytes)}
-                date_obj = datetime.strptime(exif['DateTimeOriginal'], r'%Y:%m:%d %H:%M:%S').strftime(r'%Y%m%d%H%M%S')
+                date_obj = datetime.strptime(exif['DateTimeOriginal'], r'%Y:%m:%d %H:%M:%S') # .strftime(r'%Y%m%d%H%M%S')
                 return date_obj
             except (KeyError, AttributeError):
                 try:
                     image_exif = image.getexif()
-                    date_obj = datetime.strptime(image_exif[306], r'%Y:%m:%d %H:%M:%S').strftime(r'%Y%m%d%H%M%S')
+                    date_obj = datetime.strptime(image_exif[306], r'%Y:%m:%d %H:%M:%S')# .strftime(r'%Y%m%d%H%M%S')
                     return date_obj
                 except KeyError:
-                    date_obj = datetime.fromtimestamp(getmtime(path)).strftime(r'%Y%m%d%H%M%S')
+                    date_obj = datetime.fromtimestamp(getmtime(path)) # .strftime(r'%Y%m%d%H%M%S')
                     return date_obj
                 except Exception:
                     print(f"Cannot get date for {path}")

@@ -234,7 +234,7 @@ class App(ttk.Window):
         file_name = basename(current_image_w_path)
         index = self.pointer + 1
         color = self.get_image_name_color(current_image_w_path)
-        file_date = datetime.datetime.strptime(self.imgs[self.pointer].time, '%Y%m%d%H%M%S')
+        file_date = self.imgs[self.pointer].time
         self.image_buttons.update_pagination_info(file_name=file_name, file_date=file_date, image_index=index,
                                                   image_count=len(self.imgs), color=color)
 
@@ -637,17 +637,6 @@ class App(ttk.Window):
             (img == self.entry_wigits.start_entry.var.get()) or \
             (img == self.entry_wigits.end_entry.var.get())
 
-    def get_image_dt(self):
-        """Get the date/time of the current image"""
-        image_dt = self.imgs[self.pointer].time
-        image_y = int(image_dt[:4])
-        image_m = int(image_dt[4:6])
-        image_d = int(image_dt[6:8])
-        image_h = int(image_dt[8:10])
-        image_M = int(image_dt[10:12])
-        image_s = int(image_dt[12:14])
-        image_dt = datetime.datetime(image_y, image_m, image_d, image_h, image_M, image_s)
-        return image_dt
 
     def should_add(self, img):
         """Check if this image is already used, if so confirm that is should be reused"""
@@ -689,11 +678,11 @@ class App(ttk.Window):
         # sets the start entry wigit to the path of the current image
         self.entry_wigits.start_entry.var.set(self.imgs[self.pointer].path)
 
-        image_dt = self.get_image_dt()
+        image_dt = self.imgs[self.pointer].time
         self.entry_wigits.set_play_start_datetime(image_dt)
 
         if not self.session_date_is_valid():
-            dt = datetime.date(image_dt.year, image_dt.month, image_dt.day)
+            dt = self.imgs[self.pointer].time
             self.set_session_date(dt)
 
         self.image_buttons.set_image_adders('disabled')
@@ -732,7 +721,7 @@ class App(ttk.Window):
 
         self.entry_wigits.end_entry.var.set(img)
 
-        image_dt = self.get_image_dt()
+        image_dt = self.imgs[self.pointer].time.date()
 
         self.entry_wigits.set_play_end_datetime(image_dt)
 
