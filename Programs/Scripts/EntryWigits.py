@@ -65,9 +65,8 @@ class EntryWigits(ttk.Frame):
         self._header = ttk.Label(self, text="Play Information", anchor='center')
 
     def _create_machine(self):
-        self.machine_cb = ComboboxLabel(self, '', self._window.machine_values)
-        longest = max(self._window.machine_values, key=len)
-        self.machine_cb.combobox.configure(width=len(longest))
+        self.machine_cb = ComboboxLabel(self, '', self._window.dropdown_data.machine_values)
+        self.machine_cb.combobox.configure(width=30)
         self.machine_cb.combobox.set("Select Machine")
         self.machine_cb.combobox.bind("<<ComboboxSelected>>", lambda _: self._create_play(self.machine_cb.var.get()))
 
@@ -99,12 +98,12 @@ class EntryWigits(ttk.Frame):
         self.dt.var.set("")
 
     def _create_play_type(self):
-        self.play_type = ComboboxLabel(self, 'Play Type', self._window.play_types)
+        self.play_type = ComboboxLabel(self, 'Play Type', self._window.dropdown_data.play_types)
         self.play_type.var.set("AP")
         self.play_type.bind("<<ComboboxSelected>>", self._window.update_play_type)
 
     def _create_denom(self):
-        self.denom_cb = ComboboxLabel(self, 'Denom', self._window.denom_values)
+        self.denom_cb = ComboboxLabel(self, 'Denom', self._window.dropdown_data.denom_values)
         self.denom_cb.combobox.current(0)
         self.denom_cb.combobox.bind("<<ComboboxSelected>>", self._window.update_denom)
 

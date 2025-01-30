@@ -35,8 +35,8 @@ class SessionFrame(ttk.Frame):
         self.session_date = ttk.Label(self, textvariable=self._window.session_date)
 
     def _create_casino(self):
-        self.casino = ComboboxLabel(self, '', self._window.casino_values, state='readonly')
-        self.casino.combobox.bind("<<ComboboxSelected>>", self._window.update_machine_dd)
+        self.casino = ComboboxLabel(self, '', self._window.dropdown_data.casino_values, state='readonly')
+        self.casino.combobox.bind("<<ComboboxSelected>>", self._window.update_casino)
 
     def _place_entries(self):
         self._header.grid(row=0, columnspan=2, pady=5)

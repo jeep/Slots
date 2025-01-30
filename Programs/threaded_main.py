@@ -1,11 +1,10 @@
 import copy
 import csv
 import datetime
-from collections import namedtuple
 from decimal import Decimal
 from enum import Flag, auto
 from os import makedirs, remove, startfile
-from os.path import basename, dirname, exists, join, splitext
+from os.path import basename, dirname, exists, join
 from shutil import move
 from tkinter.constants import DISABLED, NORMAL
 from tkinter.filedialog import askdirectory
@@ -13,6 +12,8 @@ from tkinter.filedialog import askdirectory
 import ttkbootstrap as ttk
 from PIL import Image, ImageTk
 from pillow_heif import register_heif_opener
+
+from DropdownData import DropdownData
 from Scripts.EntryWigits import EntryWigits
 from Scripts.get_imgs_data import multi_get_img_data
 from Scripts.HandPayWindow import HandPayWindow
@@ -26,13 +27,6 @@ from ttkbootstrap.dialogs import Messagebox, Querybox
 
 register_heif_opener(decode_threads=8, thumbnails=False)
 
-DropdownData = namedtuple("Dropdown_data", ["filename", "defaults"])
-externals = dict(
-    play_type=DropdownData("playtype_entry_values.csv", ["AP", "Gamble", "Misplay", "Non-play", "Science", "Tip"], ),
-    casino=DropdownData("casino_entry_values.csv", ["ilani", "Spirit Mountain"]),
-    denom=DropdownData("denom_entry_values.csv", ["1cent", "2cent", "5cent", "10cent", "25cent", "$1", "$2"], ),
-    machine=DropdownData("machine_entry_values.csv", ["Frankenstein", "Pinwheel Prizes", "Power Push"], ))
-
 
 class App(ttk.Window):
     """Starting point"""
@@ -40,9 +34,6 @@ class App(ttk.Window):
     def __init__(self):
         super().__init__()
 
-        self.denom_values = None
-        self.casino_values = None
-        self.play_types = None
         self.title("Slot Data Entry")
         self.minsize(450, 705)
         self.geometry("1450x1000")
@@ -54,11 +45,8 @@ class App(ttk.Window):
         self.hand_pay = []
         self.plays = {}
         self._current_play = None
-        self.machine_values = None
-        self.machine_file = None
         self.start_datetime = datetime.MINYEAR
-
-        self.get_dropdown_data()
+        self.dropdown_data = DropdownData()
 
         self.pointer = 0
         self.scale = 7
@@ -109,52 +97,6 @@ class App(ttk.Window):
         """Gets the current play"""
         return self._current_play
 
-    def get_dropdown_data(self):
-        """load dropdown data from external sources"""
-        self.play_types = App.get_entry_values(externals["play_type"])
-        self.casino_values = App.get_entry_values(externals["casino"])
-        self.machine_file = externals["machine"].filename
-        self.machine_values = App.get_entry_values(externals["machine"])
-        self.denom_values = App.get_entry_values(externals["denom"])
-
-    def update_machine_dd(self, _=None):
-        """update the machines based on casino"""
-        casino = self.session_frame.casino.selection_get()
-        fn = externals["machine"].filename
-        if casino is not None:
-            (base, ext) = splitext(fn)
-            casino = casino.replace(" ", "_")
-            casino_fn = f"{base}-{casino}{ext}"
-            if exists(casino_fn):
-                fn = casino_fn
-
-        self.machine_file = fn
-        dd = DropdownData(fn, externals["machine"].defaults)
-        self.machine_values.clear()
-        self.machine_values.extend(App.get_entry_values(dd))
-        self.entry_wigits.machine_cb.combobox['values'] = self.machine_values
-
-    @staticmethod
-    def get_entry_values(dd_data: DropdownData):
-        """Read an external file to get values to use"""
-        fn = dd_data.filename
-        if exists(fn):
-            with open(fn, "r") as csvfile:
-                values = list(csv.reader(csvfile))
-                values = [
-                    val.strip()
-                    for sublist in values
-                    for val in sublist
-                    if (val.strip() != "")
-                ]
-                return values
-
-        msg = f"{dd_data.filename} not found."
-        if dd_data.defaults:
-            print(msg, " Using defaults.")
-            return dd_data.defaults
-
-        return []
 
     def make_menu(self):
         """Make the menus"""
@@ -173,10 +115,10 @@ class App(ttk.Window):
         menu.add_cascade(label="File", menu=file_menu)
 
         edit_menu = ttk.Menu(menu, tearoff=False)
-        edit_menu.add_command(label="Add Casino", command=self.add_casino)
-        edit_menu.add_command(label="Add Machine", command=self.add_machine)
-        edit_menu.add_command(label="Add Denom", command=self.add_denom)
-        edit_menu.add_command(label="Add PlayType", command=self.add_playtype)
+        edit_menu.add_command(label="Add Casino", command=self.dropdown_data.add_casino)
+        edit_menu.add_command(label="Add Machine", command=self.dropdown_data.add_machine)
+        edit_menu.add_command(label="Add Denom", command=self.dropdown_data.add_denom)
+        edit_menu.add_command(label="Add PlayType", command=self.dropdown_data.add_playtype)
         edit_menu.add_separator()
         edit_menu.add_command(label="Open newest play", command=self.load_final_play)
         edit_menu.add_command(label="Force Clear Images", command=self.force_clear)
@@ -226,32 +168,6 @@ class App(ttk.Window):
         self.image_buttons.set_image_adders("normal")
         self.image_buttons.delete_button.configure(state="warning")
         self.image_buttons.set_image_navigation("normal")
-
-    def add_casino(self):
-        """add a new casino"""
-        new_casino = Querybox.get_string(prompt="Enter a casino", title="Casino Entry")
-        if (new_casino is not None) and (new_casino not in self.casino_values):
-            self.casino_values.append(new_casino)
-
-    def add_machine(self):
-        """Add a new machine"""
-        new_machine = Querybox.get_string(
-            prompt="Enter a machine", title="Machine Entry"
-        )
-        if (new_machine is not None) and (new_machine not in self.machine_values):
-            self.machine_values.append(new_machine)
-
-    def add_playtype(self):
-        """Add a new playtype"""
-        new = Querybox.get_string(prompt="Enter a play type", title="PlayType Entry")
-        if (new is not None) and (new not in self.play_types):
-            self.play_types.append(new)
-
-    def add_denom(self):
-        """Add a new denomination"""
-        new = Querybox.get_string(prompt="Enter a denomination", title="Denom Entry")
-        if (new is not None) and (new not in self.denom_values):
-            self.denom_values.append(new)
 
     def set_scale(self):
         """Set scale factor for the image. Larger scale is smaller image."""
@@ -380,10 +296,11 @@ class App(ttk.Window):
 
     def update_casino(self, _=None):
         """Update casino for the play. Second param is casino"""
-        if self._current_play is None:
-            return
         if self.session_frame.casino.var.get():
-            self._current_play.casino = self.session_frame.casino.var.get()
+            casino = self.session_frame.casino.var.get()
+            self.dropdown_data.update_machine_dd(casino)
+            if self._current_play is not None:
+                self._current_play.casino = self.session_frame.casino.var.get()
 
     def update_start_datetime(self):
         """"Update the start datetime for the play"""
@@ -948,18 +865,7 @@ class App(ttk.Window):
 
     def save_externals(self):
         """Save the csv files for entry drop-downs"""
-        external_csvs = {
-            "casino_entry_values.csv": self.casino_values,
-            self.machine_file: self.machine_values,
-            "denom_entry_values.csv": self.denom_values,
-            "playtype_entry_values.csv": self.play_types,
-        }
-        for f, var in external_csvs.items():
-            file_path = join(dirname(dirname(__file__)), f)
-            with open(file_path, "w", newline="") as csvfile:
-                writer = csv.writer(csvfile)
-                for item in var:
-                    writer.writerow([item])
+        self.dropdown_data.save_externals()
 
     def reset_play(self):
         """reset the current play"""
