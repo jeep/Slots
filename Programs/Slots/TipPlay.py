@@ -17,4 +17,7 @@ class TipPlay(Play):
     def __str__(self):
         start_date = self.start_time.strftime(r"%m/%d/%Y")
         note = f'"{self.note}"' if self.note else ""
-        return f"{self.casino},{start_date},{self.machine.get_name()},{format_currency(self.cash_in, 'USD', locale='en_US')},,{self.play_type},,{format_currency(self.cash_out, 'USD', locale='en_US')},{format_currency(self.pnl, 'USD', locale='en_US')},{note},{self.machine.get_family()},,,"
+        return (f"{self.casino},{start_date},{self.machine.get_name()},"
+                f"{format_currency(self.cash_in, 'USD', locale='en_US')},,{self.play_type},,"
+                f"{format_currency(self.cash_out, 'USD', locale='en_US')},"
+                f"{format_currency(self.pnl, 'USD', locale='en_US')},{note},{self.machine.get_family()},,,")

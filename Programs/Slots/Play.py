@@ -10,8 +10,8 @@ from .Bonus import Bonus
 
 
 def d(in_str):
-    TWOPLACES = Decimal(10) ** -2
-    return Decimal(in_str).quantize(TWOPLACES)
+    two_places = Decimal(10) ** -2
+    return Decimal(in_str).quantize(two_places)
 
 
 @dataclass
@@ -21,13 +21,13 @@ class HandPay:
     image: str = None
     addl_images: list[str] = field(default_factory=list)
     taxable: bool = True
-    taxrate: Decimal = d(0.27)
+    tax_rate: Decimal = d(0.27)
 
     @property
     def tax(self):
         tax = "0.00"
         if self.taxable:
-            tax = d(self.taxrate * self.pay_amount)
+            tax = d(self.tax_rate * self.pay_amount)
         return tax
 
 
@@ -117,10 +117,6 @@ class Play:
     def get_entry_fields(self):
         return None
 
-    def get_state_helper(self):
-        """pretty sure this is unused"""
-        return None
-
     def get_csv_rows(self):
         """Get the output in CSV format"""
         note = f"{self.note}"
@@ -162,12 +158,24 @@ class Play:
         if len(self.bonuses) > 0:
             note += f"; {str(self.bonuses)}"
 
-        output_string = f"{self.identifier},{self.casino},{start_date},{self.machine.get_name()},{format_currency(self.cash_in, 'USD', locale='en_US')},{format_currency(self.bet, 'USD', locale='en_US')},{self.play_type},{self.denom},\"{self.state}\",{self.cash_out_str()},{format_currency(self.pnl, 'USD', locale='en_US')},\"{note}\",{self.machine.get_family()},{self.start_image},{self.end_image},{images}"
+        output_string = (f"{self.identifier},{self.casino},{start_date},{self.machine.get_name()},"
+                         f"{format_currency(self.cash_in, 'USD', locale='en_US')},"
+                         f"{format_currency(self.bet, 'USD', locale='en_US')},{self.play_type},{self.denom},"
+                         f"\"{self.state}\",{self.cash_out_str()},"
+                         f"{format_currency(self.pnl, 'USD', locale='en_US')},\"{note}\","
+                         f"{self.machine.get_family()},{self.start_image},{self.end_image},{images}")
         for hp in self.hand_pays:
             if hp.tax > 0:
                 tax = format_currency(hp.tax, 'USD', locale='en_US')
                 images = hp.addl_images if hp.addl_images else ""
-                output_string += f"\n{self.identifier},{self.casino},{start_date},{self.machine.get_name()},{tax},,Tax Consequence,{self.denom},{format_currency(hp.pay_amount, 'USD', locale='en_US')},,-{tax},{tax},{self.machine.get_family()},{hp.image},,{images}"
+                output_string += (f"\n{self.identifier},{self.casino},{start_date},{self.machine.get_name()},{tax},,"
+                                  f"Tax Consequence,{self.denom},{format_currency(hp.pay_amount, 'USD', 
+                                                                                  locale='en_US')},,-{tax},{tax},"
+                                  f"{self.machine.get_family()},{hp.image},,{images}")
             if hp.tip_amount > 0:
-                output_string += f"\n{self.identifier},{self.casino},{start_date},{self.machine.get_name()},{format_currency(hp.tip_amount, 'USD', locale='en_US')},,Tip,,,{format_currency(0.00, 'USD', locale='en_US')},{format_currency(-1 * hp.tip_amount, 'USD', locale='en_US')},,{self.machine.get_family()},,,"
+                output_string += (f"\n{self.identifier},{self.casino},{start_date},{self.machine.get_name()},"
+                                  f"{format_currency(hp.tip_amount, 'USD', locale='en_US')},,Tip,,,"
+                                  f"{format_currency(0.00, 'USD', locale='en_US')},"
+                                  f"{format_currency(-1 * hp.tip_amount, 'USD', locale='en_US')},,"
+                                  f"{self.machine.get_family()},,,")
         return output_string

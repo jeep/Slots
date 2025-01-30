@@ -47,13 +47,10 @@ Use at your own risk
 
 # Known bugs/limitations
 * Once you save you cannot open a folder
-* Removing an image does not enable the button to allow it to be added, you must navigate away and then back if you want to readd it.
 * Add denom does not add a new denomination to the drop-down (but it will add it to the file)
 * Tax rate is set to 27% and is not currently configurable.
 * Using the state helper does not update the state display. You must click into and then out of the Initial State box to see it
-* You cannot reload/edit plays once it's been saved
 * You must save a picture to set the session date, so if you don't use pics to track, this will not be useful yet
-* You cannot delete a hand pay once added to a play. You need to create a completely new play to fix
 * There is no reset button to reset the current play
 
   

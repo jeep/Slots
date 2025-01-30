@@ -27,27 +27,22 @@ from ttkbootstrap.dialogs import Messagebox, Querybox
 register_heif_opener(decode_threads=8, thumbnails=False)
 
 DropdownData = namedtuple("Dropdown_data", ["filename", "defaults"])
-externals = {
-    "play_type": DropdownData(
-        "playtype_entry_values.csv",
-        ["AP", "Gamble", "Misplay", "Non-play", "Science", "Tip"],
-    ),
-    "casino": DropdownData("casino_entry_values.csv", ["ilani", "Spirit Mountain"]),
-    "denom": DropdownData(
-        "denom_entry_values.csv",
-        ["1cent", "2cent", "5cent", "10cent", "25cent", "$1", "$2"],
-    ),
-    "machine": DropdownData(
-        "machine_entry_values.csv",
-        ["Frankenstein", "Lucky Wealth Cat", "Pinwheel Prizes", "Power Push"],
-    ),
-}
+externals = dict(
+    play_type=DropdownData("playtype_entry_values.csv", ["AP", "Gamble", "Misplay", "Non-play", "Science", "Tip"], ),
+    casino=DropdownData("casino_entry_values.csv", ["ilani", "Spirit Mountain"]),
+    denom=DropdownData("denom_entry_values.csv", ["1cent", "2cent", "5cent", "10cent", "25cent", "$1", "$2"], ),
+    machine=DropdownData("machine_entry_values.csv", ["Frankenstein", "Pinwheel Prizes", "Power Push"], ))
+
 
 class App(ttk.Window):
     """Starting point"""
+
     def __init__(self):
         super().__init__()
 
+        self.denom_values = None
+        self.casino_values = None
+        self.play_types = None
         self.title("Slot Data Entry")
         self.minsize(450, 705)
         self.geometry("1450x1000")
@@ -76,9 +71,9 @@ class App(ttk.Window):
         self.end_img = ttk.StringVar()
         self.ttk_state = ttk.StringVar()
 
-        self.columnconfigure(0, uniform="a", weight=1) # session log
-        self.columnconfigure(1, uniform="a", weight=2) # data entry
-        self.columnconfigure(2, uniform="a", weight=2) #image and buttons
+        self.columnconfigure(0, uniform="a", weight=1)  # session log
+        self.columnconfigure(1, uniform="a", weight=2)  # data entry
+        self.columnconfigure(2, uniform="a", weight=2)  # image and buttons
 
         self.session_table = SessionTable(self)
         self.session_table.grid(row=0, column=0, sticky="nsew")
@@ -137,12 +132,12 @@ class App(ttk.Window):
         dd = DropdownData(fn, externals["machine"].defaults)
         self.machine_values.clear()
         self.machine_values.extend(App.get_entry_values(dd))
-        self.entry_wigits.machine_cb.combobox['values']=self.machine_values
+        self.entry_wigits.machine_cb.combobox['values'] = self.machine_values
 
     @staticmethod
     def get_entry_values(dd_data: DropdownData):
         """Read an external file to get values to use"""
-        fn =  dd_data.filename
+        fn = dd_data.filename
         if exists(fn):
             with open(fn, "r") as csvfile:
                 values = list(csv.reader(csvfile))
@@ -196,8 +191,7 @@ class App(ttk.Window):
 
     def load_final_play(self):
         """Load the last play in the session"""
-        id= list(self.plays.keys())[-1]
-        self.load_play(id)
+        self.load_play(list(self.plays.keys())[-1])
 
     def force_clear(self):
         self.play_imgs.clear()
@@ -219,7 +213,7 @@ class App(ttk.Window):
             return
 
         print("Loading ", datetime.datetime.now())
-        # multi threads geting the image data ( image path, image type, image date )
+        # multi threads getting the image data ( image path, image type, image date )
         self.imgs = [d for d in multi_get_img_data(directory) if d is not None]
         print("Loaded ", datetime.datetime.now())
 
@@ -278,13 +272,12 @@ class App(ttk.Window):
         self.rotation = self.rotation + 90 if self.rotation + 90 <= 360 else 0
         self.display_image()
 
-
     def image_in_another_play(self, img_name):
         """Determine if the image is in any play"""
         for p in self.plays.values():
             if self.editing_play() and p.identifier == self._current_play.identifier:
                 continue
-            if img_name in p.addl_images or img_name==p.start_image or img_name ==p.end_image:
+            if img_name in p.addl_images or img_name == p.start_image or img_name == p.end_image:
                 return True
         return False
 
@@ -322,35 +315,35 @@ class App(ttk.Window):
 
         current_image_w_path = self.imgs[self.pointer][0]
         file_name = basename(current_image_w_path)
-        index = self.pointer+1
-        color= self.get_image_name_color(current_image_w_path)
-        file_date= datetime.datetime.strptime(self.imgs[self.pointer][2], '%Y%m%d%H%M%S')
+        index = self.pointer + 1
+        color = self.get_image_name_color(current_image_w_path)
+        file_date = datetime.datetime.strptime(self.imgs[self.pointer][2], '%Y%m%d%H%M%S')
         self.image_buttons.update_pagination_info(file_name=file_name, file_date=file_date, image_index=index,
                                                   image_count=len(self.imgs), color=color)
 
-        self.image_display.canvas.bind("<Double-Button-1>", lambda _: startfile(current_image_w_path) )
+        self.image_display.canvas.bind("<Double-Button-1>", lambda _: startfile(current_image_w_path))
         if self.image_is_in_current_play(current_image_w_path):
             self.image_buttons.set_image_adders("disabled")
         else:
             self.image_buttons.set_image_adders("normal")
 
-    def display_first_image(self, event=None):
+    def display_first_image(self, _=None):
         """display the first image"""
         self.pointer = 0
         self.display_image()
 
-    def display_next_image(self, event=None):
+    def display_next_image(self, _=None):
         """next image"""
         self.pointer = min((self.pointer + 1), (len(self.imgs) - 1))
         self.display_image()
 
-    def display_prev_image(self, event=None):
+    def display_prev_image(self, _=None):
         """Previous image"""
         # does nothing if there are no images
         self.pointer = max((self.pointer - 1), 0)
         self.display_image()
 
-    def display_last_image(self, event=None):
+    def display_last_image(self, _=None):
         """display the last image"""
         self.pointer = len(self.imgs) - 1
         self.display_image()
@@ -486,7 +479,7 @@ class App(ttk.Window):
         self._current_play.hand_pays.clear()
         for hp in self.hand_pay:
             self._current_play.add_hand_pay(hp)
-        #self._current_play.hand_pays = self.hand_pay.copy()
+        # self._current_play.hand_pays = self.hand_pay.copy()
         self.update_pnl()
 
     def load_play(self, playid):
@@ -516,7 +509,7 @@ class App(ttk.Window):
         self.hand_pay.clear()
         for hp in self._current_play.hand_pays:
             self.hand_pay.append(hp)
-        #self.hand_pay = self._current_play.hand_pays.copy()
+        # self.hand_pay = self._current_play.hand_pays.copy()
         self.entry_wigits.update_hand_pay_table(self)
 
         self.image_buttons.save_button.configure(state="normal", bootstyle="normal")
@@ -606,7 +599,7 @@ class App(ttk.Window):
 
         self.session_table.update_table()
 
-        while self.image_is_in_current_play(self.imgs[self.pointer][0]) and self.pointer < len(self.imgs)-1:
+        while self.image_is_in_current_play(self.imgs[self.pointer][0]) and self.pointer < len(self.imgs) - 1:
             self.display_next_image()
 
         # clears all entry values
@@ -640,11 +633,11 @@ class App(ttk.Window):
 
         # If there are images in the image table, this will miss those, but seems fine
         if self._current_play.start_image or self._current_play.end_image or \
-            len(self._current_play.addl_images) or self.entry_wigits.start_entry.var.get() or \
-            self.entry_wigits.end_entry.var.get():
+                len(self._current_play.addl_images) or self.entry_wigits.start_entry.var.get() or \
+                self.entry_wigits.end_entry.var.get():
             confirmation = Messagebox.show_question(
                 'Are you sure? There is an incomplete play',
-                'Save Session Confirmation', 
+                'Save Session Confirmation',
                 buttons=['No:secondary', 'Yes:warning'])
             if confirmation != 'Yes':
                 return
@@ -658,7 +651,7 @@ class App(ttk.Window):
         while True:
             try:
                 f = open(file_path, "a+")
-            except Exception:
+            except OSError:
                 Messagebox.show_error(
                     f'Cannot open "{file_path}".\nPlease close and try again',
                     "File Open Error",
@@ -743,7 +736,7 @@ class App(ttk.Window):
         if self.image_is_in_current_play(img):
             confirmation = Messagebox.show_question(
                 'Are you sure? This image is in the current play already',
-                'Image Addition Confirmation', 
+                'Image Addition Confirmation',
                 buttons=['No:secondary', 'Yes:warning'])
 
             if confirmation != 'Yes':
@@ -752,7 +745,7 @@ class App(ttk.Window):
         if self.image_in_another_play(img):
             confirmation = Messagebox.show_question(
                 'Are you sure? This image is in a different play already',
-                'Image Addition Confirmation', 
+                'Image Addition Confirmation',
                 buttons=['No:secondary', 'Yes:warning'])
 
             return confirmation == 'Yes'
@@ -782,7 +775,7 @@ class App(ttk.Window):
         self.entry_wigits.set_play_start_datetime(image_dt)
 
         if not self.session_date_is_valid():
-            dt = datetime.date(image_dt.year, image_dt.month, image_dt.day) 
+            dt = datetime.date(image_dt.year, image_dt.month, image_dt.day)
             self.set_session_date(dt)
 
         self.image_buttons.set_image_adders('disabled')
@@ -856,7 +849,7 @@ class App(ttk.Window):
 
         confirmation = Messagebox.show_question(
             f'Are you sure you want to delete this image:\n{path}',
-            'Image Deletion Confirmation', 
+            'Image Deletion Confirmation',
             buttons=['No:secondary', 'Yes:warning'])
 
         if confirmation != 'Yes':
@@ -876,7 +869,7 @@ class App(ttk.Window):
         for index, img in enumerate(self.imgs):
             if img[0] == filename:
                 self.pointer = index
-#        self.pointer = self.imgs.index(self.entry_wigits.start_entry.var.get())
+        #        self.pointer = self.imgs.index(self.entry_wigits.start_entry.var.get())
         self.display_image()
 
     def jump_to_start_image(self, _=None):
@@ -889,7 +882,8 @@ class App(ttk.Window):
         filename = self.entry_wigits.end_entry.var.get()
         self.jump_to_image(filename)
 
-    def open_handpay_entry_win(self, callback):
+    @staticmethod
+    def open_handpay_entry_win(callback):
         """Open handpay window"""
         HandPayWindow(callback=callback)
 
@@ -928,13 +922,13 @@ class App(ttk.Window):
         cashout = self.entry_wigits.cashout.var.get()
 
         rv = App.SaveError(0)
-        if (casino == "" or not dt_valid or machine == "Select Machine" or play_type == ""):
+        if casino == "" or not dt_valid or machine == "Select Machine" or play_type == "":
             return App.SaveError.FORBIDDEN
         if bet == "0" or cashin == "0" or cashout == "0" or not self.play_end_date_is_valid():
             rv |= App.SaveError.DATAWARNING
         if self._current_play is not None:
             if self.image_in_another_play(self._current_play.start_image) or \
-               self.image_in_another_play(self._current_play.end_image):
+                    self.image_in_another_play(self._current_play.end_image):
                 rv |= App.SaveError.IMGWARNING
             for i in self._current_play.addl_images:
                 if self.image_in_another_play(i):
@@ -948,7 +942,7 @@ class App(ttk.Window):
         if val == self.SaveError.FORBIDDEN:
             self.image_buttons.save_button.configure(state="disabled")
         elif val:
-            self.image_buttons.save_button.configure( state="normal", bootstyle="warning")
+            self.image_buttons.save_button.configure(state="normal", bootstyle="warning")
         else:
             self.image_buttons.save_button.configure(state="normal", bootstyle="normal")
 
@@ -984,7 +978,7 @@ class App(ttk.Window):
         self.bind("<Prior>", self.display_prev_image)
         self.bind("<Next>", self.display_next_image)
         self.bind("<Home>", self.display_first_image)
-        #self.bind("<End>", self.display_last_image)
+        # self.bind("<End>", self.display_last_image)
         self.bind("<Control-Key-1>", self.set_current_image_as_start)
         self.bind("<Control-Key-2>", self.add_current_image_to_play)
         self.bind("<Control-Key-3>", self.set_current_image_as_end)

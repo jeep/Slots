@@ -15,15 +15,16 @@ class FrankensteinPlay(StateHelperPlay):
     state_data: dict = field(init=False,
                              default_factory=lambda: {"tl": None, "tm": None, "tr": None, "ml": None, "mm": None,
                                                       "mr": None, "bl": None, "bm": None, "br": None})
-    ev_mult: list = field(default_factory= lambda: [0.09416, 0.32996, 0.56598,
-                                                    0.50230, 0.83143, 0.57439,
-                                                    0.29475, 0.27778, 0.21183,
-                                                    0.16668, 0.18126, 0.16008])
+    ev_mult: list = field(default_factory=lambda: [0.09416, 0.32996, 0.56598,
+                                                   0.50230, 0.83143, 0.57439,
+                                                   0.29475, 0.27778, 0.21183,
+                                                   0.16668, 0.18126, 0.16008])
     base_head_ev = 4.18942
+
     @staticmethod
     def d(in_str):
-        TWOPLACES = Decimal(10) ** -2
-        return Decimal(in_str).quantize(TWOPLACES)
+        two_places = Decimal(10) ** -2
+        return Decimal(in_str).quantize(two_places)
 
     labels = {
         (d("0.6"), "1cent"): [1000, 500, 300, 200, 150, 125, 100, 75, 60],
@@ -68,7 +69,7 @@ class FrankensteinPlay(StateHelperPlay):
 
         state_labels = ["Maxi", "Minor", "Mini"]
         state_labels.extend(self.labels[(FrankensteinPlay.d(self.bet), self.denom)])
-        self.state_data = dict(zip(state_labels, [None]*12))
+        self.state_data = dict(zip(state_labels, [None] * 12))
         return True
 
     def get_entry_fields(self) -> list:
@@ -78,7 +79,8 @@ class FrankensteinPlay(StateHelperPlay):
 
     @property
     def state(self) -> str:
-        ev = self.d(sum([mult * int(value if value is not None and value != "" else 1) for mult, value in zip(self.ev_mult, self.state_data.values())])/self.base_head_ev)
+        ev = self.d(sum([mult * int(value if value is not None and value != "" else 1) for mult, value in
+                         zip(self.ev_mult, self.state_data.values())]) / self.base_head_ev)
         rv = {k: int(v) for k, v in self.state_data.items() if v and v != ""}
         if not len(rv):
             return self._state
