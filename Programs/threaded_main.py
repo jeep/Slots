@@ -4,7 +4,7 @@ import datetime
 from decimal import Decimal
 from enum import Flag, auto
 from os import makedirs, remove, startfile
-from os.path import basename, dirname, exists, join
+from os.path import basename, dirname, join
 from shutil import move
 from tkinter.constants import DISABLED, NORMAL
 from tkinter.filedialog import askdirectory
@@ -136,6 +136,7 @@ class App(ttk.Window):
         self.load_play(list(self.plays.keys())[-1])
 
     def force_clear(self):
+        """Clear all image data from the current play"""
         self.play_imgs.clear()
         self.start_img.set("")
         self.end_img.set("")
@@ -163,7 +164,7 @@ class App(ttk.Window):
             return
 
         self.pointer = 0
-        self.imgs = sorted(self.imgs, key=lambda item: item[2])
+        self.imgs = sorted(self.imgs, key=lambda item: item.time)
         self.display_image()
         self.image_buttons.set_image_adders("normal")
         self.image_buttons.delete_button.configure(state="warning")
@@ -214,7 +215,7 @@ class App(ttk.Window):
 
         self.image_display.canvas.delete("all")
         # opens the image at the current pointer
-        with Image.open(self.imgs[self.pointer][0]) as image:
+        with Image.open(self.imgs[self.pointer].path) as image:
             image = image.reduce(self.scale)
             image = image.rotate(self.rotation, expand=1)
 
@@ -229,11 +230,11 @@ class App(ttk.Window):
             # adds the image to the canvas
             self.image_display.canvas.create_image(x, y, image=imagetk)
 
-        current_image_w_path = self.imgs[self.pointer][0]
+        current_image_w_path = self.imgs[self.pointer].path
         file_name = basename(current_image_w_path)
         index = self.pointer + 1
         color = self.get_image_name_color(current_image_w_path)
-        file_date = datetime.datetime.strptime(self.imgs[self.pointer][2], '%Y%m%d%H%M%S')
+        file_date = datetime.datetime.strptime(self.imgs[self.pointer].time, '%Y%m%d%H%M%S')
         self.image_buttons.update_pagination_info(file_name=file_name, file_date=file_date, image_index=index,
                                                   image_count=len(self.imgs), color=color)
 
@@ -516,7 +517,7 @@ class App(ttk.Window):
 
         self.session_table.update_table()
 
-        while self.image_is_in_current_play(self.imgs[self.pointer][0]) and self.pointer < len(self.imgs) - 1:
+        while self.image_is_in_current_play(self.imgs[self.pointer].path) and self.pointer < len(self.imgs) - 1:
             self.display_next_image()
 
         # clears all entry values
@@ -617,8 +618,8 @@ class App(ttk.Window):
                 'Error Saving')
             raise e
 
-        self.imgs = [d for d in self.imgs if d[0] not in pics_to_remove]
-        self.imgs = sorted(self.imgs, key=lambda item: item[2])
+        self.imgs = [img for img in self.imgs if img.path not in pics_to_remove]
+        self.imgs = sorted(self.imgs, key=lambda item: item.time)
         self.display_first_image()
 
         self.plays.clear()
@@ -638,7 +639,7 @@ class App(ttk.Window):
 
     def get_image_dt(self):
         """Get the date/time of the current image"""
-        image_dt = self.imgs[self.pointer][2]
+        image_dt = self.imgs[self.pointer].time
         image_y = int(image_dt[:4])
         image_m = int(image_dt[4:6])
         image_d = int(image_dt[6:8])
@@ -681,12 +682,12 @@ class App(ttk.Window):
             if confirmed != "OK":
                 return
 
-        img = self.imgs[self.pointer][0]
+        img = self.imgs[self.pointer].path
         if not self.should_add(img):
             return
 
         # sets the start entry wigit to the path of the current image
-        self.entry_wigits.start_entry.var.set(self.imgs[self.pointer][0])
+        self.entry_wigits.start_entry.var.set(self.imgs[self.pointer].path)
 
         image_dt = self.get_image_dt()
         self.entry_wigits.set_play_start_datetime(image_dt)
@@ -703,7 +704,7 @@ class App(ttk.Window):
         if len(self.imgs) == 0:
             return
 
-        img = self.imgs[self.pointer][0]
+        img = self.imgs[self.pointer].path
         if not self.should_add(img):
             return
 
@@ -725,7 +726,7 @@ class App(ttk.Window):
             if confirmed != "OK":
                 return
 
-        img = self.imgs[self.pointer][0]
+        img = self.imgs[self.pointer].path
         if not self.should_add(img):
             return
 
@@ -743,7 +744,7 @@ class App(ttk.Window):
         if len(self.imgs) == 0:
             return
 
-        path = self.imgs[self.pointer][0]
+        path = self.imgs[self.pointer].path
         if not self.image_is_in_current_play(path):
             return
 
@@ -762,7 +763,7 @@ class App(ttk.Window):
         if len(self.imgs) == 0:
             return
 
-        path = self.imgs[self.pointer][0]
+        path = self.imgs[self.pointer].path
 
         confirmation = Messagebox.show_question(
             f'Are you sure you want to delete this image:\n{path}',

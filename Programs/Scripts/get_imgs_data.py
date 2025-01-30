@@ -1,9 +1,19 @@
 from datetime import datetime
+from dataclasses import dataclass, field
 from os import listdir
 from os.path import getmtime, isfile, join
 from threading import Thread
 
 from PIL import ExifTags, Image
+
+
+@dataclass(repr=False, eq=False, kw_only=True)
+class SlotImage:
+    """Class for storing image data"""
+    path: str
+    image_type: str
+    time: str
+
 
 
 def get_time(path):
@@ -34,7 +44,9 @@ def get_img_data(file, directory):
     file_type = file_path[file_path.find('.'):].upper()
     if (file_type in ('.HEIC', '.JPEG', '.JPG', '.PNG')) and isfile( file_path):
         if (file_time := get_time(file_path)) is not None:
-            return [file_path, file_type, file_time]
+            # TODO: This should return a class, not an array of data
+            #return [file_path, file_type, file_time]
+            return SlotImage(path=file_path, image_type=file_type, time=file_time)
 
 
 def multi_get_img_data(directory):
