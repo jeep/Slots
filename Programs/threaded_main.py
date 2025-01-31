@@ -107,9 +107,6 @@ class App(ttk.Window):
         file_menu.add_command(label="Open Folder", command=self.open_folder)
         file_menu.add_command(label="Save Session", command=self.save_session)
         file_menu.add_separator()
-        file_menu.add_command(label="Set Image Scale Divisor", command=self.set_scale)
-        file_menu.add_command(label="Rotate Image", command=self.rotate_image)
-        file_menu.add_separator()
         file_menu.add_command(label="Preload Test Play", command=self.load_test_play)
         file_menu.add_command(label="Open Test Folder", command=self.open_test_folder)
 
@@ -123,14 +120,15 @@ class App(ttk.Window):
         edit_menu.add_separator()
         edit_menu.add_command(label="Open newest play", command=self.load_final_play)
         edit_menu.add_command(label="Force Clear Images", command=self.force_clear)
+        edit_menu.add_separator()
+        edit_menu.add_command(label="Set Image Scale Divisor", command=self.set_scale)
+        edit_menu.add_command(label="Rotate Image", command=self.rotate_image)
         menu.add_cascade(label="Edit", menu=edit_menu)
 
         nav_menu = ttk.Menu(menu, tearoff=False)
         nav_menu.add_command(label="Goto first img [Home]", command=self.display_first_image)
         nav_menu.add_command(label="Prev img [PgUp]", command=self.display_prev_image)
         nav_menu.add_command(label="Next img [PgDn]", command=self.display_next_image)
-        nav_menu.add_command(label="Goto last img", command=self.display_last_image)
-        edit_menu.add_separator()
         nav_menu.add_command(label="Goto last img", command=self.display_last_image)
         menu.add_cascade(label="Navigate", menu=nav_menu)
 
@@ -285,7 +283,7 @@ class App(ttk.Window):
         return datetime.datetime.strptime(self.session_date.get(), fmt).date()
 
     def set_session_date(self, session_date):
-        """Sets the settion date with the correct format"""
+        """Sets the session date with the correct format"""
         if session_date == self.default_session_date:
             self.session_date.set(session_date)
             return
@@ -322,14 +320,14 @@ class App(ttk.Window):
             self._current_play.bet = Decimal(self.entry_wigits.bet.var.get())
 
     def update_play_type(self, _=None):
-        """Update the play type. Second param is play_type"""
+        """Update the play type. Param2 is event for binding"""
         if self._current_play is None:
             return
         if self.entry_wigits.play_type.var.get():
             self._current_play.play_type = self.entry_wigits.play_type.var.get()
 
     def update_denom(self, _=None):
-        """Update denom. param2 is denom"""
+        """Update denom. Param2 is event for binding"""
         if self._current_play is None:
             return
         if self.entry_wigits.denom_cb.var.get():
@@ -342,7 +340,7 @@ class App(ttk.Window):
         self.entry_wigits.profit_loss.var.set(self._current_play.pnl)
 
     def update_cashin(self, _=None):
-        """update the cash in for the play. param2 is cash in"""
+        """update the cash in for the play. param2 is for binding"""
         if self._current_play is None:
             return
         if self.entry_wigits.cashin.var.get():
@@ -350,7 +348,7 @@ class App(ttk.Window):
             self.update_pnl()
 
     def update_cashout(self, _=None):
-        """update the cash out for the play. param2 is cash out"""
+        """update the cash out for the play. param2 is for binding"""
         if self._current_play is None:
             return
         if self.entry_wigits.cashout.var.get():
