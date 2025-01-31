@@ -105,6 +105,7 @@ class App(ttk.Window):
 
         file_menu = ttk.Menu(menu, tearoff=False)
         file_menu.add_command(label="Open Folder", command=self.open_folder)
+        file_menu.add_command(label="Save Session", command=self.save_session)
         file_menu.add_separator()
         file_menu.add_command(label="Set Image Scale Divisor", command=self.set_scale)
         file_menu.add_command(label="Rotate Image", command=self.rotate_image)
@@ -128,6 +129,8 @@ class App(ttk.Window):
         nav_menu.add_command(label="Goto first img [Home]", command=self.display_first_image)
         nav_menu.add_command(label="Prev img [PgUp]", command=self.display_prev_image)
         nav_menu.add_command(label="Next img [PgDn]", command=self.display_next_image)
+        nav_menu.add_command(label="Goto last img", command=self.display_last_image)
+        edit_menu.add_separator()
         nav_menu.add_command(label="Goto last img", command=self.display_last_image)
         menu.add_cascade(label="Navigate", menu=nav_menu)
 
@@ -468,41 +471,30 @@ class App(ttk.Window):
         """determine a current play is being editted or is a new play"""
         return self._current_index is not None
 
+    def move_to_next_unused_image(self):
+        # this actually moves to the next image not in current play... need to decided if I want to
+        # update the name or the behavior
+        while self.image_is_in_current_play(self.imgs[self.pointer].path) and self.pointer < len(self.imgs)-1:
+            self.pointer = min((self.pointer + 1), (len(self.imgs) - 1))
+        self.display_image()
     def save(self):
         """Save the play"""
-        readiness_state = self.get_save_readiness()
-        if self.SaveError.FORBIDDEN in readiness_state:
-            return
-
-        if self.SaveError.DATAWARNING in readiness_state:
-            confirmed = Messagebox.okcancel(
-                "There is potentially some missing data, are you sure?",
-                "Incomplete save warning",
-            )
-            if confirmed != "OK":
-                return
-
-        if self.SaveError.IMGWARNING in readiness_state:
-            confirmed = Messagebox.okcancel(
-                "At least one image in this play is in another play. Are you sure?",
-                "Duplicate image warning",
-            )
-            if confirmed != "OK":
-                return
+        self.confirm_save_readiness()
 
         if self._current_play is None:
             self.create_play()
 
         if self.editing_play():
+            # Get the play id and play object for the item being edited
             li = list(self.plays.items())
             li[self._current_index] = (
                 self._current_play.identifier,
                 self._current_play,
             )
-            self.plays = dict(li)
+            # Update the current play
             self.update_all_play_values()
-            # this shouldn't be needed, but somehow I am clearing the hand pays
-            self.plays[self._current_play.identifier] = copy.deepcopy(self._current_play)
+            # If the identifier changes, the new id needs to be used, this copies everythign back correctly.
+            self.plays = dict(li)
         else:
             self.update_all_play_values()
             if self._current_play.identifier in self.plays:
@@ -512,15 +504,46 @@ class App(ttk.Window):
                 )
                 if button != "OK":
                     return
-            # this shouldn't be needed, but somehow I am clearing the hand pays
-            self.plays[self._current_play.identifier] = copy.deepcopy(self._current_play)
+        # this deepcopy shouldn't be needed, but somehow I am clearing the hand pays
+        self.plays[self._current_play.identifier] = copy.deepcopy(self._current_play)
 
         self.session_table.update_table()
 
-        while self.image_is_in_current_play(self.imgs[self.pointer].path) and self.pointer < len(self.imgs) - 1:
-            self.display_next_image()
+        self.move_to_next_unused_image()
+        self.clear_entry_values()
 
-        # clears all entry values
+        # resets the save button to disabled
+        self.image_buttons.save_button.configure(state="disabled")
+        self.image_buttons.save_session_button.configure(state="enabled")
+        self.entry_wigits.machine_cb.combobox.focus_set()
+
+        self.create_play()
+
+    def confirm_save_readiness(self):
+        """Ask for confirmation if there are warnings, if there is an error, return False, if neither return True"""
+        readiness_state = self.get_save_readiness()
+        if self.SaveError.FORBIDDEN in readiness_state:
+            return False
+
+        if self.SaveError.DATAWARNING in readiness_state:
+            confirmed = Messagebox.okcancel(
+                "There is potentially some missing data, are you sure?",
+                "Incomplete save warning",
+            )
+            if confirmed != "OK":
+                return False
+
+        if self.SaveError.IMGWARNING in readiness_state:
+            confirmed = Messagebox.okcancel(
+                "At least one image in this play is in another play. Are you sure?",
+                "Duplicate image warning",
+            )
+            if confirmed != "OK":
+                return False
+        return True
+
+    def clear_entry_values(self):
+        """clears all entry values"""
         self._current_index = None
         self.entry_wigits.clear_play_start_datetime()
         self.entry_wigits.clear_play_end_datetime()
@@ -539,20 +562,16 @@ class App(ttk.Window):
         self.hand_pay.clear()
         self.entry_wigits.update_hand_pay_table(self)
 
-        # resets the save button to disabled
-        self.image_buttons.save_button.configure(state="disabled")
-        self.image_buttons.save_session_button.configure(state="enabled")
-        self.entry_wigits.machine_cb.combobox.focus_set()
-
-        self.create_play()
-
     def save_session(self):
         """Save the session"""
+        if len(self.plays) == 0 or self.session_date == self.default_session_date:
+            print("Nothing to do")
+            return
 
         # If there are images in the image table, this will miss those, but seems fine
         if self._current_play.start_image or self._current_play.end_image or \
                 len(self._current_play.addl_images) or self.entry_wigits.start_entry.var.get() or \
-                self.entry_wigits.end_entry.var.get():
+                self.entry_wigits.end_entry.var.get() or self.editing_play():
             confirmation = Messagebox.show_question(
                 'Are you sure? There is an incomplete play',
                 'Save Session Confirmation',

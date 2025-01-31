@@ -1,5 +1,6 @@
 import ttkbootstrap as ttk
 
+
 class ImageButtons(ttk.Frame):
     """Frame for the buttons above the image"""
     def __init__(self, parent, window):
