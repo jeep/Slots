@@ -5,12 +5,13 @@ from collections import namedtuple
 from ttkbootstrap import Querybox
 
 DropdownDataDefaults = namedtuple("Dropdown_data", ["filename", "defaults"])
-externals = dict(
-    play_type=DropdownDataDefaults("playtype_entry_values.csv",
-                                   ["AP", "Gamble", "Misplay", "Non-play", "Science", "Tip"], ),
-    casino=DropdownDataDefaults("casino_entry_values.csv", ["ilani", "Spirit Mountain"]),
-    denom=DropdownDataDefaults("denom_entry_values.csv", ["1cent", "2cent", "5cent", "10cent", "25cent", "$1", "$2"], ),
-    machine=DropdownDataDefaults("machine_entry_values.csv", ["Frankenstein", "Pinwheel Prizes", "Power Push"], ))
+externals = {'play_type': DropdownDataDefaults("playtype_entry_values.csv",
+                                               ["AP", "Gamble", "Misplay", "Non-play", "Science", "Tip"], ),
+             'casino': DropdownDataDefaults("casino_entry_values.csv", ["ilani", "Spirit Mountain"]),
+             'denom': DropdownDataDefaults("denom_entry_values.csv",
+                                           ["1cent", "2cent", "5cent", "10cent", "25cent", "$1", "$2"], ),
+             'machine': DropdownDataDefaults("machine_entry_values.csv",
+                                             ["Frankenstein", "Pinwheel Prizes", "Power Push"], )}
 
 
 class DropdownData:
@@ -20,8 +21,8 @@ class DropdownData:
         self.denom_values = DropdownData.get_entry_values(externals["denom"])
         self.casino_values = DropdownData.get_entry_values(externals["casino"])
         self.play_types = DropdownData.get_entry_values(externals["play_type"])
-        self._machine_file = externals["machine"]
-        self.machine_values = DropdownData.get_entry_values(self._machine_file)
+        self._machine_file = externals["machine"].filename
+        self.machine_values = DropdownData.get_entry_values(externals["machine"])
 
     def add_denom(self):
         """Add a new denomination"""
