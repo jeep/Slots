@@ -37,7 +37,11 @@ class StateHelperPlay(Play):
             return self._state
 
         if self._state.strip() != "":
-            return "; ".join([self._state.strip(), json.dumps(rv)])
+            start = "{"
+            end = "}"
+            st = f'"{self._state.strip()}"'
+            det = json.dumps(rv)
+            return f'{start}"state": {st}, "details": {det}{end}'
         return json.dumps(rv)
 
     @state.setter
