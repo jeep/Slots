@@ -88,6 +88,11 @@ class Play:
         else:
             self._cash_in.append(cash)
 
+    def clear_addl_cash_in(self) -> None:
+        """Clears cash in"""
+        self._cash_in.clear()
+
+
     def cash_out_str(self):
         rv = ""
         if len(self.hand_pays):

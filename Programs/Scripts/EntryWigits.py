@@ -48,7 +48,13 @@ class EntryWigits(ttk.Frame):
 
         self._create_cashin()
         self._create_cashout()
+
+        self._create_total_ci()
+        self._create_total_co()
         self._create_profit_loss()
+
+        self._create_cash_in_table()
+        self._create_hp_table()
 
         self._create_initial_state()
         self._create_state_val()
@@ -59,7 +65,6 @@ class EntryWigits(ttk.Frame):
         self._create_end_entry()
         self._create_image_table()
 
-        self._create_hp_table()
 
     def _create_header(self):
         self._header = ttk.Label(self, text="Play Information", anchor='center')
@@ -91,10 +96,12 @@ class EntryWigits(ttk.Frame):
         return datetime.datetime.strptime(self.dt.var.get(), fmt)
 
     def set_play_start_datetime(self, start_datetime):
+        """Set the start time of the play"""
         fmt = "%Y-%m-%d %H:%M:%S"
         self.dt.var.set(start_datetime.strftime(fmt))
 
     def clear_play_start_datetime(self):
+        """Clears the start time for the play"""
         self.dt.var.set("")
 
     def _create_play_type(self):
@@ -118,6 +125,12 @@ class EntryWigits(ttk.Frame):
     def _create_cashout(self):
         self.cashout = MoneyEntryLabel(self, 'Cash Out')
         self.cashout.bind("<FocusOut>", self._window.update_cashout)
+
+    def _create_total_ci(self):
+        self.total_ci = LabelLabel(self, 'Total Cash In', 0.00)
+
+    def _create_total_co(self):
+        self.total_co = LabelLabel(self, 'Total Cash Out', 0.00)
 
     def _create_profit_loss(self):
         self.profit_loss = LabelLabel(self, 'Profit/Loss', 0.00)
@@ -198,10 +211,15 @@ class EntryWigits(ttk.Frame):
         self.image_table.bind('<Double-Button-1>', self._jump_to_selection)
 
     def _create_hp_table(self):
-        self.hp_table = ttk.Treeview(self, columns=('hp', 'tip'), show='headings')
+        self.hp_table = ttk.Treeview(self, columns=('hp', 'tip'), show='headings', height=4)
         self.hp_table.heading('hp', text='Hand Pay')
         self.hp_table.heading('tip', text='Tip')
         self.hp_table.bind('<Delete>', self._hp_delete)
+
+    def _create_cash_in_table(self):
+        self.ci_table = ttk.Treeview(self, columns=('ci'), show='headings', height=4)
+        self.ci_table.heading('ci', text='Addl Cash in')
+        self.ci_table.bind('<Delete>', self._ci_delete)
 
     def update_table(self, parent):
         """update the table of images"""
@@ -218,6 +236,14 @@ class EntryWigits(ttk.Frame):
             self.hp_table.insert(parent='', index=ttk.END,
                                  values=(item.pay_amount, item.tip_amount))
         parent.update_handpays()
+
+    def _ci_delete(self, _):
+        for item in self.ci_table.selection():
+            self.ci_table.delete(item)
+        self._window.addl_ci.clear()
+        for item in self.ci_table.get_children():
+            values = self.ci_table.item(item)['values']
+            self._window.ci.append(Decimal(values[0]))
 
     def _hp_delete(self, _):
         for item in self.hp_table.selection():
@@ -244,26 +270,31 @@ class EntryWigits(ttk.Frame):
         self.denom_cb.grid(row=row, column=1, sticky='we', padx=5, pady=5)
         self.play_type.grid(row=row, column=2, sticky='we', padx=5, pady=5)
 
-        row = 4
+        row += 1
+        self.total_ci.grid(row=row, column=0, sticky='we')
+        self.total_co.grid(row=row, column=1, sticky='we')
+        self.profit_loss.grid(row=row, column=2, sticky='we')
+
+        row += 1
         self.cashin.grid(row=row, column=0, sticky='we', padx=5, pady=5)
         self.cashout.grid(row=row, column=1, sticky='we', padx=5, pady=5)
-        self.profit_loss.grid(row=row, column=2, sticky='we', columnspan=2)
 
-        row = 5
+        row += 1
+        self.ci_table.grid(row=row, column=0, columnspan=1, sticky='we', padx=5, pady=5)
+        self.hp_table.grid(row=row, column=1, columnspan=2, sticky='we', padx=5, pady=5)
+
+        row += 1
         self.initial_state.grid(row=row, column=0, columnspan=3, sticky='we', padx=5, pady=5)
 
-        row = 6
+        row += 1
         self.state_val.grid(row=row, column=0, columnspan=3, sticky='we', padx=5, pady=5)
 
-        row = 7
+        row += 1
         self.note.grid(row=row, column=0, columnspan=3, sticky='we', padx=5, pady=5)
 
-        row = 8
+        row += 1
         self.start_entry.grid(row=row, column=0, sticky='we', padx=5, pady=5)
         self.image_table.grid(row=row, column=1, columnspan=2, rowspan=2, sticky='we', padx=5, pady=5)
 
-        row = 9
+        row += 1
         self.end_entry.grid(row=row, column=0, sticky='we', padx=5, pady=5)
-
-        row = 10
-        self.hp_table.grid(row=row, column=0, columnspan=3, sticky='we', padx=5, pady=5)

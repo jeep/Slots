@@ -43,6 +43,7 @@ class App(ttk.Window):
         self.imgs = []
         self.play_imgs = []
         self.hand_pay = []
+        self.cash_in = []
         self.plays = {}
         self._current_play = None
         self.start_datetime = datetime.MINYEAR
@@ -179,10 +180,10 @@ class App(ttk.Window):
             self.scale,
             1,
         )
-        if scale is None:
-            pass
-        else:
+
+        if scale is not None:
             self.scale = scale
+
         self.display_image()
 
     def rotate_image(self):
@@ -239,6 +240,7 @@ class App(ttk.Window):
         self.image_buttons.update_pagination_info(file_name=file_name, file_date=file_date, image_index=index,
                                                   image_count=len(self.imgs), color=color)
 
+        # does this need to bind each time or could we bind once and have it use a member var?
         self.image_display.canvas.bind("<Double-Button-1>", lambda _: startfile(current_image_w_path))
         if self.image_is_in_current_play(current_image_w_path):
             self.image_buttons.set_image_adders("disabled")
@@ -297,7 +299,7 @@ class App(ttk.Window):
             self._current_play.session_date = self.get_session_date()
 
     def update_casino(self, _=None):
-        """Update casino for the play. Second param is casino"""
+        """Update casino for the play. Second param is event for binding"""
         if self.session_frame.casino.var.get():
             casino = self.session_frame.casino.var.get()
             self.dropdown_data.update_machine_dd(casino)
@@ -345,6 +347,12 @@ class App(ttk.Window):
             return
         if self.entry_wigits.cashin.var.get():
             self._current_play.cash_in = Decimal(self.entry_wigits.cashin.var.get())
+            self.update_pnl()
+            self.update_pnl()
+        
+        self._current_play.clear_addl_cash_in()
+        for ci in self.cash_in:
+            self._current_play.add_cash(Decimal(ci))
             self.update_pnl()
 
     def update_cashout(self, _=None):
@@ -470,11 +478,13 @@ class App(ttk.Window):
         return self._current_index is not None
 
     def move_to_next_unused_image(self):
+        """increment pointer and display tne nexe unused image"""
         # this actually moves to the next image not in current play... need to decided if I want to
         # update the name or the behavior
         while self.image_is_in_current_play(self.imgs[self.pointer].path) and self.pointer < len(self.imgs)-1:
             self.pointer = min((self.pointer + 1), (len(self.imgs) - 1))
         self.display_image()
+
     def save(self):
         """Save the play"""
         self.confirm_save_readiness()
@@ -560,6 +570,8 @@ class App(ttk.Window):
         self.hand_pay.clear()
         self.entry_wigits.update_hand_pay_table(self)
 
+
+
     def save_session(self):
         """Save the session"""
         if len(self.plays) == 0 or self.session_date == self.default_session_date:
@@ -576,6 +588,9 @@ class App(ttk.Window):
                 buttons=['No:secondary', 'Yes:warning'])
             if confirmation != 'Yes':
                 return
+
+#        if not self.confirm_session_save():
+#            return
 
         # gets the path to the data save
         save_path = join(dirname(dirname(__file__)), "Data")
