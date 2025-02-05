@@ -341,19 +341,35 @@ class App(ttk.Window):
             return
         self.entry_wigits.profit_loss.var.set(self._current_play.pnl)
 
-    def update_cashin(self, _=None):
-        """update the cash in for the play. param2 is for binding"""
+
+    def add_cash_to_play(self, value):
+        """Add this amount to the current play"""
+        if self._current_play:
+            self._current_play.add_cash(value)
+            return True
+        return False
+
+    def get_cash_in(self):
+        """Get list of cash entries from play"""
+        return self._current_play.get_cash_entries()
+
+
+    def update_cash_in(self, _=None):
+        """update the cash in for the play by taking what's in the display table and adding it to the play. param2 is for binding"""
         if self._current_play is None:
             return
-        if self.entry_wigits.cashin.var.get():
-            self._current_play.cash_in = Decimal(self.entry_wigits.cashin.var.get())
-            self.update_pnl()
-            self.update_pnl()
-        
-        self._current_play.clear_addl_cash_in()
-        for ci in self.cash_in:
-            self._current_play.add_cash(Decimal(ci))
-            self.update_pnl()
+
+        self._current_play.clear_cash_in()
+        for ci in self.entry_wigits.get_cash_in():
+            self._current_play.add_cash(ci)
+        self.update_pnl()
+        self.update_total_cash_in()
+
+    def update_total_cash_in(self):
+        self.entry_wigits.total_cash_in.set(self._current_play.cash_in)
+
+    def update_total_cash_out(self):
+        self.entry_wigits.total_cash_out.set(self._current_play.get_total_cash_out())
 
     def update_cashout(self, _=None):
         """update the cash out for the play. param2 is for binding"""
@@ -362,6 +378,7 @@ class App(ttk.Window):
         if self.entry_wigits.cashout.var.get():
             self._current_play.cash_out = Decimal(self.entry_wigits.cashout.var.get())
             self.update_pnl()
+        self.update_total_cash_out()
 
     def update_init_state(self):
         """update initial state"""
@@ -408,6 +425,7 @@ class App(ttk.Window):
             self._current_play.add_hand_pay(hp)
         # self._current_play.hand_pays = self.hand_pay.copy()
         self.update_pnl()
+        self.update_cashout()
 
     def load_play(self, playid):
         """load a pre-existing play"""
@@ -464,7 +482,7 @@ class App(ttk.Window):
         self.update_bet()
         self.update_denom()
         self.update_play_type()
-        self.update_cashin()
+        self.update_cash_in()
         self.update_cashout()
         self.update_init_state()
         self.update_play_note()

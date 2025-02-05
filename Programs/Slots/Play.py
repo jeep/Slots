@@ -82,16 +82,26 @@ class Play:
         hps = sum(hp.pay_amount for hp in self.hand_pays)
         return self.cash_out + hps - self.cash_in
 
+
+    def get_cash_entries(self):
+        return self._cash_in
+
     def add_cash(self, cash: Decimal) -> None:
         if len(self._cash_in) == 1 and self._cash_in[0] == Decimal(0):
             self._cash_in[0] = cash
         else:
             self._cash_in.append(cash)
 
-    def clear_addl_cash_in(self) -> None:
+    def clear_cash_in(self) -> None:
         """Clears cash in"""
         self._cash_in.clear()
 
+    def get_total_cash_out(self):
+        rv = 0.0
+        for hp in self.hand_pays:
+            rv += hp.pay_amount
+        rv += self.cash_out
+        return rv
 
     def cash_out_str(self):
         rv = ""

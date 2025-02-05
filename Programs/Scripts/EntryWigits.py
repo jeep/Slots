@@ -31,6 +31,9 @@ class EntryWigits(ttk.Frame):
         super().__init__(master=parent)
         self._window = window
 
+        self.total_cash_out = ttk.StringVar()
+        self.total_cash_in = ttk.StringVar()
+
         self._create_entries()
         self._place_entries()
 
@@ -120,17 +123,17 @@ class EntryWigits(ttk.Frame):
 
     def _create_cashin(self):
         self.cashin = MoneyEntryLabel(self, 'Cash In')
-        self.cashin.bind("<FocusOut>", self._window.update_cashin)
+        self.cashin.bind("<FocusOut>", self.add_cash)
 
     def _create_cashout(self):
         self.cashout = MoneyEntryLabel(self, 'Cash Out')
         self.cashout.bind("<FocusOut>", self._window.update_cashout)
 
     def _create_total_ci(self):
-        self.total_ci = LabelLabel(self, 'Total Cash In', 0.00)
+        self.total_ci = LabelLabel(self, 'Total Cash In', label_var=self.total_cash_in)
 
     def _create_total_co(self):
-        self.total_co = LabelLabel(self, 'Total Cash Out', 0.00)
+        self.total_co = LabelLabel(self, 'Total Cash Out', label_var=self.total_cash_out)
 
     def _create_profit_loss(self):
         self.profit_loss = LabelLabel(self, 'Profit/Loss', 0.00)
@@ -216,9 +219,22 @@ class EntryWigits(ttk.Frame):
         self.hp_table.heading('tip', text='Tip')
         self.hp_table.bind('<Delete>', self._hp_delete)
 
+
+    def add_cash(self, _):
+        """Add cash from entry field to the play"""
+        if not self.cashin.var.get():
+            return
+        ci = Decimal(self.cashin.var.get())
+        if ci and ci > Decimal(0.0):
+            success = self._window.add_cash_to_play(ci)
+            if success:
+                self.cashin.var.set("")
+        self.update_cash_in_table(self._window)
+
+
     def _create_cash_in_table(self):
         self.ci_table = ttk.Treeview(self, columns=('ci'), show='headings', height=4)
-        self.ci_table.heading('ci', text='Addl Cash in')
+        self.ci_table.heading('ci', text='Cash in')
         self.ci_table.bind('<Delete>', self._ci_delete)
 
     def update_table(self, parent):
@@ -237,13 +253,26 @@ class EntryWigits(ttk.Frame):
                                  values=(item.pay_amount, item.tip_amount))
         parent.update_handpays()
 
+    def update_cash_in_table(self, parent):
+        """Update the cash in display table to match the values from the play"""
+        self.ci_table.delete(*self.ci_table.get_children())
+        total = Decimal(0.0)
+        for item in parent.get_cash_in():
+            self.ci_table.insert(parent='', index=ttk.END, values=item)
+            total += item
+        self.total_cash_in.set('{:2f}'.format(total))
+
     def _ci_delete(self, _):
         for item in self.ci_table.selection():
             self.ci_table.delete(item)
-        self._window.addl_ci.clear()
-        for item in self.ci_table.get_children():
-            values = self.ci_table.item(item)['values']
-            self._window.ci.append(Decimal(values[0]))
+        success = True
+        self._window.update_cash_in()
+
+    def get_cash_in(self):
+        values = []
+        for i in self.ci_table.get_children():
+            values.append(Decimal(self.ci_table.item(i, 'values')[0]))
+        return values
 
     def _hp_delete(self, _):
         for item in self.hp_table.selection():
