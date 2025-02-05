@@ -86,6 +86,16 @@ class Play:
     def get_cash_entries(self):
         return self._cash_in
 
+    
+    def get_cash_entries_for_csv(self):
+        """Get the string to use for cashin for CSV"""
+        if len(self._cash_in) <=1:
+            return f"{self.cash_in:.2f}"
+
+        rv = "="
+        rv += "+".join(str(ci) for ci in self.get_cash_entries())
+        return rv
+
     def add_cash(self, cash: Decimal) -> None:
         if len(self._cash_in) == 1 and self._cash_in[0] == Decimal(0):
             self._cash_in[0] = cash
@@ -97,7 +107,7 @@ class Play:
         self._cash_in.clear()
 
     def get_total_cash_out(self):
-        rv = 0.0
+        rv = Decimal(0.0)
         for hp in self.hand_pays:
             rv += hp.pay_amount
         rv += self.cash_out
@@ -142,11 +152,11 @@ class Play:
         start_date = self.start_time.strftime(r"%m/%d/%Y")
         images = [str(pathlib.PureWindowsPath(f)) for f in self.addl_images]
 
-        rows = [(self.session_date.strftime(r"%m/%d/%Y"), self.casino, self.start_time, self.machine.get_name(),
-                 format_currency(self.cash_in, 'USD', locale='en_US'), format_currency(self.bet, 'USD', locale='en_US'),
-                 self.play_type, self.denom, self.state, self.cash_out_str(),
-                 format_currency(self.pnl, 'USD', locale='en_US'), note, self.machine.get_family(),
-                 self.start_image, self.end_image, images, self.end_time)]
+        rows = [(self.session_date.strftime(r"%m/%d/%Y"), self.casino, self.start_time,
+                 self.machine.get_name(), self.get_cash_entries_for_csv(),
+                 format_currency(self.bet, 'USD', locale='en_US'), self.play_type, self.denom,
+                 self.state, self.cash_out_str(),format_currency(self.pnl, 'USD', locale='en_US'),
+                 note, self.machine.get_family(), self.start_image, self.end_image, images, self.end_time)]
         for hp in self.hand_pays:
             if hp.tax > 0:
                 tax = format_currency(hp.tax, 'USD', locale='en_US')
@@ -174,9 +184,9 @@ class Play:
             note += f"; {str(self.bonuses)}"
 
         output_string = (f"{self.identifier},{self.casino},{start_date},{self.machine.get_name()},"
-                         f"{format_currency(self.cash_in, 'USD', locale='en_US')},"
-                         f"{format_currency(self.bet, 'USD', locale='en_US')},{self.play_type},{self.denom},"
-                         f"\"{self.state}\",{self.cash_out_str()},"
+                         f"{self.get_cash_entries_for_csv()},"
+                         f"{format_currency(self.bet, 'USD', locale='en_US')},{self.play_type},"
+                         f"{self.denom},\"{self.state}\",{self.cash_out_str()},"
                          f"{format_currency(self.pnl, 'USD', locale='en_US')},\"{note}\","
                          f"{self.machine.get_family()},{self.start_image},{self.end_image},{images}")
         for hp in self.hand_pays:

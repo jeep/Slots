@@ -440,7 +440,8 @@ class App(ttk.Window):
         self.entry_wigits.bet.var.set(self._current_play.bet)
         self.entry_wigits.denom_cb.var.set(self._current_play.denom)
         self.entry_wigits.play_type.var.set(self._current_play.play_type)
-        self.entry_wigits.cashin.var.set(self._current_play.cash_in)
+        self.entry_wigits.cashin.var.set("")
+        self.entry_wigits.update_cash_in_table(self)
         self.entry_wigits.cashout.var.set(self._current_play.cash_out)
         self.update_pnl()
         self.entry_wigits.initial_state.set_text(self._current_play.state)
@@ -570,24 +571,14 @@ class App(ttk.Window):
 
     def clear_entry_values(self):
         """clears all entry values"""
+
         self._current_index = None
-        self.entry_wigits.clear_play_start_datetime()
-        self.entry_wigits.clear_play_end_datetime()
-        self.entry_wigits.bet.var.set(0)
-        self.entry_wigits.cashin.var.set(self._current_play.cash_out)
-        self.entry_wigits.cashout.var.set(0)
-        self.entry_wigits.initial_state.clear()
-        self.ttk_state.set("")
-        self.entry_wigits.note.clear()
-        self.entry_wigits.start_entry.var.set("")
-        self.entry_wigits.end_entry.var.set("")
-
+        cash_out = self._current_play.cash_out
         self.play_imgs.clear()
-        self.entry_wigits.update_table(self)
-
         self.hand_pay.clear()
-        self.entry_wigits.update_hand_pay_table(self)
-
+        self.ttk_state.set("")
+        self.entry_wigits.clear_all_widgets()
+        self.entry_wigits.cashin.var.set(cash_out)
 
 
     def save_session(self):
@@ -824,7 +815,7 @@ class App(ttk.Window):
     def jump_to_image(self, filename):
         """Jump to the named image"""
         for index, img in enumerate(self.imgs):
-            if img[0] == filename:
+            if img.path == filename:
                 self.pointer = index
         #        self.pointer = self.imgs.index(self.entry_wigits.start_entry.var.get())
         self.display_image()

@@ -282,6 +282,21 @@ class EntryWigits(ttk.Frame):
             values = self.hp_table.item(item)['values']
             self._window.hand_pay.append(HandPay(Decimal(values[0]), Decimal(values[1])))
 
+    def clear_all_widgets(self):
+        self.clear_play_start_datetime()
+        self.clear_play_end_datetime()
+        self.bet.var.set(0)
+        self.cashout.var.set(0)
+        self.initial_state.clear()
+        self.note.clear()
+        self.start_entry.var.set("")
+        self.end_entry.var.set("")
+
+        self.update_table(self._window)
+        self.ci_table.delete(*self.ci_table.get_children())
+        self.update_hand_pay_table(self._window)
+
+
     def _place_entries(self):
         self.columnconfigure((0, 1, 2), weight=1, uniform='b')
         row = 0
