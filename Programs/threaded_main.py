@@ -506,7 +506,8 @@ class App(ttk.Window):
 
     def save(self):
         """Save the play"""
-        self.confirm_save_readiness()
+        if not self.confirm_save_readiness():
+            return
 
         if self._current_play is None:
             self.create_play()
