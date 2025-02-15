@@ -98,7 +98,6 @@ class App(ttk.Window):
         """Gets the current play"""
         return self._current_play
 
-
     def make_menu(self):
         """Make the menus"""
         menu = ttk.Menu(master=self)
@@ -133,22 +132,6 @@ class App(ttk.Window):
         nav_menu.add_command(label="Goto last img", command=self.display_last_image)
         menu.add_cascade(label="Navigate", menu=nav_menu)
 
-    def load_final_play(self):
-        """Load the last play in the session"""
-        self.load_play(list(self.plays.keys())[-1])
-
-    def force_clear(self):
-        """Clear all image data from the current play"""
-        self.play_imgs.clear()
-        self.start_img.set("")
-        self.end_img.set("")
-        self.entry_wigits.update_table(self)
-
-    def open_test_folder(self):
-        """For testing"""
-        folder = join(dirname(dirname(__file__)), "Data", "test_pics")
-        self.open_folder(folder)
-
     def open_folder(self, directory=""):
         """open a folder to get images"""
         if directory == "":
@@ -171,6 +154,162 @@ class App(ttk.Window):
         self.image_buttons.set_image_adders("normal")
         self.image_buttons.delete_button.configure(state="warning")
         self.image_buttons.set_image_navigation("normal")
+        self.default_output_base_dir = directory
+
+    def display_image(self):
+        """Display the image"""
+        if len(self.imgs) == 0:
+            return
+
+        self.image_display.canvas.delete("all")
+        # opens the image at the current pointer
+        with Image.open(self.imgs[self.pointer].path) as image:
+            image = image.reduce(self.scale)
+            image = image.rotate(self.rotation, expand=1)
+
+            global imagetk
+            # turns the image into an image that tkinter can display
+            imagetk = ImageTk.PhotoImage(image)
+
+            # gets the image dimensions and divides them by 2
+            x, y = image.size
+            x, y = x / 2, y / 2
+
+            # adds the image to the canvas
+            self.image_display.canvas.create_image(x, y, image=imagetk)
+
+        current_image_w_path = self.imgs[self.pointer].path
+        file_name = basename(current_image_w_path)
+        index = self.pointer + 1
+        color = self.get_image_name_color(current_image_w_path)
+        file_date = self.imgs[self.pointer].time
+        self.image_buttons.update_pagination_info(file_name=file_name, file_date=file_date, image_index=index,
+                                                  image_count=len(self.imgs), color=color)
+
+        # does this need to bind each time or could we bind once and have it use a member var?
+        self.image_display.canvas.bind("<Double-Button-1>", lambda _: startfile(current_image_w_path))
+        if self.image_is_in_current_play(current_image_w_path):
+            self.image_buttons.set_image_adders("disabled")
+        else:
+            self.image_buttons.set_image_adders("normal")
+
+    def save_session(self):
+        """Save the session"""
+        if not self.session_exists():
+            print("Nothing to do")
+            return
+
+        # If there are images in the image table, this will miss those, but seems fine
+        if self.play_is_being_editted():
+            confirmation = Messagebox.show_question(
+                'Are you sure? There is an incomplete play',
+                'Save Session Confirmation',
+                buttons=['No:secondary', 'Yes:warning'])
+            if confirmation != 'Yes':
+                return
+
+#        if not self.confirm_session_save():
+#            return
+
+        # gets the path to the data save
+        outdir = self.get_output_dir()
+        save_path = join(outdir, "Data")
+        file_path = join(save_path, "slots_data.csv")
+        makedirs(save_path, exist_ok=True)
+
+        self.confirm_file_is_writable(file_path)
+
+        new_path = join(outdir, f"Sorted/{self.get_session_date()}")
+        try:
+            makedirs(new_path, exist_ok=False)
+        except Exception:
+            pass
+
+        pics_to_remove = []
+        # move all images and update play values with new location
+        play_id = ""
+        try:
+            with open(file_path, "a+", newline="") as csvfile:
+                writer = csv.writer(csvfile)
+                for p in list(self.plays.values()):
+                    play_id = p.identifier
+                    if p.start_image and new_path:
+                        pics_to_remove.append(p.start_image)
+                        p.start_image = move(p.start_image, new_path)
+
+                    pics_to_remove.extend(p.addl_images)
+                    for i, a in enumerate(p.addl_images):
+                        p.addl_images[i] = move(a, new_path)
+
+                    if p.end_image and new_path:
+                        pics_to_remove.append(p.end_image)
+                        p.end_image = move(p.end_image, new_path)
+
+                    for row in p.get_csv_rows():
+                        writer.writerow(row)
+        except Exception as e:
+            Messagebox.show_error(
+                f'Error saving session at {play_id}. Aborting. You will need to manually fix things to continue.\n{e}',
+                'Error Saving')
+            raise e
+
+        self.imgs = [img for img in self.imgs if img.path not in pics_to_remove]
+        self.imgs = sorted(self.imgs, key=lambda item: item.time)
+        self.display_first_image()
+
+        self.plays.clear()
+        self.session_table.update_table()
+
+        self.image_buttons.set_image_adders("normal")
+
+        self.image_buttons.save_button.configure(state="disabled")
+        self.image_buttons.save_session_button.configure(state="disabled")
+        self.set_session_date(self.default_session_date)
+
+    def session_exists(self):
+        return len(self.plays) > 0 and self.session_date != self.default_session_date
+
+    def play_is_being_editted(self):
+        return (self._current_play.start_image or
+                self._current_play.end_image or
+                len(self._current_play.addl_images) or
+                self.entry_wigits.start_entry.var.get() or
+                self.entry_wigits.end_entry.var.get() or
+                self.editing_play())
+
+    def confirm_file_is_writable(self, file_path):
+        while True:
+            try:
+                f = open(file_path, "a+")
+            except OSError:
+                Messagebox.show_error(
+                    f'Cannot open "{file_path}".\nPlease close and try again',
+                    "File Open Error",
+                )
+            else:
+                f.close()
+                break
+
+    def get_output_dir(self):
+        """open a folder to get images"""
+        directory = askdirectory(initialdir=self.default_output_base_dir, mustexist=False)
+        return directory
+
+    def load_final_play(self):
+        """Load the last play in the session"""
+        self.load_play(list(self.plays.keys())[-1])
+
+    def force_clear(self):
+        """Clear all image data from the current play"""
+        self.play_imgs.clear()
+        self.start_img.set("")
+        self.end_img.set("")
+        self.entry_wigits.update_table(self)
+
+    def open_test_folder(self):
+        """For testing"""
+        folder = join(dirname(dirname(__file__)), "Data", "test_pics")
+        self.open_folder(folder)
 
     def set_scale(self):
         """Set scale factor for the image. Larger scale is smaller image."""
@@ -209,43 +348,6 @@ class App(ttk.Window):
         if "IMG_E" in basename(img_name):
             return image_name_color["avoid"]
         return image_name_color["normal"]
-
-    def display_image(self):
-        """Display the image"""
-        if len(self.imgs) == 0:
-            return
-
-        self.image_display.canvas.delete("all")
-        # opens the image at the current pointer
-        with Image.open(self.imgs[self.pointer].path) as image:
-            image = image.reduce(self.scale)
-            image = image.rotate(self.rotation, expand=1)
-
-            global imagetk
-            # turns the image into an image that tkinter can display
-            imagetk = ImageTk.PhotoImage(image)
-
-            # gets the image dimensions and divides them by 2
-            x, y = image.size
-            x, y = x / 2, y / 2
-
-            # adds the image to the canvas
-            self.image_display.canvas.create_image(x, y, image=imagetk)
-
-        current_image_w_path = self.imgs[self.pointer].path
-        file_name = basename(current_image_w_path)
-        index = self.pointer + 1
-        color = self.get_image_name_color(current_image_w_path)
-        file_date = self.imgs[self.pointer].time
-        self.image_buttons.update_pagination_info(file_name=file_name, file_date=file_date, image_index=index,
-                                                  image_count=len(self.imgs), color=color)
-
-        # does this need to bind each time or could we bind once and have it use a member var?
-        self.image_display.canvas.bind("<Double-Button-1>", lambda _: startfile(current_image_w_path))
-        if self.image_is_in_current_play(current_image_w_path):
-            self.image_buttons.set_image_adders("disabled")
-        else:
-            self.image_buttons.set_image_adders("normal")
 
     def display_first_image(self, _=None):
         """display the first image"""
@@ -352,7 +454,6 @@ class App(ttk.Window):
     def get_cash_in(self):
         """Get list of cash entries from play"""
         return self._current_play.get_cash_entries()
-
 
     def update_cash_in(self, _=None):
         """update the cash in for the play by taking what's in the display table and adding it to the play. param2 is for binding"""
@@ -581,104 +682,11 @@ class App(ttk.Window):
         self.entry_wigits.clear_all_widgets()
         self.entry_wigits.cashin.var.set(cash_out)
 
-
-    def save_session(self):
-        """Save the session"""
-        if len(self.plays) == 0 or self.session_date == self.default_session_date:
-            print("Nothing to do")
-            return
-
-        # If there are images in the image table, this will miss those, but seems fine
-        if self._current_play.start_image or self._current_play.end_image or \
-                len(self._current_play.addl_images) or self.entry_wigits.start_entry.var.get() or \
-                self.entry_wigits.end_entry.var.get() or self.editing_play():
-            confirmation = Messagebox.show_question(
-                'Are you sure? There is an incomplete play',
-                'Save Session Confirmation',
-                buttons=['No:secondary', 'Yes:warning'])
-            if confirmation != 'Yes':
-                return
-
-#        if not self.confirm_session_save():
-#            return
-
-        # gets the path to the data save
-        save_path = join(dirname(dirname(__file__)), "Data")
-        file_path = join(save_path, "slots_data.csv")
-
-        makedirs(save_path, exist_ok=True)
-
-        while True:
-            try:
-                f = open(file_path, "a+")
-            except OSError:
-                Messagebox.show_error(
-                    f'Cannot open "{file_path}".\nPlease close and try again',
-                    "File Open Error",
-                )
-            else:
-                f.close()
-                break
-
-        new_path = ""
-        if list(self.plays.values())[0].start_image:
-            new_path = join(
-                dirname(dirname(list(self.plays.values())[0].start_image)),
-                f"Sorted/{self.get_session_date()}",
-            )
-
-            try:
-                makedirs(new_path, exist_ok=False)
-            except Exception:
-                pass
-
-        pics_to_remove = []
-        # move all images and update play values with new location
-        play_id = ""
-        try:
-            with open(file_path, "a+", newline="") as csvfile:
-                writer = csv.writer(csvfile)
-                for p in list(self.plays.values()):
-                    play_id = p.identifier
-                    if p.start_image and new_path:
-                        pics_to_remove.append(p.start_image)
-                        p.start_image = move(p.start_image, new_path)
-
-                    pics_to_remove.extend(p.addl_images)
-                    for i, a in enumerate(p.addl_images):
-                        p.addl_images[i] = move(a, new_path)
-
-                    if p.end_image and new_path:
-                        pics_to_remove.append(p.end_image)
-                        p.end_image = move(p.end_image, new_path)
-
-                    for row in p.get_csv_rows():
-                        writer.writerow(row)
-        except Exception as e:
-            Messagebox.show_error(
-                f'Error saving session at {play_id}. Aborting. You will need to manually fix things to continue.\n{e}',
-                'Error Saving')
-            raise e
-
-        self.imgs = [img for img in self.imgs if img.path not in pics_to_remove]
-        self.imgs = sorted(self.imgs, key=lambda item: item.time)
-        self.display_first_image()
-
-        self.plays.clear()
-        self.session_table.update_table()
-
-        self.image_buttons.set_image_adders("normal")
-
-        self.image_buttons.save_button.configure(state="disabled")
-        self.image_buttons.save_session_button.configure(state="disabled")
-        self.set_session_date(self.default_session_date)
-
     def image_is_in_current_play(self, img):
         """determine if the image is in the current play"""
         return (img in self.play_imgs) or \
             (img == self.entry_wigits.start_entry.var.get()) or \
             (img == self.entry_wigits.end_entry.var.get())
-
 
     def should_add(self, img):
         """Check if this image is already used, if so confirm that is should be reused"""
