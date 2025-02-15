@@ -48,6 +48,7 @@ class App(ttk.Window):
         self._current_play = None
         self.start_datetime = datetime.MINYEAR
         self.dropdown_data = DropdownData()
+        self.default_output_base_dir = None
 
         self.pointer = 0
         self.scale = 7
@@ -104,7 +105,7 @@ class App(ttk.Window):
         self.configure(menu=menu)
 
         file_menu = ttk.Menu(menu, tearoff=False)
-        file_menu.add_command(label="Open Folder", command=self.open_folder)
+        file_menu.add_command(label="Open Folder", command=self.get_and_open_folder)
         file_menu.add_command(label="Save Session", command=self.save_session)
         file_menu.add_separator()
         file_menu.add_command(label="Preload Test Play", command=self.load_test_play)
@@ -132,14 +133,16 @@ class App(ttk.Window):
         nav_menu.add_command(label="Goto last img", command=self.display_last_image)
         menu.add_cascade(label="Navigate", menu=nav_menu)
 
-    def open_folder(self, directory=""):
+    def get_and_open_folder(self):
         """open a folder to get images"""
-        if directory == "":
-            directory = askdirectory(mustexist=True)
-
+        directory = askdirectory(mustexist=True)
         if directory == "":
             return
+        
+        self.open_folder(directory)
 
+    def open_folder(self, directory):
+        """open a folder to get images"""
         print("Loading ", datetime.datetime.now())
         # multi threads getting the image data ( image path, image type, image date )
         self.imgs = [d for d in multi_get_img_data(directory) if d is not None]
@@ -208,56 +211,22 @@ class App(ttk.Window):
             if confirmation != 'Yes':
                 return
 
-#        if not self.confirm_session_save():
-#            return
-
         # gets the path to the data save
         outdir = self.get_output_dir()
         save_path = join(outdir, "Data")
-        file_path = join(save_path, "slots_data.csv")
+        csv_file_path = join(save_path, "slots_data.csv")
         makedirs(save_path, exist_ok=True)
 
-        self.confirm_file_is_writable(file_path)
+        self.confirm_file_is_writable(csv_file_path)
 
-        new_path = join(outdir, f"Sorted/{self.get_session_date()}")
+        new_image_path = join(outdir, f"Sorted/{self.get_session_date()}")
         try:
-            makedirs(new_path, exist_ok=False)
+            makedirs(new_image_path, exist_ok=False)
         except Exception:
             pass
 
-        pics_to_remove = []
-        # move all images and update play values with new location
-        play_id = ""
-        try:
-            with open(file_path, "a+", newline="") as csvfile:
-                writer = csv.writer(csvfile)
-                for p in list(self.plays.values()):
-                    play_id = p.identifier
-                    if p.start_image and new_path:
-                        pics_to_remove.append(p.start_image)
-                        p.start_image = move(p.start_image, new_path)
+        self.move_pics_and_write_csv_file(csv_file_path, new_image_path)
 
-                    pics_to_remove.extend(p.addl_images)
-                    for i, a in enumerate(p.addl_images):
-                        p.addl_images[i] = move(a, new_path)
-
-                    if p.end_image and new_path:
-                        pics_to_remove.append(p.end_image)
-                        p.end_image = move(p.end_image, new_path)
-
-                    for row in p.get_csv_rows():
-                        writer.writerow(row)
-        except Exception as e:
-            Messagebox.show_error(
-                f'Error saving session at {play_id}. Aborting. You will need to manually fix things to continue.\n{e}',
-                'Error Saving')
-            raise e
-
-        self.imgs = [img for img in self.imgs if img.path not in pics_to_remove]
-        self.imgs = sorted(self.imgs, key=lambda item: item.time)
-        self.display_first_image()
-
-        self.plays.clear()
         self.session_table.update_table()
 
         self.image_buttons.set_image_adders("normal")
@@ -267,9 +236,11 @@ class App(ttk.Window):
         self.set_session_date(self.default_session_date)
 
     def session_exists(self):
+        """Determine if we are already in a session"""
         return len(self.plays) > 0 and self.session_date != self.default_session_date
 
     def play_is_being_editted(self):
+        """Determine if we are editting a play (vs. createing a new one)"""
         return (self._current_play.start_image or
                 self._current_play.end_image or
                 len(self._current_play.addl_images) or
@@ -278,6 +249,7 @@ class App(ttk.Window):
                 self.editing_play())
 
     def confirm_file_is_writable(self, file_path):
+        """Loop until the csv file is writable"""
         while True:
             try:
                 f = open(file_path, "a+")
@@ -294,6 +266,51 @@ class App(ttk.Window):
         """open a folder to get images"""
         directory = askdirectory(initialdir=self.default_output_base_dir, mustexist=False)
         return directory
+
+    def move_pics_and_write_csv_file(self, csv_file_path, new_image_path):
+        """Move all images to the processed directory and write the csv file"""
+        pics_to_remove = []
+        # move all images and update play values with new location
+        play_id = ""
+        try:
+            with open(csv_file_path, "a+", newline="") as csvfile:
+                writer = csv.writer(csvfile)
+                for play_id, p in self.plays.items():
+                    moved_pix = self.move_play_images(p, new_image_path)
+                    pics_to_remove.extend(moved_pix)
+
+                    for row in p.get_csv_rows():
+                        writer.writerow(row)
+
+                    del(self.plays[play_id])
+                    self.session_table.update_table()
+        except Exception as e:
+            Messagebox.show_error(
+                f'Error saving session at {play_id}. Aborting. You will need to manually fix things to continue.\n{e}',
+                'Error Saving')
+
+        self.imgs = [img for img in self.imgs if img.path not in pics_to_remove]
+        self.imgs = sorted(self.imgs, key=lambda item: item.time)
+        self.display_first_image()
+
+    def move_play_images(self, play, new_path):
+        """Move images associated with this play to the new path, updating the play with the new location. returns list of original picture paths"""
+        pics_to_remove = []
+        if not new_path:
+            return pics_to_remove
+
+        if play.start_image:
+            pics_to_remove.append(play.start_image)
+            play.start_image = move(play.start_image, new_path)
+
+        pics_to_remove.extend(play.addl_images)
+        for idx, img in enumerate(play.addl_images):
+            play.addl_images[idx] = move(img, new_path)
+
+        if play.end_image:
+            pics_to_remove.append(play.end_image)
+            play.end_image = move(play.end_image, new_path)
+        return pics_to_remove
 
     def load_final_play(self):
         """Load the last play in the session"""
