@@ -1,5 +1,13 @@
 import ttkbootstrap as ttk
+from dataclasses import dataclass
 
+@dataclass
+class PaginationData:
+    file_name : str
+    file_date : str
+    image_index : int
+    image_count : int
+    color : str = 'black'
 
 class ImageButtons(ttk.Frame):
     """Frame for the buttons above the image"""
@@ -17,12 +25,12 @@ class ImageButtons(ttk.Frame):
         self._create_buttons()
         self._place_buttons()
 
-    def update_pagination_info(self, file_name, file_date, image_index, image_count, color='black'):
+    def update_pagination_info(self, pagination_data):
         """Updates the pagination text"""
-        self.picture_count.set(image_count)
-        self.file_date.set(f"Date: {file_date}")
-        self.file_name.set(f"{file_name} ({image_index}/{image_count})")
-        self.file_name_label.config(foreground=color)
+        self.picture_count.set(pagination_data.image_count)
+        self.file_date.set(f"Date: {pagination_data.file_date}")
+        self.file_name.set(f"{pagination_data.file_name} ({pagination_data.image_index}/{pagination_data.image_count})")
+        self.file_name_label.config(foreground=pagination_data.color)
 
     def _create_buttons(self):
         self.prev_button = ttk.Button(self, text='Prev', command=self._window.display_prev_image)

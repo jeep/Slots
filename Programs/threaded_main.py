@@ -17,7 +17,7 @@ from DropdownData import DropdownData
 from Scripts.EntryWigits import EntryWigits
 from Scripts.get_imgs_data import multi_get_img_data
 from Scripts.HandPayWindow import HandPayWindow
-from Scripts.ImageButtons import ImageButtons
+from Scripts.ImageButtons import ImageButtons, PaginationData
 from Scripts.ImageDisplay import ImageDisplay
 from Scripts.SessionFrame import SessionFrame
 from Scripts.SessionTable import SessionTable
@@ -83,7 +83,7 @@ class App(ttk.Window):
         # image_frame.pack(side='right', fill='both', anchor='ne')
         image_frame.grid(row=0, column=2, sticky="nsew")
 
-        self.make_menu()
+        self._make_menu()
 
         self.setup_keybinds()
 
@@ -99,7 +99,7 @@ class App(ttk.Window):
         """Gets the current play"""
         return self._current_play
 
-    def make_menu(self):
+    def _make_menu(self):
         """Make the menus"""
         menu = ttk.Menu(master=self)
         self.configure(menu=menu)
@@ -138,7 +138,7 @@ class App(ttk.Window):
         directory = askdirectory(mustexist=True)
         if directory == "":
             return
-        
+
         self.open_folder(directory)
 
     def open_folder(self, directory):
@@ -165,36 +165,33 @@ class App(ttk.Window):
             return
 
         self.image_display.canvas.delete("all")
-        # opens the image at the current pointer
         with Image.open(self.imgs[self.pointer].path) as image:
-            image = image.reduce(self.scale)
-            image = image.rotate(self.rotation, expand=1)
+            image = image.reduce(self.scale).rotate(self.rotation, expand=1)
 
             global imagetk
-            # turns the image into an image that tkinter can display
             imagetk = ImageTk.PhotoImage(image)
-
-            # gets the image dimensions and divides them by 2
             x, y = image.size
             x, y = x / 2, y / 2
-
-            # adds the image to the canvas
             self.image_display.canvas.create_image(x, y, image=imagetk)
 
+        pagination_data = self.get_pagination_data()
+        self.image_buttons.update_pagination_info(pagination_data) 
+
+        current_image_path = self.imgs[self.pointer].path
+        # does this need to bind each time or could we bind once and have it use a member var?
+        self.image_display.canvas.bind("<Double-Button-1>", lambda _: startfile(current_image_path))
+
+        image_button_state = DISABLED if self.image_is_in_current_play(current_image_path) else NORMAL
+        self.image_buttons.set_image_adders(image_button_state)
+
+    def get_pagination_data(self):
+        """Get pagination data"""
         current_image_w_path = self.imgs[self.pointer].path
         file_name = basename(current_image_w_path)
-        index = self.pointer + 1
-        color = self.get_image_name_color(current_image_w_path)
         file_date = self.imgs[self.pointer].time
-        self.image_buttons.update_pagination_info(file_name=file_name, file_date=file_date, image_index=index,
-                                                  image_count=len(self.imgs), color=color)
-
-        # does this need to bind each time or could we bind once and have it use a member var?
-        self.image_display.canvas.bind("<Double-Button-1>", lambda _: startfile(current_image_w_path))
-        if self.image_is_in_current_play(current_image_w_path):
-            self.image_buttons.set_image_adders("disabled")
-        else:
-            self.image_buttons.set_image_adders("normal")
+        index = self.pointer + 1 # adjust for 0 based vs 1 based
+        color = self.get_image_name_color(current_image_w_path)
+        return PaginationData(file_name=file_name, file_date=file_date, image_index=index, image_count=len(self.imgs), color=color)
 
     def save_session(self):
         """Save the session"""

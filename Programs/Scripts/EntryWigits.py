@@ -68,7 +68,6 @@ class EntryWigits(ttk.Frame):
         self._create_end_entry()
         self._create_image_table()
 
-
     def _create_header(self):
         self._header = ttk.Label(self, text="Play Information", anchor='center')
 
