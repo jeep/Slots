@@ -128,9 +128,9 @@ class App(ttk.Window):
 
         nav_menu = ttk.Menu(menu, tearoff=False)
         nav_menu.add_command(label="Goto first img [Home]", command=self.move_to_first_image)
-        nav_menu.add_command(label="Prev img [PgUp]", command=self.display_prev_image)
-        nav_menu.add_command(label="Next img [PgDn]", command=self.display_next_image)
-        nav_menu.add_command(label="Goto last img", command=self.display_last_image)
+        nav_menu.add_command(label="Prev img [PgUp]", command=self.move_to_prev_image)
+        nav_menu.add_command(label="Next img [PgDn]", command=self.move_to_next_image)
+        nav_menu.add_command(label="Goto last img", command=self.move_to_last_image)
         menu.add_cascade(label="Navigate", menu=nav_menu)
 
     def get_and_open_folder(self):
@@ -367,18 +367,18 @@ class App(ttk.Window):
         self.pointer = 0
         self.display_image()
 
-    def display_next_image(self, _=None):
+    def move_to_next_image(self, _=None):
         """next image"""
         self.pointer = min((self.pointer + 1), (len(self.imgs) - 1))
         self.display_image()
 
-    def display_prev_image(self, _=None):
+    def move_to_prev_image(self, _=None):
         """Previous image"""
         # does nothing if there are no images
         self.pointer = max((self.pointer - 1), 0)
         self.display_image()
 
-    def display_last_image(self, _=None):
+    def move_to_last_image(self, _=None):
         """display the last image"""
         self.pointer = len(self.imgs) - 1
         self.display_image()
@@ -934,8 +934,8 @@ class App(ttk.Window):
         self.bind("<FocusOut>", lambda _: self.set_save_button_state())
 
         self.bind("<Control-s>", lambda _: self.save())
-        self.bind("<Prior>", self.display_prev_image)
-        self.bind("<Next>", self.display_next_image)
+        self.bind("<Prior>", self.move_to_prev_image)
+        self.bind("<Next>", self.move_to_next_image)
         self.bind("<Home>", self.move_to_first_image)
         # self.bind("<End>", self.display_last_image)
         self.bind("<Control-Key-1>", self.set_current_image_as_start)
