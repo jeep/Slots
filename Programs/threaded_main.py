@@ -127,7 +127,7 @@ class App(ttk.Window):
         menu.add_cascade(label="Edit", menu=edit_menu)
 
         nav_menu = ttk.Menu(menu, tearoff=False)
-        nav_menu.add_command(label="Goto first img [Home]", command=self.display_first_image)
+        nav_menu.add_command(label="Goto first img [Home]", command=self.move_to_first_image)
         nav_menu.add_command(label="Prev img [PgUp]", command=self.display_prev_image)
         nav_menu.add_command(label="Next img [PgDn]", command=self.display_next_image)
         nav_menu.add_command(label="Goto last img", command=self.display_last_image)
@@ -151,9 +151,8 @@ class App(ttk.Window):
         if len(self.imgs) == 0:
             return
 
-        self.pointer = 0
         self.imgs = sorted(self.imgs, key=lambda item: item.time)
-        self.display_image()
+        self.move_to_first_image()
         self.image_buttons.set_image_adders("normal")
         self.image_buttons.delete_button.configure(state="warning")
         self.image_buttons.set_image_navigation("normal")
@@ -237,7 +236,7 @@ class App(ttk.Window):
         return len(self.plays) > 0 and self.session_date != self.default_session_date
 
     def play_is_being_editted(self):
-        """Determine if we are editting a play (vs. createing a new one)"""
+        """Determine if we are editting a play (vs. creating a new one)"""
         return (self._current_play.start_image or
                 self._current_play.end_image or
                 len(self._current_play.addl_images) or
@@ -288,7 +287,7 @@ class App(ttk.Window):
 
         self.imgs = [img for img in self.imgs if img.path not in pics_to_remove]
         self.imgs = sorted(self.imgs, key=lambda item: item.time)
-        self.display_first_image()
+        self.move_to_first_image()
 
     def move_play_images(self, play, new_path):
         """Move images associated with this play to the new path, updating the play with the new location. returns list of original picture paths"""
@@ -363,7 +362,7 @@ class App(ttk.Window):
             return image_name_color["avoid"]
         return image_name_color["normal"]
 
-    def display_first_image(self, _=None):
+    def move_to_first_image(self, _=None):
         """display the first image"""
         self.pointer = 0
         self.display_image()
@@ -937,7 +936,7 @@ class App(ttk.Window):
         self.bind("<Control-s>", lambda _: self.save())
         self.bind("<Prior>", self.display_prev_image)
         self.bind("<Next>", self.display_next_image)
-        self.bind("<Home>", self.display_first_image)
+        self.bind("<Home>", self.move_to_first_image)
         # self.bind("<End>", self.display_last_image)
         self.bind("<Control-Key-1>", self.set_current_image_as_start)
         self.bind("<Control-Key-2>", self.add_current_image_to_play)

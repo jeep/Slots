@@ -36,10 +36,10 @@ class ImageButtons(ttk.Frame):
         self.prev_button = ttk.Button(self, text='Prev', command=self._window.display_prev_image)
         self.next_button = ttk.Button(self, text='Next', command=self._window.display_next_image)
         self.return_button = ttk.Button(self, text='Return to Start',
-                                        command=self._window.display_first_image)
+                                        command=self._window.move_to_first_image)
 
         self.goto_start = ttk.Label(self, text='1')
-        self.goto_start.bind("<Button-1>", self._window.display_first_image)
+        self.goto_start.bind("<Button-1>", self._window.move_to_first_image)
         self.goto_prev = ttk.Label(self, text='prev')
         self.goto_prev.bind("<Button-1>", self._window.display_prev_image)
         self.goto_next = ttk.Label(self, text='next')
