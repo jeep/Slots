@@ -271,7 +271,8 @@ class App(ttk.Window):
         try:
             with open(csv_file_path, "a+", newline="") as csvfile:
                 writer = csv.writer(csvfile)
-                for play_id, p in self.plays.items():
+                while (len(self.plays) > 0):
+                    play_id, p = list(self.plays.items())[0]
                     moved_pix = self.move_play_images(p, new_image_path)
                     pics_to_remove.extend(moved_pix)
 
@@ -626,6 +627,9 @@ class App(ttk.Window):
         if self._current_play is None:
             self.create_play()
 
+        # Save the cash in (when moving to next play it can be left in the entry field by default)
+        self.entry_wigits.add_cash()
+        
         if self.editing_play():
             # Get the play id and play object for the item being edited
             li = list(self.plays.items())

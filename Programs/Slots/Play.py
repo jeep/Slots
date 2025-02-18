@@ -142,6 +142,56 @@ class Play:
     def get_entry_fields(self):
         return None
 
+
+    def get_csv_dict(self):
+        """In progress, not working now. Get the output in CSV format"""
+        return
+        note = f"{self.note}"
+        if len(self.bonuses) > 0:
+            note += f"; {str(self.bonuses)}"
+
+        # JEEP: This doesn't belong in this class
+        start_date = self.start_time.strftime(r"%m/%d/%Y")
+        images = [str(pathlib.PureWindowsPath(f)) for f in self.addl_images]
+
+        fieldnames = ['session id', 'casino', 'start time', 'machine', 'cash in', 'bet', 'play_type', 'denom', 'state', 'cash out', 'pnl', 'note', 'family', 'start image', 'end image', 'addl images', 'end time']
+
+        session_id = self.session_date.strftime(r"%m/%d/%Y") 
+        data=[{'session id': session_id,
+               'casino': self.casino, 
+               'start time': self.start_time, 
+               'machine': self.machine.get_name(), 
+               'cash in': self.get_cash_entries_for_csv(),
+               'bet': format_currency(self.bet, 'USD', locale='en_US'), 
+               'play type': self.play_type,
+               'denom': self.denom,
+               'state': self.state,
+               'cash out': self.cash_out,
+               'pnl': format_currency(self.pnl, 'USD', locale='en_US'),
+               'note': note,
+               'family': self.machine.get_family(), 
+               'start image': self.start_image,
+               'end image': self.end_image,
+               'addl images': images,
+               'end time': self.end_time
+               }]
+
+        for hp in self.hand_pays:
+            if hp.tax > 0:
+                tax = format_currency(hp.tax, 'USD', locale='en_US')
+                images = hp.addl_images if hp.addl_images else ""
+                rows.append((self.session_date.strftime(r"%m/%d/%Y"), self.casino, start_date, self.machine.get_name(),
+                             tax, "", "Tax Consequence", self.denom,
+                             format_currency(hp.pay_amount, 'USD', locale="en_US"), "", -1 * tax, tax,
+                             self.machine.get_family(), hp.image, "", images, ""))
+            if hp.tip_amount > 0:
+                rows.append((self.session_date.strftime(r"%m/%d/%Y"), self.casino, start_date, self.machine.get_name(),
+                             format_currency(hp.tip_amount, 'USD', locale='en_US'), "", "Tip", "", "",
+                             format_currency(0.00, 'USD', locale='en_US'),
+                             format_currency(-1 * hp.tip_amount, 'USD', locale='en_US'), "", self.machine.get_family(),
+                             "", "", "", ""))
+        return rows
+
     def get_csv_rows(self):
         """Get the output in CSV format"""
         note = f"{self.note}"

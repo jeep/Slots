@@ -219,7 +219,7 @@ class EntryWigits(ttk.Frame):
         self.hp_table.bind('<Delete>', self._hp_delete)
 
 
-    def add_cash(self, _):
+    def add_cash(self, _=None):
         """Add cash from entry field to the play"""
         if not self.cashin.var.get():
             return
