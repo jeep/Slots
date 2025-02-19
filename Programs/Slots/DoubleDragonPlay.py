@@ -19,7 +19,7 @@ class DoubleDragonPlay(StateHelperPlay):
     @property
     def state(self) -> str:
         rv = {k: v for k, v in self.state_data.items() if v and v != ""}
-        if not len(rv):
+        if not rv: # or not len(rv):
             return self._state
 
         rv = ""
