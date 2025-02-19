@@ -131,6 +131,9 @@ class App(ttk.Window):
         nav_menu.add_command(label="Prev img [PgUp]", command=self.move_to_prev_image)
         nav_menu.add_command(label="Next img [PgDn]", command=self.move_to_next_image)
         nav_menu.add_command(label="Goto last img", command=self.move_to_last_image)
+        nav_menu.add_separator()
+        nav_menu.add_command(label="Goto first unused img", command=self.move_to_first_unused_image)
+        nav_menu.add_command(label="Goto next unused img", command=self.move_to_next_unused_image)
         menu.add_cascade(label="Navigate", menu=nav_menu)
 
     def get_and_open_folder(self):
@@ -362,6 +365,23 @@ class App(ttk.Window):
         if "IMG_E" in basename(img_name):
             return image_name_color["avoid"]
         return image_name_color["normal"]
+
+    def move_to_first_unused_image(self):
+        """display the first unused image"""
+        index = next((idx for idx, img in enumerate(self.imgs) if not self.is_image_used(img.path)),0)
+        self.pointer = index
+        self.display_image()
+
+    def move_to_next_unused_image(self, _=None):
+        """increment pointer and display the next unused image"""
+        self.pointer = min((self.pointer + 1), (len(self.imgs) - 1))
+        while self.is_image_used(self.imgs[self.pointer].path) and self.pointer < len(self.imgs)-1:
+            self.pointer = min((self.pointer + 1), (len(self.imgs) - 1))
+        self.display_image()
+
+    def is_image_used(self, image_path):
+        """find if the image is used in any play"""
+        return self.image_in_another_play(image_path) or self.image_is_in_current_play(image_path)
 
     def move_to_first_image(self, _=None):
         """display the first image"""
@@ -611,14 +631,6 @@ class App(ttk.Window):
         """determine a current play is being editted or is a new play"""
         return self._current_index is not None
 
-    def move_to_next_unused_image(self):
-        """increment pointer and display tne nexe unused image"""
-        # this actually moves to the next image not in current play... need to decided if I want to
-        # update the name or the behavior
-        while self.image_is_in_current_play(self.imgs[self.pointer].path) and self.pointer < len(self.imgs)-1:
-            self.pointer = min((self.pointer + 1), (len(self.imgs) - 1))
-        self.display_image()
-
     def save(self):
         """Save the play"""
         if not self.confirm_save_readiness():
@@ -629,7 +641,7 @@ class App(ttk.Window):
 
         # Save the cash in (when moving to next play it can be left in the entry field by default)
         self.entry_wigits.add_cash()
-        
+
         if self.editing_play():
             # Get the play id and play object for the item being edited
             li = list(self.plays.items())
