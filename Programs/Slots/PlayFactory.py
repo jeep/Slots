@@ -1,3 +1,4 @@
+from .BuffaloAscension import BuffaloAscensionPlay
 from .CatsWildSerengeti import CatsWildSerengetiPlay
 from .DoubleDragonPlay import DoubleDragonPlay
 from .FrankensteinPlay import FrankensteinPlay
@@ -17,6 +18,7 @@ from .Play import Play
 class PlayFactory:
     """Class to create plays based on machine"""
     play_for_machine = {
+        "Buffalo Ascension" : BuffaloAscensionPlay,
         "Cats Wild Serengeti": CatsWildSerengetiPlay,
         "Double Dragon Jin Long Jin Bao": DoubleDragonPlay,
         "Frankenstein": FrankensteinPlay,
