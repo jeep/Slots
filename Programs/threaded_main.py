@@ -438,6 +438,9 @@ class App(ttk.Window):
         """Update casino for the play. Second param is event for binding"""
         if self.session_frame.casino.var.get():
             casino = self.session_frame.casino.var.get()
+            dashLoc = casino.find("-")
+            if dashLoc > 0:
+                casino = casino[0:dashLoc]
             self.dropdown_data.update_machine_dd(casino)
             if self._current_play is not None:
                 self._current_play.casino = self.session_frame.casino.var.get()
